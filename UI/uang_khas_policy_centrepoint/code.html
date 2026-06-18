@@ -1,0 +1,292 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Uang Khas - POLICY CENTREPOINT</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1a1c1c",
+                        "tertiary": "#5e5d5d",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "primary-fixed-dim": "#ffb3b2",
+                        "surface-dim": "#dadada",
+                        "outline": "#8f6f6f",
+                        "on-primary-container": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#2f3131",
+                        "on-surface-variant": "#5b4040",
+                        "primary-fixed": "#ffdad9",
+                        "surface-container-low": "#f3f3f4",
+                        "on-primary-fixed-variant": "#92001f",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#93f7ba",
+                        "inverse-on-surface": "#f0f1f1",
+                        "secondary": "#006d41",
+                        "on-secondary-container": "#007144",
+                        "surface": "#f9f9f9",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#777676",
+                        "background": "#f9f9f9",
+                        "inverse-primary": "#ffb3b2",
+                        "surface-variant": "#e2e2e2",
+                        "bg-gray": "#EFECEC",
+                        "on-secondary-fixed": "#002110",
+                        "black-charcoal": "#222222",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f9f9f9",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#ffffff",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "outline-variant": "#e3bebd",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#77da9f",
+                        "primary-container": "#dc3545",
+                        "on-secondary-fixed-variant": "#00522f",
+                        "surface-container-high": "#e8e8e8",
+                        "border-slate": "#E2E8F0",
+                        "error-container": "#ffdad6",
+                        "primary": "#b9172f",
+                        "on-primary-fixed": "#410008",
+                        "on-background": "#1a1c1c",
+                        "surface-container": "#eeeeee",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#ba1830",
+                        "secondary-container": "#90f4b7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "inner-padding": "12px",
+                        "appbar-padding": "12px",
+                        "stack-gap": "16px",
+                        "margin-page": "16px",
+                        "gutter-grid": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Bricolage Grotesque"],
+                        "label-bold": ["Bricolage Grotesque"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "body-lg": ["Bricolage Grotesque"],
+                        "headline-md": ["Bricolage Grotesque"],
+                        "body-md": ["Bricolage Grotesque"],
+                        "display-lg-mobile": ["Bricolage Grotesque"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "800" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #EFECEC; } /* bg-gray */
+        .my-divider { border-bottom: 2px dashed #E2E8F0; } /* border-slate */
+        .bounce-tapper:active { transform: scale(0.95); transition: transform 0.1s; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #222222; }
+    </style>
+</head>
+<body class="text-on-surface font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- TopAppBar (Mobile Only) -->
+<header class="md:hidden sticky top-4 z-50 flex justify-between items-center px-4 py-2 bg-surface dark:bg-surface-container-high rounded-xl border-2 border-black-charcoal mt-margin-page mx-margin-page shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]">
+<button class="text-primary dark:text-inverse-primary hover:bg-surface-variant p-2 rounded-full bounce-tapper flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<div class="text-center">
+<h1 class="font-headline-sm text-headline-sm-mobile font-bold text-on-surface dark:text-inverse-on-surface">POLICY CENTREPOINT</h1>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-black-charcoal overflow-hidden bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">person</span>
+</div>
+</header>
+<!-- NavigationDrawer (Web Only) -->
+<nav class="hidden md:flex fixed inset-y-0 left-0 w-80 z-[60] flex-col p-4 bg-surface dark:bg-surface-container rounded-r-xl border-r-2 border-black-charcoal shadow-[4px_0px_0px_0px_rgba(34,34,34,1)]">
+<div class="flex items-center gap-4 mb-8 p-2">
+<div class="w-12 h-12 rounded-full border-2 border-black-charcoal overflow-hidden bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">person</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary">UKM Admin</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Policy Management</p>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-primary-container text-on-primary-container font-bold border-2 border-black-charcoal scale-[0.98] transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Uang Khas</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-body-md text-body-md">Policy Search</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-body-md text-body-md">Recent Activities</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-margin-page md:ml-80 pb-24 md:pb-margin-page">
+<div class="max-w-4xl mx-auto space-y-6">
+<!-- Header Section -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
+<div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-2">Uang Khas</h1>
+<p class="font-body-md text-body-md text-tertiary">Manage financial contributions and track monthly status.</p>
+</div>
+<!-- Year Selector -->
+<div class="relative w-full sm:w-auto">
+<label class="block font-label-bold text-label-bold text-on-surface mb-1">Select Year</label>
+<div class="relative bg-surface rounded-lg border-2 border-black-charcoal hard-shadow overflow-hidden">
+<select class="w-full sm:w-40 appearance-none bg-transparent border-none py-3 pl-4 pr-10 font-body-lg text-body-lg text-on-surface focus:ring-0 cursor-pointer">
+<option selected="" value="2026">2026</option>
+<option value="2025">2025</option>
+<option value="2024">2024</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-tertiary">arrow_drop_down</span>
+</div>
+</div>
+</div>
+<!-- Financial Summary Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-gap mb-8">
+<!-- Total Paid Card -->
+<div class="bg-primary-container text-on-primary-container border-2 border-black-charcoal rounded-xl p-6 hard-shadow flex flex-col justify-between h-40">
+<div class="flex justify-between items-start">
+<span class="font-label-bold text-label-bold uppercase tracking-wider">Total Paid (2026)</span>
+<div class="bg-surface/20 p-2 rounded-full border-2 border-on-primary-container">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+</div>
+<div class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg">
+                        Rp 600.000
+                    </div>
+</div>
+<!-- Outstanding Summary Card -->
+<div class="bg-surface border-2 border-black-charcoal rounded-xl p-6 hard-shadow flex flex-col justify-between h-40">
+<div class="flex justify-between items-start">
+<span class="font-label-bold text-label-bold text-tertiary uppercase tracking-wider">Months Paid</span>
+<div class="bg-surface-variant p-2 rounded-full border-2 border-black-charcoal">
+<span class="material-symbols-outlined text-tertiary">calendar_today</span>
+</div>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">6</span>
+<span class="font-body-md text-body-md text-tertiary">/ 12 Months</span>
+</div>
+<div class="w-full bg-surface-variant h-3 rounded-full mt-2 border-2 border-black-charcoal overflow-hidden">
+<div class="bg-secondary h-full border-r-2 border-black-charcoal" style="width: 50%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Monthly Status List -->
+<div class="bg-surface border-2 border-black-charcoal rounded-xl hard-shadow overflow-hidden">
+<div class="p-6 border-b-2 border-slate-200">
+<h3 class="font-headline-md text-headline-md text-on-surface">Monthly Status</h3>
+</div>
+<div class="divide-y-2 divide-dashed divide-slate-200">
+<!-- Paid Month -->
+<div class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-variant border-2 border-black-charcoal flex items-center justify-center font-headline-sm text-headline-sm text-on-surface">
+                                Jan
+                            </div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface">January Contribution</h4>
+<p class="font-body-md text-body-md text-tertiary">Rp 100.000 • 6 months ago</p>
+</div>
+</div>
+<div class="inline-flex items-center px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full border-2 border-black-charcoal font-label-bold text-label-bold self-start sm:self-auto shadow-[2px_2px_0px_0px_rgba(34,34,34,1)]">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Lunas
+                        </div>
+</div>
+<!-- Paid Month -->
+<div class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-variant border-2 border-black-charcoal flex items-center justify-center font-headline-sm text-headline-sm text-on-surface">
+                                Feb
+                            </div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface">February Contribution</h4>
+<p class="font-body-md text-body-md text-tertiary">Rp 100.000 • 5 months ago</p>
+</div>
+</div>
+<div class="inline-flex items-center px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full border-2 border-black-charcoal font-label-bold text-label-bold self-start sm:self-auto shadow-[2px_2px_0px_0px_rgba(34,34,34,1)]">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Lunas
+                        </div>
+</div>
+<!-- Paid Month -->
+<div class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-variant border-2 border-black-charcoal flex items-center justify-center font-headline-sm text-headline-sm text-on-surface">
+                                Mar
+                            </div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface">March Contribution</h4>
+<p class="font-body-md text-body-md text-tertiary">Rp 100.000 • 4 months ago</p>
+</div>
+</div>
+<div class="inline-flex items-center px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full border-2 border-black-charcoal font-label-bold text-label-bold self-start sm:self-auto shadow-[2px_2px_0px_0px_rgba(34,34,34,1)]">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Lunas
+                        </div>
+</div>
+<!-- Unpaid Month -->
+<div class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface-dim/30">
+<div class="flex items-center gap-4 opacity-70">
+<div class="w-12 h-12 rounded-lg bg-surface-variant border-2 border-tertiary flex items-center justify-center font-headline-sm text-headline-sm text-tertiary">
+                                Jul
+                            </div>
+<div>
+<h4 class="font-body-lg text-body-lg text-tertiary">July Contribution</h4>
+<p class="font-body-md text-body-md text-outline">Rp 100.000 • Due in 2 days</p>
+</div>
+</div>
+<div class="inline-flex items-center px-3 py-1 bg-surface-variant text-tertiary rounded-full border-2 border-tertiary font-label-bold text-label-bold self-start sm:self-auto">
+<span class="material-symbols-outlined text-[14px] mr-1">pending</span> Belum Bayar
+                        </div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-4 left-0 right-0 z-50 flex justify-center items-center gap-stack-gap px-6 py-2 bg-surface dark:bg-surface-container-high rounded-full border-2 border-black-charcoal mb-margin-page mx-auto w-fit shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]">
+<a class="text-on-surface-variant p-3 hover:bg-surface-container-high rounded-full transition-colors bounce-tapper flex items-center justify-center" href="#">
+<span class="material-symbols-outlined">home</span>
+</a>
+<a class="bg-secondary-container text-on-secondary-container rounded-full p-3 border-2 border-black-charcoal scale-95 transition-transform duration-100 flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(34,34,34,1)]" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+</a>
+<a class="text-on-surface-variant p-3 hover:bg-surface-container-high rounded-full transition-colors bounce-tapper flex items-center justify-center" href="#">
+<span class="material-symbols-outlined">person</span>
+</a>
+</nav>
+</body></html>

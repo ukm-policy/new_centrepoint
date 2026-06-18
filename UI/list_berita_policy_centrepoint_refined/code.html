@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="id"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Berita &amp; Pengumuman - POLICY CENTREPOINT</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#e5e2e1",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "inverse-on-surface": "#f0f1f1",
+                    "on-primary-container": "#ffffff",
+                    "tertiary": "#5e5d5d",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-primary": "#ffb3b2",
+                    "surface-bright": "#f9f9f9",
+                    "error": "#ba1a1a",
+                    "surface": "#ffffff",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "on-secondary-fixed-variant": "#00522f",
+                    "surface-container-high": "#e8e8e8",
+                    "outline-variant": "#e3bebd",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#77da9f",
+                    "primary-container": "#dc3545",
+                    "on-primary-fixed": "#410008",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "surface-container-low": "#f3f3f4",
+                    "black-charcoal": "#222222",
+                    "inverse-surface": "#2f3131",
+                    "border-slate": "#E2E8F0",
+                    "secondary-fixed": "#93f7ba",
+                    "surface-container": "#eeeeee",
+                    "on-primary-fixed-variant": "#92001f",
+                    "surface-variant": "#e2e2e2",
+                    "primary": "#dc3545",
+                    "primary-fixed-dim": "#ffb3b2",
+                    "on-surface-variant": "#5b4040",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#ffdad9",
+                    "on-surface": "#1a1c1c",
+                    "on-secondary-container": "#007144",
+                    "surface-dim": "#dadada",
+                    "surface-container-highest": "#e2e2e2",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#ffffff",
+                    "surface-tint": "#ba1830",
+                    "outline": "#8f6f6f",
+                    "on-secondary-fixed": "#002110",
+                    "bg-gray": "#ffffff",
+                    "tertiary-container": "#777676",
+                    "secondary": "#006d41",
+                    "secondary-container": "#90f4b7",
+                    "on-error": "#ffffff",
+                    "background": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "on-background": "#1a1c1c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-page": "16px",
+                    "inner-padding": "12px",
+                    "stack-gap": "16px",
+                    "gutter-grid": "12px",
+                    "appbar-padding": "12px"
+            },
+            "fontFamily": {
+                    "headline-sm": [
+                            "Bricolage Grotesque"
+                    ],
+                    "display-lg-mobile": [
+                            "Bricolage Grotesque"
+                    ],
+                    "label-bold": [
+                            "Bricolage Grotesque"
+                    ],
+                    "display-lg": [
+                            "Bricolage Grotesque"
+                    ],
+                    "body-lg": [
+                            "Bricolage Grotesque"
+                    ],
+                    "body-md": [
+                            "Bricolage Grotesque"
+                    ],
+                    "headline-md": [
+                            "Bricolage Grotesque"
+                    ]
+            },
+            "fontSize": {
+                    "headline-sm": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "label-bold": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "display-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+        },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.bg-gray');
+        }
+        .bouncetapper:active {
+            transform: scale(0.95);
+        }
+        .my-divider {
+            border-top: 2px dashed theme('colors.black-charcoal');
+        }
+        
+        .shadow-brutal {
+            box-shadow: 4px 4px 0px 0px rgba(34,34,34,1);
+        }
+        .shadow-brutal-sm {
+            box-shadow: 2px 2px 0px 0px rgba(34,34,34,1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 flex justify-between items-center px-4 py-4 bg-surface dark:bg-surface-container-high border-b-2 border-black-charcoal">
+<button class="bouncetapper text-on-surface hover:bg-surface-variant p-2 rounded-full transition-transform duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="flex items-center gap-2">
+<img alt="Logo" class="w-8 h-8 rounded-full border-2 border-black-charcoal" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpfAh7R2PETp3MNUvdlRivpj1RPCDHcUSQgmgkH0gJwY3J8uMMVIXsy8z6V2B8WMuoUaSECFA-mNLKnPjydPOzLmSSuOgw-cqbn7ZswMCqOF-PHKSANCTr-BUXK1tsacoPw_oIsIg2-xvz6GQfsY16Fdr71zK44IScpT3vXQ4wGPWt_8B3V_lfTBc-ViUxj-PjVtBXLu7BRd2xQEt2-Ryyc1NKoV5zVTw9-x_ciCsNRmPqyplyLIrO5S4NjsT_2GbirQURvPZrGePV">
+<h1 class="font-headline-sm text-headline-sm-mobile font-bold text-primary text-center">
+                UKM-POLICY
+            </h1>
+</div>
+<button class="bouncetapper text-on-surface hover:bg-surface-variant p-2 rounded-full transition-transform duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</header>
+<!-- Tabs -->
+<div class="flex border-b-2 border-black-charcoal bg-surface sticky top-[72px] z-40">
+<button class="flex-1 py-3 text-center font-label-bold text-label-bold text-primary border-b-4 border-primary uppercase bouncetapper">News</button>
+<button class="flex-1 py-3 text-center font-label-bold text-label-bold text-tertiary uppercase bouncetapper">Documentation</button>
+</div>
+<!-- Main Content -->
+<main class="mx-margin-page mt-stack-gap flex flex-col gap-stack-gap relative">
+<!-- Search Bar -->
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-tertiary">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border-2 border-black-charcoal rounded-lg leading-5 bg-surface-container-lowest placeholder-tertiary focus:outline-none focus:ring-0 focus:border-black-charcoal sm:text-sm font-body-md text-body-md shadow-brutal transition-all bouncetapper" placeholder="Cari berita atau pengumuman..." type="text">
+</div>
+<!-- Featured News Card -->
+<article class="bg-surface-container-lowest border-2 border-black-charcoal rounded-xl shadow-brutal overflow-hidden flex flex-col cursor-pointer bouncetapper transition-transform duration-100">
+<div class="h-48 w-full border-b-2 border-black-charcoal relative">
+<img class="w-full h-full object-cover" data-alt="Android 15 promo graphic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD35RRnZxeDSrc3yKluEUMTjuE8hBEgAnJr7Hbfq05WzwAxzPIqRgxF3aUMBwUuZjZMB8Z5ACcJG_YMlzo9zwJY07AxxnLXHKpcdVhkiFMFpUuauLFA0sXblw9C3_NxavmoyyMzA7j9Pfay-fjTgIdPQASuKEd4hIfQ14RHxdigxt3MznRCPp_qDH-KVORDDF3q3W_whWiBdj462Yg52MKwJymdqSUjWkCmTUQO4zR6yFqiywWrG2xWxXeAXZJwN2lI0X-QL0FCd2Y8">
+</div>
+<div class="p-4 flex flex-col gap-2">
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface leading-tight mt-1">
+                    Google Rilis Android 15 dengan Fitur Keamanan Biometrik yang Lebih Canggih
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mt-1">
+                    Mountain View, 18 April 2025 — Google secara resmi meluncurkan Android 15 dengan pembaruan besar di sisi keamanan dan privasi. Salah satu fitur unggulan dalam sistem operasi terbaru ini adalah peningkatan kemampuan autentikasi biometrik.
+                </p>
+<div class="flex items-center gap-4 mt-2 text-tertiary font-body-md text-[12px]">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> 5 days ago</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">visibility</span> 0 views</span>
+<span class="ml-auto text-primary border border-primary px-2 py-0.5 rounded-full text-[10px] font-bold">Terbaru</span>
+</div>
+</div>
+</article>
+<!-- Secondary News Cards List -->
+<div class="flex flex-col gap-4">
+<!-- News Item 1 -->
+<article class="bg-surface-container-lowest border-2 border-black-charcoal rounded-xl shadow-brutal p-3 flex items-center gap-4 cursor-pointer bouncetapper transition-transform duration-100">
+<div class="w-20 h-20 rounded-lg border-2 border-black-charcoal overflow-hidden flex-shrink-0">
+<img alt="Apple event" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeEwA95kjETsxyXVRzhDRi80YVNkrXs2FFTMd66-DZdJSMFAb6ecX8J7eGPfG2ItsX03ZeS5yS_NNIMRY-gJNYMn1iU7IbiwRO84q2bUt--yrgY-ar72ZbhwWaDLq_UQTi9mz-cOe6WZ8kTus-BkgrB4SsexvTBqiGTAfIPtYfH8yqTgE5Kr8XgeiaQ7qDmxuwOCbfSBRNGSKGtwbGUPDGAR7dXnHZqNCVAXVagJfSw0ouMBbwaGivQoC8KYlWLbfj4AGTh6VWKfcK">
+</div>
+<div class="flex-1 flex flex-col">
+<h3 class="font-headline-sm text-[16px] leading-tight font-bold text-on-surface line-clamp-1">Apple Umumkan Peluncuran iOS 19</h3>
+<p class="font-body-md text-[12px] text-on-surface-variant line-clamp-2 mt-1">Cupertino, 17 April 2025 — Apple resmi mengumumkan...</p>
+<div class="flex items-center gap-3 mt-1 text-tertiary font-body-md text-[10px]">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">calendar_today</span> 5 days ago</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">visibility</span> 0 dilihat</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary flex-shrink-0">chevron_right</span>
+</article>
+<!-- News Item 2 -->
+<article class="bg-surface-container-lowest border-2 border-black-charcoal rounded-xl shadow-brutal p-3 flex items-center gap-4 cursor-pointer bouncetapper transition-transform duration-100">
+<div class="w-20 h-20 rounded-lg border-2 border-black-charcoal overflow-hidden flex-shrink-0">
+<img alt="AI Technology" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHL_-Y7amTH41HM2mgWFah78rlHVoAvv62Ba--PW55VagrBcPapRcA_pu62EWy9zD7gq9-mK4wG14dJ_GjvmcwGLLQ2cLnoaYeFrZd4X6LtDg5vEec_L8B5ygT-lXuXNTT-WaIOvPFmL5zQYeOxof_nmWrVG4Z-8ws2IuLWeveEQOey5Okk3f4klzTj8BLgbfgeZNeyH7XPWuyNR11WF2I9Kh3doRoUL5qv7ll6rITyuYN7FVIrAXw0lTvRTMYDqVeAc-fWhXVRlSV">
+</div>
+<div class="flex-1 flex flex-col">
+<h3 class="font-headline-sm text-[16px] leading-tight font-bold text-on-surface line-clamp-1">Teknologi AI Semakin Berkembang</h3>
+<p class="font-body-md text-[12px] text-on-surface-variant line-clamp-2 mt-1">Dalam beberapa tahun terakhir, kecerdasan buatan...</p>
+<div class="flex items-center gap-3 mt-1 text-tertiary font-body-md text-[10px]">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">calendar_today</span> 24 days ago</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">visibility</span> 155 x dilihat</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary flex-shrink-0">chevron_right</span>
+</article>
+</div>
+<div class="flex justify-center mt-4 mb-8">
+<button class="bg-surface-container-lowest border-2 border-black-charcoal text-on-surface font-label-bold text-label-bold uppercase px-6 py-3 shadow-brutal bouncetapper transition-all flex items-center gap-2 rounded-sm">
+<span class="material-symbols-outlined text-[18px]">autorenew</span> Muat Lebih Banyak
+            </button>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-[100px] right-6 z-50 bg-primary text-on-primary w-14 h-14 rounded-full border-2 border-black-charcoal shadow-brutal flex items-center justify-center bouncetapper transition-transform">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-4 left-0 right-0 z-50 flex justify-between items-center px-6 py-3 bg-surface dark:bg-surface-container-high rounded-[32px] border-2 border-black-charcoal mb-margin-page mx-4 shadow-brutal md:hidden">
+<button class="bouncetapper text-on-surface-variant hover:bg-surface-container-high rounded-full transition-transform duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</button>
+<button class="bouncetapper text-on-surface-variant hover:bg-surface-container-high rounded-full transition-transform duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="newspaper">newspaper</span>
+</button>
+<button class="bouncetapper bg-primary text-on-primary rounded-full p-4 -mt-8 border-2 border-black-charcoal shadow-brutal-sm hover:bg-primary-fixed transition-transform duration-100 flex items-center justify-center scale-110">
+<span class="material-symbols-outlined" data-icon="qr_code_scanner" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+</button>
+<button class="bouncetapper text-on-surface-variant hover:bg-surface-container-high rounded-full transition-transform duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<button class="bouncetapper text-on-surface-variant hover:bg-surface-container-high rounded-full transition-transform duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+</nav>
+</body></html>

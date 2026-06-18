@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="id"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Detail Berita - POLICY CENTREPOINT</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#f9f9f9",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "on-secondary-fixed": "#002110",
+                        "on-secondary-fixed-variant": "#00522f",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#ffffff",
+                        "surface-container-high": "#e8e8e8",
+                        "on-surface": "#1a1c1c",
+                        "surface-container-highest": "#e2e2e2",
+                        "secondary-fixed": "#93f7ba",
+                        "secondary": "#006d41",
+                        "on-surface-variant": "#5b4040",
+                        "secondary-container": "#90f4b7",
+                        "on-tertiary-container": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "surface-bright": "#f9f9f9",
+                        "primary": "#b9172f",
+                        "on-primary-fixed-variant": "#92001f",
+                        "primary-container": "#dc3545",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#007144",
+                        "primary-fixed-dim": "#ffb3b2",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#e3bebd",
+                        "black-charcoal": "#222222",
+                        "primary-fixed": "#ffdad9",
+                        "inverse-on-surface": "#f0f1f1",
+                        "surface-dim": "#dadada",
+                        "on-primary-fixed": "#410008",
+                        "on-background": "#1a1c1c",
+                        "background": "#f9f9f9",
+                        "tertiary-container": "#777676",
+                        "inverse-primary": "#ffb3b2",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-container-low": "#f3f3f4",
+                        "outline": "#8f6f6f",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "error-container": "#ffdad6",
+                        "bg-gray": "#EFECEC",
+                        "surface-variant": "#e2e2e2",
+                        "tertiary": "#5e5d5d",
+                        "border-slate": "#E2E8F0",
+                        "surface-tint": "#ba1830",
+                        "inverse-surface": "#2f3131",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#77da9f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-grid": "12px",
+                        "margin-page": "16px",
+                        "appbar-padding": "12px",
+                        "stack-gap": "16px",
+                        "inner-padding": "12px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Bricolage Grotesque"],
+                        "headline-md": ["Bricolage Grotesque"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "body-md": ["Bricolage Grotesque"],
+                        "display-lg-mobile": ["Bricolage Grotesque"],
+                        "headline-sm": ["Bricolage Grotesque"],
+                        "body-lg": ["Bricolage Grotesque"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "800" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.bg-gray'); }
+        .brutalist-shadow { box-shadow: 4px 4px 0px 0px rgba(34,34,34,1); }
+        .brutalist-border { border: 2px solid theme('colors.black-charcoal'); }
+        .bounce-tapper:active { transform: scale(0.95) translate(2px, 2px); box-shadow: 2px 2px 0px 0px rgba(34,34,34,1); transition: all 0.1s ease-in-out; }
+        .my-divider { border-top: 2px dashed theme('colors.black-charcoal'); opacity: 0.5; margin: 16px 0; }
+    </style>
+</head>
+<body class="antialiased min-h-screen pb-32">
+<!-- Nav shell is suppressed because this is a detailed view (task-focused/sub-page) -->
+<!-- Floating Top App Bar -->
+<header class="sticky top-4 z-50 flex justify-between items-center px-4 py-2 bg-surface dark:bg-surface-container-high text-primary dark:text-inverse-primary rounded-xl border-2 border-black-charcoal mt-margin-page mx-margin-page shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] md:hidden">
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-surface-variant transition-colors bounce-tapper">
+<span class="material-symbols-outlined font-bold text-black-charcoal">arrow_back</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm-mobile font-bold text-on-surface dark:text-inverse-on-surface">Detail Berita</h1>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</header>
+<!-- Main Content Canvas -->
+<main class="px-margin-page mt-6 max-w-2xl mx-auto">
+<!-- Hero Section -->
+<article class="bg-surface-container-lowest brutalist-border brutalist-shadow rounded-xl overflow-hidden mb-6 relative group">
+<div class="absolute top-4 left-4 z-10">
+<span class="bg-primary-container text-on-primary-container font-label-bold text-label-bold px-3 py-1 rounded-full brutalist-border shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] inline-block uppercase tracking-wider">
+                    Pengumuman
+                </span>
+</div>
+<div class="h-64 w-full bg-surface-container-high border-b-2 border-black-charcoal relative">
+<img class="w-full h-full object-cover" data-alt="A striking digital illustration representing campus security, featuring bold geometric shapes and a vibrant red and deep charcoal color palette in a neo-brutalist style. The image depicts abstract architectural elements like gates and stylized security cameras in a bright, light-mode setting. The composition is highly structured, conveying safety and modern infrastructure with high contrast and stark shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1RmbUlAm7ptoLbug4NLmJUL1YKEwF9oBJDriQVLm-saHIMt1j0Fmsj7SWjQapAt-8BlIN5Z5iHi3TuX7isPQ12x0dD9DVuDPG369ZweTB2PxYCYi0XJlnv4srG4kYfF1vdYfhWvJHTFcxdQYtja03-cQ3HvOtLtxLvlfw_J7eORDdCc9AYFz1aIAvDtaEBEBHHbrDRh9x4YsE82XmhN4GcOv3kThycWfTQCNL9CZnTnGAD3xzytm_lFmXCfUg-C8tlMZOQmg9oeHk">
+</div>
+<div class="p-6">
+<!-- Metadata -->
+<div class="flex items-center gap-3 mb-4 text-on-surface-variant font-body-md text-body-md">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-bold text-black-charcoal">Admin Pusat</span>
+</div>
+<span class="w-1 h-1 rounded-full bg-black-charcoal"></span>
+<span>Selasa, 24 Oktober 2023</span>
+<span class="w-1 h-1 rounded-full bg-black-charcoal"></span>
+<span>2 jam yang lalu</span>
+</div>
+<h2 class="font-display-lg-mobile text-display-lg-mobile text-black-charcoal mb-6 leading-tight">
+                    Pembaruan Kebijakan Keamanan Kampus Terpadu 2024
+                </h2>
+<div class="my-divider"></div>
+<!-- Rich Text Content -->
+<div class="prose font-body-lg text-body-lg text-on-surface space-y-4">
+<p class="font-bold text-lg mb-4">
+                        Pemberitahuan penting bagi seluruh civitas akademika mengenai pembaruan sistem keamanan kampus yang akan mulai berlaku pada awal tahun akademik 2024.
+                    </p>
+<p>
+                        Dalam upaya meningkatkan standar keamanan dan kenyamanan di lingkungan kampus, pihak universitas telah mengesahkan <span class="bg-primary-fixed px-1 font-bold">Protokol Keamanan Terpadu V.2</span>. Kebijakan ini mencakup pengetatan akses fisik di area sensitif dan implementasi sistem pemantauan digital yang lebih komprehensif.
+                    </p>
+<div class="bg-surface-container p-4 rounded-lg brutalist-border my-6">
+<h3 class="font-headline-sm text-headline-sm text-primary-container mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined">gpp_maybe</span> Poin Utama Perubahan
+                        </h3>
+<ul class="list-disc list-inside space-y-2 mt-2 ml-1">
+<li>Wajib menggunakan Kartu Identitas Digital (Smart KTM) untuk akses ke laboratorium dan perpustakaan utama.</li>
+<li>Jam malam kampus diperketat menjadi pukul 23:00 WIB, kecuali untuk kegiatan dengan izin khusus.</li>
+<li>Penambahan 50 titik CCTV baru di area parkir terbuka dan koridor penghubung antar gedung fakultas.</li>
+</ul>
+</div>
+<p>
+                        Bagi mahasiswa atau staf yang kehilangan akses atau mengalami kendala dengan sistem baru ini, diharap segera menghubungi Pusat Layanan Keamanan Terpadu di Gedung Rektorat lantai dasar.
+                    </p>
+<div class="my-divider"></div>
+<!-- Contact Block -->
+<div class="bg-secondary-container text-on-secondary-container p-4 rounded-lg brutalist-border shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] flex items-start gap-4">
+<span class="material-symbols-outlined text-3xl mt-1">support_agent</span>
+<div>
+<h4 class="font-headline-sm text-headline-sm mb-1">Kontak Darurat Keamanan</h4>
+<p class="font-body-md text-body-md mb-2">Tersedia 24/7 untuk pelaporan insiden darurat.</p>
+<a class="inline-block bg-surface-container-lowest text-black-charcoal font-label-bold text-label-bold px-4 py-2 rounded brutalist-border bounce-tapper" href="#">
+                                HUBUNGI SEKARANG
+                            </a>
+</div>
+</div>
+</div>
+</div>
+</article>
+</main>
+<script>
+        // Simple script to handle back button behavior (mock)
+        document.querySelector('header button').addEventListener('click', () => {
+            console.log('Navigating back to previous screen...');
+        });
+    </script>
+</body></html>

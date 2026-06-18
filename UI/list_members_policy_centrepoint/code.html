@@ -1,0 +1,240 @@
+<!DOCTYPE html><html lang="id"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>POLICY CENTREPOINT - Daftar Anggota</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#b9172f",
+                        "on-secondary-fixed": "#002110",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#ffffff",
+                        "surface-container-low": "#f3f3f4",
+                        "primary-container": "#dc3545",
+                        "inverse-on-surface": "#f0f1f1",
+                        "border-slate": "#E2E8F0",
+                        "surface-tint": "#ba1830",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-primary-fixed": "#410008",
+                        "secondary-fixed-dim": "#77da9f",
+                        "surface-dim": "#dadada",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-surface": "#1a1c1c",
+                        "surface-variant": "#e2e2e2",
+                        "surface-bright": "#f9f9f9",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#90f4b7",
+                        "surface-container": "#eeeeee",
+                        "black-charcoal": "#222222",
+                        "primary-fixed": "#ffdad9",
+                        "secondary": "#006d41",
+                        "error-container": "#ffdad6",
+                        "background": "#f9f9f9",
+                        "outline-variant": "#e3bebd",
+                        "on-primary-container": "#ffffff",
+                        "tertiary": "#5e5d5d",
+                        "surface-container-high": "#e8e8e8",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "inverse-primary": "#ffb3b2",
+                        "on-secondary-fixed-variant": "#00522f",
+                        "bg-gray": "#EFECEC",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "on-surface-variant": "#5b4040",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2f3131",
+                        "on-primary-fixed-variant": "#92001f",
+                        "surface": "#f9f9f9",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#93f7ba",
+                        "primary-fixed-dim": "#ffb3b2",
+                        "on-secondary-container": "#007144",
+                        "on-background": "#1a1c1c",
+                        "outline": "#8f6f6f",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "tertiary-container": "#777676"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "inner-padding": "12px",
+                        "gutter-grid": "12px",
+                        "stack-gap": "16px",
+                        "margin-page": "16px",
+                        "appbar-padding": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Bricolage Grotesque"],
+                        "headline-sm": ["Bricolage Grotesque"],
+                        "display-lg-mobile": ["Bricolage Grotesque"],
+                        "label-bold": ["Bricolage Grotesque"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "body-md": ["Bricolage Grotesque"],
+                        "body-lg": ["Bricolage Grotesque"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "800" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        .my-divider {
+            border-bottom: 2px dashed #222222;
+            margin: 16px 0;
+            opacity: 0.5;
+        }
+        /* Custom scrollbar for Neo-Brutalist feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #EFECEC;
+            border-left: 2px solid #222222;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #b9172f;
+            border: 2px solid #222222;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-bg-gray text-on-surface font-body-md min-h-screen antialiased flex flex-col relative pb-32">
+<!-- TopAppBar -->
+<header class="bg-surface text-primary rounded-xl border-2 border-black-charcoal mt-margin-page mx-margin-page shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] sticky top-4 z-50 flex justify-between items-center px-4 py-2">
+<button class="text-on-surface-variant hover:bg-surface-variant p-2 rounded-full active:scale-95 transition-transform duration-100 flex items-center justify-center">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm-mobile font-bold text-on-surface text-center flex-1">POLICY CENTREPOINT</h1>
+<button class="w-8 h-8 rounded-full border-2 border-black-charcoal overflow-hidden active:scale-95 transition-transform duration-100 flex-shrink-0">
+<img alt="User Profile Photo" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a professional individual in a brightly lit modern office environment. The lighting is crisp and high-contrast, emphasizing sharp details and a confident expression. The color palette features stark whites, deep blacks, and subtle warm skin tones, aligning with a clean, Neo-Brutalist corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw5Vn77O3z1-hm2FjcwxnKBY4Xajm_nmDlwgSfPQLTwK3_sgZ_9wWRCn5NoZmvVbjAmltzsp0w9HJrYrQ5FWG4JpyMizERlUQtGupSfsSdphfOb9nDARMObdp7TtcSrJaME4JekLoV6z1u8zkMwwJzhl2fdtJ_l6CpIfTSdQPp6IKbw01l-gNxSulLiKjliLMjgqV5XUTjdMGtOz-TnC0FbF-su6PEnQk3UL2SLlB1oGOeTb0s9GDwH1GyjYCqLzz9iXtYiWCcbSnz">
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 px-margin-page pt-stack-gap flex flex-col gap-stack-gap">
+<!-- Page Header -->
+<section class="flex flex-col gap-2">
+<h2 class="font-display-lg-mobile text-display-lg-mobile text-on-surface uppercase tracking-tight">Daftar Anggota</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Kelola dan cari anggota tim yang terdaftar di sistem.</p>
+<div class="my-divider"></div>
+</section>
+<!-- Search Bar (Neo-Brutalist) -->
+<section class="relative">
+<div class="bg-surface border-2 border-black-charcoal rounded-xl shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] flex items-center px-4 py-3 focus-within:shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] focus-within:translate-x-[2px] focus-within:translate-y-[2px] transition-all duration-100">
+<span class="material-symbols-outlined text-on-surface-variant mr-3">search</span>
+<input class="w-full bg-transparent border-none outline-none font-body-lg text-body-lg text-on-surface placeholder-on-surface-variant p-0 focus:ring-0" placeholder="Cari nama atau jabatan..." type="text">
+<button class="bg-primary-container text-on-primary-container px-4 py-1.5 rounded-lg border-2 border-black-charcoal font-label-bold text-label-bold uppercase active:scale-95 transition-transform duration-100 ml-3 shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] hover:bg-surface-tint">
+                    Cari
+                </button>
+</div>
+</section>
+<!-- Member List -->
+<section class="flex flex-col gap-4 mt-2">
+<!-- Member Card 1 -->
+<article class="bg-surface border-2 border-black-charcoal rounded-xl shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] p-4 flex items-center gap-4 active:scale-[0.98] active:shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100 cursor-pointer group">
+<div class="w-16 h-16 rounded-full border-2 border-black-charcoal overflow-hidden flex-shrink-0 bg-surface-container-high relative shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:-translate-y-1 transition-transform">
+<img class="w-full h-full object-cover" data-alt="A detailed portrait shot of an Asian male professional in his 40s wearing a structured dark suit against a stark white background. High-key lighting highlights his features. The image embodies a modern, clean, and slightly gritty corporate brutalist aesthetic, utilizing high contrast between the subject and the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSBigDGsJeuaeKMd_4zPNUjhzUnnmoyFaTCHROQwR_IiTpSOWN_6dWy0oimanIXvQ1gSNHEC8ZJV5J4WBkH2JpNO9KxfLHS2A7ZgPjhbJvHAJyn9meNCKxXJ76MSbjVxJpUqwV7YeCSz1Ad03di1LjBdzQGDJQe0Wpy_RkxWDCy1b85IGp-_5NdjXzt3VMwxTXXhhagYpjTycnCAA_hSO-QHroOxzE9K8Mj3jv25vfcl6L8SBOMbCsAn63saIvHbutzzB1dmpEtxlW">
+</div>
+<div class="flex flex-col flex-1">
+<h3 class="font-headline-sm text-headline-sm-mobile text-on-surface mb-1">Budi Santoso</h3>
+<div class="flex flex-wrap items-center gap-2 mt-1">
+<span class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider bg-surface-variant px-2 py-0.5 border border-black-charcoal rounded-md">Kabid</span>
+<span class="font-label-bold text-label-bold text-black-charcoal uppercase tracking-wider bg-[#FFD700] px-2 py-0.5 border-2 border-black-charcoal rounded-md shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]">Gold</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full border-2 border-black-charcoal bg-surface flex items-center justify-center text-on-surface shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</article>
+<!-- Member Card 2 -->
+<article class="bg-surface border-2 border-black-charcoal rounded-xl shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] p-4 flex items-center gap-4 active:scale-[0.98] active:shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100 cursor-pointer group">
+<div class="w-16 h-16 rounded-full border-2 border-black-charcoal overflow-hidden flex-shrink-0 bg-surface-container-high relative shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:-translate-y-1 transition-transform">
+<img class="w-full h-full object-cover" data-alt="A high-contrast headshot of an Asian female administrative worker with short black hair and glasses, wearing a white button-down shirt. The background is a solid flat light gray. The lighting is harsh and direct, creating strong distinct shadows that fit perfectly within a Neo-Brutalist UI design language." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtX2ux8_Yy03k_WTJDFjaF98-XOl7FYp515Q6LJ6K5-3Fw_RvyxN3bCn9NXp1M4xq0zV-p72JPqJ6U1kIs6QjMRVsSSNJO2W08FA5kBAg49K7NQl81JgIxdYlaIWrXNuh9ykiTtCpAjaXtfXoX23WIHfaNJKcNROdGqyIO8aA7_edj7wLIJwu3KAnrp3w9eLKwNGbodnt2dx--PAdWjhzavRtKQFXn2ajV-z1sthOLFHq_X0rulqUpdrHyq--ZAR2czVBTC64QfGCX">
+</div>
+<div class="flex flex-col flex-1">
+<h3 class="font-headline-sm text-headline-sm-mobile text-on-surface mb-1">Siti Aminah</h3>
+<div class="flex flex-wrap items-center gap-2 mt-1">
+<span class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider bg-surface-variant px-2 py-0.5 border border-black-charcoal rounded-md">Admin</span>
+<span class="font-label-bold text-label-bold text-black-charcoal uppercase tracking-wider bg-[#E5E4E2] px-2 py-0.5 border-2 border-black-charcoal rounded-md shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]">Platinum</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full border-2 border-black-charcoal bg-surface flex items-center justify-center text-on-surface shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</article>
+<!-- Member Card 3 -->
+<article class="bg-surface border-2 border-black-charcoal rounded-xl shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] p-4 flex items-center gap-4 active:scale-[0.98] active:shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100 cursor-pointer group">
+<div class="w-16 h-16 rounded-full border-2 border-black-charcoal overflow-hidden flex-shrink-0 bg-surface-container-high relative shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:-translate-y-1 transition-transform">
+<img class="w-full h-full object-cover" data-alt="A striking portrait of a young male professional facing the camera. He wears a casual but sharp dark polo shirt. The scene is illuminated with flat, bright studio lighting, isolating him cleanly against an off-white background, generating a minimalist and bold aesthetic suitable for high-contrast digital interfaces." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZk697Zw2KOE4BUJH0x6z7uNf1aWGw232deCVJFVzgrVljfTVHLbHrzz3X7uk-2KcnF4iklJJ2__nC6OMl48O0U1gd_KTq_zDZ9Fqmz_G0DOBijekOHRQlc97deYhJN01BkQampvz_XRBplEthzhc8caMIuGnkm4xr38zMS8X9iNMqjeLIiQ7bDdTXTVuN7KSvYnuwsLiUDI5z1tyrzzUhwws_jaGvu9kKkgM0J82tCNwyS8G4rfVRSovjDQAkClfem5-pljzfeAC8">
+</div>
+<div class="flex flex-col flex-1">
+<h3 class="font-headline-sm text-headline-sm-mobile text-on-surface mb-1">Andi Wijaya</h3>
+<div class="flex flex-wrap items-center gap-2 mt-1">
+<span class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider bg-surface-variant px-2 py-0.5 border border-black-charcoal rounded-md">Anggota</span>
+<span class="font-label-bold text-label-bold text-black-charcoal uppercase tracking-wider bg-[#C0C0C0] px-2 py-0.5 border-2 border-black-charcoal rounded-md shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]">Silver</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full border-2 border-black-charcoal bg-surface flex items-center justify-center text-on-surface shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</article>
+<!-- Member Card 4 -->
+<article class="bg-surface border-2 border-black-charcoal rounded-xl shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] p-4 flex items-center gap-4 active:scale-[0.98] active:shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100 cursor-pointer group">
+<div class="w-16 h-16 rounded-full border-2 border-black-charcoal overflow-hidden flex-shrink-0 bg-surface-container-high relative shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:-translate-y-1 transition-transform">
+<img class="w-full h-full object-cover" data-alt="A modern, high-definition portrait of an Asian female employee smiling softly. She wears a professional navy blue blazer over a bright red inner shirt, adding a pop of primary color. The lighting is flat and geometric, creating hard edges that resonate with a heavily structured, brutalist UI layout." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIufxcgxr-lbWz1F0ONVL1s7kMxmK6-AmJs-8JdyS3yonmWCDm0EqwVVg4COOl9T0W0iLxrjpNktl-oP26txpv2cPHcmdOcbtdHZCtz2YN0pgb8YxlbomtdAVUR4SH25C3b0SSYu9lVhGoHy2hO_s4q7yuNAzCIYv5gka9UZR756s38wwW8lOsQYaw2jVY9ycLV4KkiXGsm_ISRNxtKJcpeYMkXjUjPYd1rJoZmc8fT5BQUgA0t6EJScwvUUga7IjOiDwQ9oNwh_st">
+</div>
+<div class="flex flex-col flex-1">
+<h3 class="font-headline-sm text-headline-sm-mobile text-on-surface mb-1">Dewi Lestari</h3>
+<div class="flex flex-wrap items-center gap-2 mt-1">
+<span class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider bg-surface-variant px-2 py-0.5 border border-black-charcoal rounded-md">Anggota</span>
+<span class="font-label-bold text-label-bold text-black-charcoal uppercase tracking-wider bg-[#CD7F32] px-2 py-0.5 border-2 border-black-charcoal rounded-md shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]">Bronze</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full border-2 border-black-charcoal bg-surface flex items-center justify-center text-on-surface shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</article>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface rounded-full border-2 border-black-charcoal mb-margin-page mx-auto w-fit shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] fixed bottom-4 left-0 right-0 z-50 flex justify-center items-center gap-stack-gap px-6 py-2 md:hidden">
+<!-- Home (Inactive) -->
+<button class="text-on-surface-variant p-3 hover:bg-surface-container-high rounded-full flex items-center justify-center active:scale-95 transition-transform duration-100 flex-col gap-1">
+<span class="material-symbols-outlined">home</span>
+</button>
+<!-- Explore (Inactive) -->
+<button class="text-on-surface-variant p-3 hover:bg-surface-container-high rounded-full flex items-center justify-center active:scale-95 transition-transform duration-100 flex-col gap-1">
+<span class="material-symbols-outlined">explore</span>
+</button>
+<!-- Person (Active for Members List) -->
+<button class="bg-secondary-container text-on-secondary-container rounded-full p-3 flex items-center justify-center active:scale-95 transition-transform duration-100 flex-col gap-1 border-2 border-black-charcoal shadow-[2px_2px_0px_0px_rgba(34,34,34,1)]">
+<span class="material-symbols-outlined icon-fill">person</span>
+</button>
+</nav>
+</body></html>

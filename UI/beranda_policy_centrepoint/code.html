@@ -1,0 +1,238 @@
+<!DOCTYPE html><html class="light" lang="en" style="width: 390px; height: 1060px; overflow: hidden; position: relative;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Policy Centrepoint - Beranda</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1a1c1c",
+                        "tertiary": "#5e5d5d",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "primary-fixed-dim": "#ffb3b2",
+                        "surface-dim": "#dadada",
+                        "outline": "#8f6f6f",
+                        "on-primary-container": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#2f3131",
+                        "on-surface-variant": "#5b4040",
+                        "primary-fixed": "#ffdad9",
+                        "surface-container-low": "#f3f3f4",
+                        "on-primary-fixed-variant": "#92001f",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#93f7ba",
+                        "inverse-on-surface": "#f0f1f1",
+                        "secondary": "#006d41",
+                        "on-secondary-container": "#007144",
+                        "surface": "#f9f9f9",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#777676",
+                        "background": "#f9f9f9",
+                        "inverse-primary": "#ffb3b2",
+                        "surface-variant": "#e2e2e2",
+                        "bg-gray": "#EFECEC",
+                        "on-secondary-fixed": "#002110",
+                        "black-charcoal": "#222222",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f9f9f9",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#ffffff",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "outline-variant": "#e3bebd",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#77da9f",
+                        "primary-container": "#dc3545",
+                        "on-secondary-fixed-variant": "#00522f",
+                        "surface-container-high": "#e8e8e8",
+                        "border-slate": "#E2E8F0",
+                        "error-container": "#ffdad6",
+                        "primary": "#b9172f",
+                        "on-primary-fixed": "#410008",
+                        "on-background": "#1a1c1c",
+                        "surface-container": "#eeeeee",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#ba1830",
+                        "secondary-container": "#90f4b7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "inner-padding": "12px",
+                        "appbar-padding": "12px",
+                        "stack-gap": "16px",
+                        "margin-page": "16px",
+                        "gutter-grid": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Bricolage Grotesque"],
+                        "label-bold": ["Bricolage Grotesque"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "body-lg": ["Bricolage Grotesque"],
+                        "headline-md": ["Bricolage Grotesque"],
+                        "body-md": ["Bricolage Grotesque"],
+                        "display-lg-mobile": ["Bricolage Grotesque"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "800" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Bricolage Grotesque', sans-serif; background-color: #EFECEC; }
+        .my-divider-dashed { border-top: 2px dashed #222222; }
+        .my-divider-dotted { border-top: 2px dotted #222222; }
+        .brutalist-card { background-color: #ffffff; border: 2px solid #222222; box-shadow: 4px 4px 0px 0px #222222; transition: all 0.1s ease; }
+        .brutalist-card:active { box-shadow: 1px 1px 0px 0px #222222; transform: translate(3px, 3px); }
+        .brutalist-btn { background-color: #DC3545; color: #ffffff; border: 2px solid #222222; box-shadow: 4px 4px 0px 0px #222222; transition: transform 0.1s ease, box-shadow 0.1s ease; }
+        .brutalist-btn:active { box-shadow: 1px 1px 0px 0px #222222; transform: translate(3px, 3px) scale(0.95); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-bg-gray text-on-surface min-h-screen flex flex-col pb-32">
+<!-- TopAppBar -->
+<header class="sticky top-4 z-50 flex justify-between items-center px-4 py-2 bg-surface rounded-xl border-2 border-black-charcoal mt-margin-page mx-margin-page shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]">
+<button class="p-2 hover:bg-surface-variant rounded-full transition-transform duration-100 active:scale-95 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile md:text-headline-md font-bold text-on-surface tracking-tight">POLICY CENTREPOINT</h1>
+<button class="p-2 hover:bg-surface-variant rounded-full transition-transform duration-100 active:scale-95 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="user_profile_photo">account_circle</span>
+</button>
+</header>
+<main class="flex-grow p-margin-page space-y-stack-gap md:max-w-3xl md:mx-auto w-full">
+<!-- Carousel Banner -->
+<section class="brutalist-card rounded-xl overflow-hidden relative h-48 w-full group cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A dynamic, high-contrast digital banner illustration in a Neo-Brutalist style. The image features bold, abstract geometric shapes in stark black, pristine white, and vibrant primary red (#DC3545). The composition is energetic, suggesting an important announcement or forward momentum, with thick structural lines dividing the space. The lighting is flat and harsh, creating a graphic, poster-like aesthetic suitable for a modern policy dashboard." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1B5w8MhvnRyJJ_9h7rF9YUuKhsHi48SQo8AUc93DsqQRq-VXaAflBRUhuzu7S11eSqK2TUnR7ddjbJW7o66z9ekUDjMBR-L2YGfzLvnyNQFxVKLOGZZf8639TrAdBlYV90oOS7vLVZfJxxw2_LSFn2VHgRB7e33sslXRAGrbJupJBEer_pDuHzh6vqc3zI2d4Ok9JRQD6k2C_vgl2lQIwRG2VAgRZvkUPZUIWNX4kNeFWY3YdnNS_tl5-e8W8gWrK241Zpy78e53T')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black-charcoal/80 to-transparent flex flex-col justify-end p-4">
+<span class="bg-primary-container text-on-primary-container font-label-bold text-label-bold px-2 py-1 rounded w-fit border border-black-charcoal mb-2">ANNOUNCEMENT</span>
+<h2 class="font-headline-sm text-headline-sm text-surface-container-lowest drop-shadow-md">New Policy Guidelines Released for Q3</h2>
+</div>
+</section>
+<!-- User Card -->
+<section class="brutalist-card rounded-xl p-4 flex items-center justify-between"><div class="flex items-center gap-4 w-full">
+<div class="w-20 h-20 rounded-full border-2 border-black-charcoal overflow-hidden bg-surface-container-high flex-shrink-0 shadow-[2px_2px_0px_0px_rgba(34,34,34,1)]">
+<img class="w-full h-full object-cover" data-alt="A stylized, flat-color portrait illustration of a professional individual in a Neo-Brutalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWEVeCjl798m-DR9kiV67L05ALbJp4KWeo44kTtrviFBAE2zmQK0Ke5q77WLbD8kjXl1nBjxrjj-wZKpzod5x5qfuyRYW8F1uptDF-FovRIsgNP-72m-EbG1qOPRESE7XWrI22hXEtOibKdbXWYqHB2pH8IR9tAoLSrJ4DngwPVDJkK2G0P3wENH-Mp1iBt-oJvmc0MQiVOBt3OmfcIYaynm0SlwHIvgMFi_vIpoo_stJ6k_2Aqr9oUTNPY7dKeyUbB9lOk1y8HB2_">
+</div>
+<div class="flex flex-col flex-grow">
+<h3 class="font-headline-md text-headline-md font-extrabold text-black-charcoal leading-tight">Ahmad Ridhwan</h3>
+<p class="font-body-md text-body-md text-tertiary">Senior Policy Analyst</p>
+</div>
+<div class="flex flex-col items-end gap-2 pl-4 border-l-2 border-black-charcoal">
+<span class="bg-secondary-container text-on-secondary-container font-label-bold text-label-bold px-3 py-1.5 rounded-full border-2 border-black-charcoal flex items-center gap-1 shadow-[2px_2px_0px_0px_rgba(34,34,34,1)]">
+<span class="material-symbols-outlined text-[16px]">stars</span> Gold Member
+</span>
+<span class="font-headline-sm text-headline-sm text-primary flex items-center gap-1 font-extrabold">
+<span class="material-symbols-outlined">monetization_on</span> 1250 Pts
+</span>
+</div>
+</div></section>
+<!-- Quick Access Menu (Bento Style) -->
+<section class="grid grid-cols-3 gap-gutter-grid">
+<button class="brutalist-card rounded-xl p-4 flex flex-col items-center justify-center gap-2 aspect-square group">
+<div class="bg-surface-container-high p-3 rounded-full border border-black-charcoal group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="groups">groups</span>
+</div>
+<span class="font-label-bold text-label-bold text-center">All Members</span>
+</button>
+<button class="brutalist-card rounded-xl p-4 flex flex-col items-center justify-center gap-2 aspect-square group">
+<div class="bg-surface-container-high p-3 rounded-full border border-black-charcoal group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="event_note">event_note</span>
+</div>
+<span class="font-label-bold text-label-bold text-center">Kegiatan</span>
+</button>
+<button class="brutalist-card rounded-xl p-4 flex flex-col items-center justify-center gap-2 aspect-square group">
+<div class="bg-surface-container-high p-3 rounded-full border border-black-charcoal group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<span class="font-label-bold text-label-bold text-center">Uang Khas</span>
+</button>
+</section>
+<!-- Latest News -->
+<section class="space-y-4">
+<div class="flex justify-between items-end mb-2">
+<h2 class="font-headline-md text-headline-md font-extrabold border-b-4 border-primary pb-1">Berita Terbaru</h2>
+<button class="font-label-bold text-label-bold text-tertiary hover:text-black-charcoal underline">View All</button>
+</div>
+<div class="flex overflow-x-auto hide-scroll pb-4 -mx-margin-page px-margin-page snap-x gap-6">
+<!-- News Card 1 -->
+<div class="brutalist-card min-w-[280px] rounded-xl overflow-hidden flex-shrink-0 snap-center flex flex-col">
+<div class="h-32 bg-surface-container-high relative border-b-2 border-black-charcoal">
+<img class="w-full h-full object-cover" data-alt="A stylized, architectural illustration of a modern government building in a Neo-Brutalist style. The image uses stark white and light gray blocky forms outlined by thick black strokes. A vibrant red sky provides high contrast. The composition is rigid and geometric, conveying authority and structure suitable for a policy news thumbnail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjUIWGnsPkNov8keRo71K5mkeWlD19xF9QLKVyNZSlrFr22AyLTQm_VrRvjtZetw4VTzHGZoJfjEF9Bg0_eJ-rWAmtbqOYv1BMZ9MFhsMpXI0F0JgM_-VKjE6FPn0DC9aPyphEQoIE2p1RUiG55N_KiVDd8fYTg8bTTD9xqCdkfGrK7MM65NACYvr4goRdXHrGLS27GfwaOquEgDVASwUQ2Xic3BPlvL3PjoRBh4ULDvbCiZmfCEkJ5BLVNaWfflcMW_Bs7Ry0KxjB">
+</div>
+<div class="p-4 flex flex-col flex-grow justify-between gap-2"><div class="space-y-1">
+<span class="font-label-bold text-label-bold text-tertiary">Oct 24, 2023</span>
+<h3 class="font-headline-sm text-headline-sm font-bold line-clamp-2">Annual Policy Review Meeting Scheduled</h3>
+</div>
+<div class="mt-4 pt-2 border-t border-black-charcoal/10">
+<button class="font-label-bold text-label-bold text-primary flex items-center gap-1 self-start hover:underline group">
+Read More <span class="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</div></div>
+</div>
+<!-- News Card 2 -->
+<div class="brutalist-card min-w-[280px] rounded-xl overflow-hidden flex-shrink-0 snap-center flex flex-col">
+<div class="h-32 bg-surface-container-high relative border-b-2 border-black-charcoal">
+<img class="w-full h-full object-cover" data-alt="An abstract graphical representation of financial data and charts in a Neo-Brutalist aesthetic. The scene features bold, chunky bar graphs and jagged trend lines drawn with thick black borders on a stark white background. Areas of the graph are filled with bright primary red (#DC3545) to indicate growth. The overall look is flat, aggressive, and highly structured." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeq_6gFxy8gn9Je1g_xZHb5j-HUPSP0B5STxs1DHkFjw5whs6zydLG_1aptg3ozfhG6_RgsihUStGqM7jfbDQabzwWAQmfKT6VmyXP80KbYkvfOhUAQ1wwj6_6chs5FdiLydwlaYbKhtsC6_7PFnSDxmtpSZ3xso2T8uldI914LoHtQjICE77Eplq46kbMxJb-U94fqxLCrI56CeRedNEphk3CaMthCdKSLNyHGZSakZLK_pMNKVh9X4SG9qGcC_kGMgebIQFoqMKD">
+</div>
+<div class="p-4 flex flex-col flex-grow justify-between gap-2"><div class="space-y-1">
+<span class="font-label-bold text-label-bold text-tertiary">Oct 20, 2023</span>
+<h3 class="font-headline-sm text-headline-sm font-bold line-clamp-2">Budget Allocations for Next Fiscal Year</h3>
+</div>
+<div class="mt-4 pt-2 border-t border-black-charcoal/10">
+<button class="font-label-bold text-label-bold text-primary flex items-center gap-1 self-start hover:underline group">
+Read More <span class="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</div></div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-4 left-0 right-0 z-50 flex justify-center items-center gap-stack-gap px-6 py-2 bg-surface rounded-full border-2 border-black-charcoal mb-margin-page mx-auto w-fit shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] md:hidden">
+<button class="bg-secondary-container text-on-secondary-container rounded-full p-3 scale-95 transition-transform duration-100 flex flex-col items-center">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+</button>
+<button class="text-on-surface-variant p-3 hover:bg-surface-container-high rounded-full transition-colors flex flex-col items-center">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+</button>
+<button class="text-on-surface-variant p-3 hover:bg-surface-container-high rounded-full transition-colors flex flex-col items-center">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+</nav>
+<!-- Web Nav (Hidden on mobile) -->
+<nav class="hidden md:flex fixed bottom-4 left-0 right-0 z-50 justify-center items-center gap-stack-gap px-6 py-2 bg-surface rounded-full border-2 border-black-charcoal mb-margin-page mx-auto w-fit shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]">
+<button class="bg-secondary-container text-on-secondary-container rounded-full px-6 py-3 scale-95 transition-transform duration-100 flex items-center gap-2 font-label-bold text-label-bold">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span> Home
+        </button>
+<button class="text-on-surface-variant px-6 py-3 hover:bg-surface-container-high rounded-full transition-colors flex items-center gap-2 font-label-bold text-label-bold">
+<span class="material-symbols-outlined" data-icon="explore">explore</span> Explore
+        </button>
+<button class="text-on-surface-variant px-6 py-3 hover:bg-surface-container-high rounded-full transition-colors flex items-center gap-2 font-label-bold text-label-bold">
+<span class="material-symbols-outlined" data-icon="person">person</span> Profile
+        </button>
+</nav>
+
+
+</body></html>

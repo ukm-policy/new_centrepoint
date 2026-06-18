@@ -1,0 +1,269 @@
+<!DOCTYPE html><html lang="id"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>POLICY CENTREPOINT - Profil Anggota</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#b9172f",
+                        "on-secondary-fixed": "#002110",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#ffffff",
+                        "surface-container-low": "#f3f3f4",
+                        "primary-container": "#dc3545",
+                        "inverse-on-surface": "#f0f1f1",
+                        "border-slate": "#E2E8F0",
+                        "surface-tint": "#ba1830",
+                        "tertiary-fixed": "#e5e2e1",
+                        "on-primary-fixed": "#410008",
+                        "secondary-fixed-dim": "#77da9f",
+                        "surface-dim": "#dadada",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-surface": "#1a1c1c",
+                        "surface-variant": "#e2e2e2",
+                        "surface-bright": "#f9f9f9",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#90f4b7",
+                        "surface-container": "#eeeeee",
+                        "black-charcoal": "#222222",
+                        "primary-fixed": "#ffdad9",
+                        "secondary": "#006d41",
+                        "error-container": "#ffdad6",
+                        "background": "#f9f9f9",
+                        "outline-variant": "#e3bebd",
+                        "on-primary-container": "#ffffff",
+                        "tertiary": "#5e5d5d",
+                        "surface-container-high": "#e8e8e8",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "inverse-primary": "#ffb3b2",
+                        "on-secondary-fixed-variant": "#00522f",
+                        "bg-gray": "#EFECEC",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "on-surface-variant": "#5b4040",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2f3131",
+                        "on-primary-fixed-variant": "#92001f",
+                        "surface": "#f9f9f9",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#93f7ba",
+                        "primary-fixed-dim": "#ffb3b2",
+                        "on-secondary-container": "#007144",
+                        "on-background": "#1a1c1c",
+                        "outline": "#8f6f6f",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "tertiary-container": "#777676"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "inner-padding": "12px",
+                        "gutter-grid": "12px",
+                        "stack-gap": "16px",
+                        "margin-page": "16px",
+                        "appbar-padding": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Bricolage Grotesque"],
+                        "headline-sm": ["Bricolage Grotesque"],
+                        "display-lg-mobile": ["Bricolage Grotesque"],
+                        "label-bold": ["Bricolage Grotesque"],
+                        "display-lg": ["Bricolage Grotesque"],
+                        "body-md": ["Bricolage Grotesque"],
+                        "body-lg": ["Bricolage Grotesque"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "800" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #EFECEC; }
+        .brutalist-card {
+            background-color: #FFFFFF;
+            border: 2px solid #222222;
+            box-shadow: 4px 4px 0px 0px #222222;
+        }
+        .brutalist-border {
+            border: 2px solid #222222;
+        }
+        .my-divider {
+            border-bottom: 2px dashed #E2E8F0;
+        }
+        .bounce-tapper:active {
+            transform: scale(0.95);
+            box-shadow: 1px 1px 0px 0px #222222;
+            transition: all 0.1s ease-in-out;
+        }
+        .bounce-tapper {
+            transition: all 0.2s ease-out;
+        }
+        
+        /* Apply font family globally to ensure Bricolage Grotesque is used */
+        * {
+            font-family: 'Bricolage Grotesque', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-bg-gray min-h-screen text-on-surface antialiased flex flex-col relative pb-[100px]">
+<!-- TopAppBar -->
+<header class="sticky top-4 z-50 flex justify-between items-center px-4 py-2 bg-surface dark:bg-surface-container-high rounded-xl border-2 border-black-charcoal mt-margin-page mx-margin-page shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]">
+<button aria-label="Back" class="w-10 h-10 flex items-center justify-center rounded-full border-2 border-black-charcoal bg-white bounce-tapper hover:bg-surface-variant text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="flex-1 text-center font-headline-sm text-headline-sm-mobile font-bold text-on-surface dark:text-inverse-on-surface truncate px-2">
+            Profil Anggota
+        </div>
+<div class="w-10 h-10 rounded-full border-2 border-black-charcoal overflow-hidden bg-white">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A clean, minimalist abstract pattern replacing a user profile photo, featuring bold geometric shapes in pure white, deep charcoal, and striking primary red, high contrast neo-brutalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyuCT29E1Lm93KNJ72NqLk5afoky-wWYzkcFsyvpuW6cp2AHbz0N7oXPt3DN_d19Dwh5mc6IcopEe27sBqZXL8ml1f8agP_gV1cFHqaavNaTaKV_gjy6JDe2xeNMgSnMBGVOSCaSVI__18ULfsP2q7p1An9OxVrGQqWskZ-gaHAkpMjrheYyvPFxUDrOG_r5pPcvazRfwDNohlL-JDeRk7bysoeK-L7sr6gCLx5zspvgVP99gb35IyXs85jt2Zze-848RCBD6CgM5B">
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 px-margin-page py-6 flex flex-col gap-6 max-w-2xl mx-auto w-full">
+<!-- Profile Header Section -->
+<section class="brutalist-card rounded-xl p-6 flex flex-col items-center text-center relative overflow-hidden">
+<!-- Decorative background element -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary-container rounded-full opacity-20 blur-xl"></div>
+<div class="w-28 h-28 rounded-full border-2 border-black-charcoal overflow-hidden mb-4 shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] bg-white z-10">
+<img alt="Profile Photo" class="w-full h-full object-cover" data-alt="A striking portrait photo of an Indonesian professional, bright natural lighting, confident expression, neo-brutalist graphic novel style with heavy outlines and high contrast colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArcIcVTV3efO6IwphUQkli2FU2_jkZKA-aljF8yfb_aVQ3Vd94ZnAhuJwZq9DvASgtpJ9WPR7oIL74i_z6Bw5t1YunDoEjaGKh4iDwZnouwm-7KOsvzOt_8er2F1Y1uCNMg3vHZy_CyZ1--i7-8gEaJfmcbla4LVy5p29E3JuYetawTGB2Iuj6DQijFhmeI5i4aYYCXtU7vzd1eysM5GM3lKbYiVsxRJSJNoAgLMGHoLDgSyLBa0rOhiHaBSwhtPhOqLQ0Xel9mdhi">
+</div>
+<h1 class="font-headline-md text-headline-md font-bold mb-1 z-10">Budi Santoso</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 z-10">@budisantoso_policy</p>
+<!-- Badge Level -->
+<div class="inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2 rounded-full border-2 border-black-charcoal shadow-[2px_2px_0px_0px_rgba(34,34,34,1)] z-10 font-label-bold text-label-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-[16px]" data-icon="workspace_premium" data-weight="fill" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                Gold Member
+            </div>
+</section>
+<!-- Statistics Section (Bento Layout) -->
+<section class="grid grid-cols-2 gap-4">
+<div class="brutalist-card rounded-xl p-4 flex flex-col justify-between">
+<div class="flex items-center gap-2 mb-2 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="stars">stars</span>
+<span class="font-label-bold text-label-bold uppercase">Total Poin</span>
+</div>
+<div class="font-display-lg-mobile text-display-lg-mobile font-extrabold text-primary">
+                    1250 <span class="text-body-md font-normal text-on-surface-variant">Pts</span>
+</div>
+</div>
+<div class="brutalist-card rounded-xl p-4 flex flex-col justify-between">
+<div class="flex items-center gap-2 mb-2 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+<span class="font-label-bold text-label-bold uppercase">Kehadiran</span>
+</div>
+<div class="font-display-lg-mobile text-display-lg-mobile font-extrabold text-on-surface">
+                    85%
+                </div>
+</div>
+</section>
+<!-- Information Section -->
+<section class="brutalist-card rounded-xl flex flex-col overflow-hidden">
+<div class="bg-surface-variant p-4 border-b-2 border-black-charcoal flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+<h2 class="font-headline-sm text-headline-sm font-bold">Informasi Detail</h2>
+</div>
+<div class="p-0">
+<!-- List Item 1 -->
+<div class="flex items-center justify-between p-4 my-divider">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border-2 border-black-charcoal">
+<span class="material-symbols-outlined text-[16px]" data-icon="lan">lan</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-surface-variant">Divisi</span>
+</div>
+<span class="font-body-md text-body-md font-bold">Riset &amp; Pengembangan</span>
+</div>
+<!-- List Item 2 -->
+<div class="flex items-center justify-between p-4 my-divider">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border-2 border-black-charcoal">
+<span class="material-symbols-outlined text-[16px]" data-icon="mail">mail</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-surface-variant">Email</span>
+</div>
+<span class="font-body-md text-body-md font-bold">budi@policy.or.id</span>
+</div>
+<!-- List Item 3 -->
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border-2 border-black-charcoal">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_month">calendar_month</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-on-surface-variant">Tanggal Bergabung</span>
+</div>
+<span class="font-body-md text-body-md font-bold">12 Jan 2023</span>
+</div>
+</div>
+</section>
+<!-- Action Button -->
+<button class="w-full py-4 mt-2 bg-white text-on-surface font-label-bold text-label-bold uppercase tracking-widest border-2 border-black-charcoal shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] rounded-xl bounce-tapper flex justify-center items-center gap-2">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+            Edit Profil
+        </button>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-4 left-0 right-0 z-50 flex justify-center items-center gap-stack-gap px-6 py-2 bg-surface dark:bg-surface-container-high rounded-full border-2 border-black-charcoal mb-margin-page mx-auto w-fit shadow-[4px_4px_0px_0px_rgba(34,34,34,1)] md:hidden">
+<!-- Home (Inactive) -->
+<button aria-label="Home" class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:bg-surface-container-high bounce-tapper rounded-full">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</button>
+<!-- Explore (Inactive) -->
+<button aria-label="Explore" class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:bg-surface-container-high bounce-tapper rounded-full">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+</button>
+<!-- Person (Active) - Mapping "Profil Anggota" to "person" -->
+<button aria-label="Person" class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full p-3 hover:bg-surface-container-high bounce-tapper scale-95 transition-transform duration-100">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction scripts could go here
+        document.addEventListener('DOMContentLoaded', () => {
+            const tappers = document.querySelectorAll('.bounce-tapper');
+            tappers.forEach(tapper => {
+                tapper.addEventListener('mousedown', () => {
+                    tapper.style.transform = 'scale(0.95)';
+                    if(tapper.classList.contains('shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]')) {
+                        tapper.classList.remove('shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]');
+                        tapper.classList.add('shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]');
+                    }
+                });
+                tapper.addEventListener('mouseup', () => {
+                    tapper.style.transform = '';
+                    if(tapper.classList.contains('shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]')) {
+                        tapper.classList.remove('shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]');
+                        tapper.classList.add('shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]');
+                    }
+                });
+                tapper.addEventListener('mouseleave', () => {
+                    tapper.style.transform = '';
+                    if(tapper.classList.contains('shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]')) {
+                        tapper.classList.remove('shadow-[1px_1px_0px_0px_rgba(34,34,34,1)]');
+                        tapper.classList.add('shadow-[4px_4px_0px_0px_rgba(34,34,34,1)]');
+                    }
+                });
+            });
+        });
+    </script>
+</body></html>

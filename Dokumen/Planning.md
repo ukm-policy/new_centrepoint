@@ -1,18 +1,54 @@
 # Planning: Policy Centrepoint — Flutter UI Implementation
 
-> Design System: **Neo-Centric Brutalism**
-> Stack: Flutter (Dart), `lib/` sebagai root source
+> Design System: **Neo-Centric Brutalism**  
+> Stack: Flutter (Dart), `lib/` sebagai root source  
+> Versi: 3.0 — Diperbarui 20 Juni 2026
 
 ---
 
 ## 1. Daftar Layar (Screens)
 
-| # | Folder UI | Nama Layar | Route |
-|---|-----------|------------|-------|
-| 1 | `login_policy_centrepoint` | Login | `/login` |
-| 2 | `beranda_policy_centrepoint` | Beranda (Home) | `/` |
-| 3 | `absensi_policy_centrepoint` | Absensi | `/absensi` |
-| 4 | `list_berita_policy_centrepoint_refined` | Berita & Pengumuman | `/berita` |
+### Sudah Diimplementasi ✅
+
+| # | Nama Layar | Route | Status |
+|---|------------|-------|--------|
+| 1 | Login | `/login` | ✅ Done |
+| 2 | Beranda | `/` | ✅ Done |
+| 3 | List Berita | `/berita` | ✅ Done |
+| 4 | Detail Berita | `/berita/:id` | ✅ Done |
+| 5 | List Kegiatan | `/kegiatan` | ✅ Done |
+| 6 | Detail Kegiatan | `/kegiatan/:id` | ✅ Done |
+| 7 | Riwayat Kegiatan | `/kegiatan/riwayat` | ✅ Done |
+| 8 | Daftar Anggota | `/anggota` | ✅ Done |
+| 9 | Profil Anggota | `/anggota/:id` | ✅ Done |
+| 10 | Absensi | `/absensi` | ✅ Done |
+| 11 | Riwayat Absensi Sekret | `/absensi/riwayat-sekret` | ✅ Done |
+| 12 | Uang Khas | `/uang-khas` | ✅ Done |
+| 13 | Menu & Setelan | `/menu` | ✅ Done |
+| 14 | Poin Keaktifan | `/poin` | ✅ Done |
+| 15 | Inbox | `/inbox` | ✅ Done |
+| 16 | Detail Pengumuman | `/inbox/pengumuman/:id` | ✅ Done |
+
+### Belum Diimplementasi 🔲
+
+| # | Nama Layar | Route | Prioritas |
+|---|------------|-------|-----------|
+| 17 | Register | `/register` | Tinggi |
+| 18 | Lupa Password | `/forgot-password` | Tinggi |
+| 19 | Edit Profil | `/profil/edit` | Tinggi |
+| 20 | Generate QR Absensi | `/admin/qr-generator` | Tinggi |
+| 21 | Kelola Kegiatan (Admin) | `/admin/kegiatan` | Sedang |
+| 22 | Kelola Anggota (Admin) | `/admin/anggota` | Sedang |
+| 23 | Kelola Uang Khas (Admin) | `/admin/uang-khas` | Sedang |
+| 24 | Kelola Berita (Admin) | `/admin/berita` | Sedang |
+| 25 | Kirim Pengumuman | `/admin/pengumuman/buat` | Sedang |
+| 26 | Kelola Periode | `/admin/periode` | Rendah |
+| 27 | Assign Jabatan | `/admin/periode/:id/jabatan` | Rendah |
+| 28 | Notifikasi Settings | `/menu/notifikasi` | Rendah |
+
+---
+
+## 2. Struktur Direktori `lib/` (Current)
 | 5 | `detail_berita_policy_centrepoint` | Detail Berita | `/berita/:id` |
 | 6 | `list_kegiatan_policy_centrepoint` | List Kegiatan | `/kegiatan` |
 | 7 | `detail_kegiatan_policy_centrepoint` | Detail Kegiatan | `/kegiatan/:id` |
@@ -24,55 +60,56 @@
 
 ---
 
-## 2. Struktur Direktori `lib/`
+## 2. Struktur Direktori `lib/` (Current)
 
 ```
 lib/
 ├── main.dart
-├── app.dart                        # MaterialApp + ThemeData + routing
+├── app.dart                         # GoRouter + ShellRoute + _AppShell
 ├── core/
 │   ├── theme/
-│   │   ├── app_colors.dart         # Semua konstanta warna
-│   │   ├── app_typography.dart     # TextStyle (Bricolage Grotesque)
-│   │   └── app_theme.dart          # ThemeData utama
+│   │   ├── app_colors.dart          # Semua konstanta warna + BoxShadow
+│   │   ├── app_typography.dart      # TextStyle (Bricolage Grotesque)
+│   │   └── app_theme.dart           # ThemeData utama
 │   └── constants/
-│       └── app_spacing.dart        # Spacing tokens (margin, gutter, dll)
+│       └── app_spacing.dart         # Spacing tokens
 ├── shared/
 │   └── widgets/
-│       ├── brutalist_card.dart     # Card dengan 2px border + hard shadow
-│       ├── brutalist_button.dart   # Primary & secondary button + BounceTapper
-│       ├── my_divider.dart         # Dashed/dotted divider
-│       ├── floating_app_bar.dart   # AppBar melayang dengan border+shadow
-│       └── bottom_nav_bar.dart     # Capsule bottom nav melayang
+│       ├── brutalist_card.dart      # Card 2px border + hard shadow + tap animation
+│       ├── brutalist_button.dart    # Primary & secondary button
+│       ├── my_divider.dart          # Dashed divider
+│       ├── floating_app_bar.dart    # AppBar melayang — hamburger/back + mail badge
+│       ├── bottom_nav_bar.dart      # Capsule bottom nav + Absensi FAB
+│       └── app_drawer.dart          # Drawer navigasi dengan item kondisional
 └── features/
-    ├── auth/
+    ├── auth/screens/
+    │   └── login_screen.dart
+    ├── beranda/screens/
+    │   └── beranda_screen.dart
+    ├── berita/screens/
+    │   ├── list_berita_screen.dart
+    │   └── detail_berita_screen.dart
+    ├── kegiatan/screens/
+    │   ├── list_kegiatan_screen.dart
+    │   ├── detail_kegiatan_screen.dart
+    │   └── riwayat_kegiatan_screen.dart
+    ├── anggota/screens/
+    │   ├── list_members_screen.dart
+    │   └── detail_member_screen.dart
+    ├── absensi/screens/
+    │   ├── absensi_screen.dart
+    │   └── riwayat_sekret_screen.dart
+    ├── uang_khas/screens/
+    │   └── uang_khas_screen.dart
+    ├── poin/screens/
+    │   └── poin_screen.dart         # Tab Riwayat + Leaderboard
+    ├── inbox/
+    │   ├── inbox_data.dart          # Model & mock data (InboxNotifItem, InboxPengumumanItem)
     │   └── screens/
-    │       └── login_screen.dart
-    ├── beranda/
-    │   └── screens/
-    │       └── beranda_screen.dart
-    ├── berita/
-    │   └── screens/
-    │       ├── list_berita_screen.dart
-    │       └── detail_berita_screen.dart
-    ├── kegiatan/
-    │   └── screens/
-    │       ├── list_kegiatan_screen.dart
-    │       ├── detail_kegiatan_screen.dart
-    │       └── riwayat_kegiatan_screen.dart
-    ├── anggota/
-    │   └── screens/
-    │       ├── list_members_screen.dart
-    │       └── detail_member_screen.dart
-    ├── absensi/
-    │   └── screens/
-    │       └── absensi_screen.dart
-    ├── uang_khas/
-    │   └── screens/
-    │       └── uang_khas_screen.dart
-    └── menu/
-        └── screens/
-            └── menu_setelan_screen.dart
+    │       ├── inbox_screen.dart
+    │       └── detail_pengumuman_screen.dart
+    └── menu/screens/
+        └── menu_setelan_screen.dart
 ```
 
 ---

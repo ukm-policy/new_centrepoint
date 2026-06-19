@@ -48,16 +48,7 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: FloatingAppBar(
-            title: 'Berita & Pengumuman',
-            trailing: GestureDetector(
-              onTap: () => context.go('/menu'),
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: Icon(Icons.menu, color: AppColors.onSurfaceVariant),
-              ),
-            ),
-          ),
+          child: FloatingAppBar(title: 'Berita & Pengumuman'),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(

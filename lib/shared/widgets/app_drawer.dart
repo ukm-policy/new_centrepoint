@@ -265,6 +265,9 @@ class _DrawerItem extends StatelessWidget {
   final IconData icon, activeIcon;
   final String label, route, currentRoute;
 
+  // Hanya 4 tab bottom nav yang pakai go(); sisanya push() agar back berfungsi
+  static const _tabRoutes = {'/', '/berita', '/kegiatan', '/menu'};
+
   bool get _isActive {
     if (route == '/') return currentRoute == '/';
     return currentRoute.startsWith(route);
@@ -277,7 +280,11 @@ class _DrawerItem extends StatelessWidget {
       child: GestureDetector(
         onTap: () {
           Navigator.of(context).pop();
-          context.go(route);
+          if (_tabRoutes.contains(route)) {
+            context.go(route);
+          } else {
+            context.push(route);
+          }
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),

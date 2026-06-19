@@ -8,10 +8,10 @@ class AppColors {
   static const Color onPrimary = Color(0xFFFFFFFF);
   static const Color onPrimaryContainer = Color(0xFFFFFFFF);
 
-  static const Color secondary = Color(0xFF006D41);
+  static const Color secondary = Color(0xFF7A6500);
   static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color secondaryContainer = Color(0xFF90F4B7);
-  static const Color onSecondaryContainer = Color(0xFF007144);
+  static const Color secondaryContainer = Color(0xFFFDFBD4);
+  static const Color onSecondaryContainer = Color(0xFF2B2100);
 
   static const Color tertiary = Color(0xFF5E5D5D);
   static const Color onTertiary = Color(0xFFFFFFFF);

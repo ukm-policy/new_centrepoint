@@ -210,7 +210,7 @@ class _AbsensiScreenState extends State<AbsensiScreen>
                   _sekretSubmitted = false;
                 }),
                 onSubmit: _submitSekret,
-                onLihatRiwayat: () => context.go('/absensi/riwayat-sekret'),
+                onLihatRiwayat: () => context.push('/absensi/riwayat-sekret'),
               ),
             ]),
           ),

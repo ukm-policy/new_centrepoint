@@ -140,7 +140,7 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
               ..._filtered.map((b) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
                     child: BrutalistCard(
-                      onTap: () => context.go('/berita/${b.id}'),
+                      onTap: () => context.push('/berita/${b.id}'),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

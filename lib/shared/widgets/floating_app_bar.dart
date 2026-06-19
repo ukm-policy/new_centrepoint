@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -8,14 +9,14 @@ class FloatingAppBar extends StatelessWidget {
     super.key,
     this.title = 'POLICY CENTREPOINT',
     this.showBack = false,
-    this.onProfileTap,
     this.trailing,
+    this.inboxCount = 0,
   });
 
   final String title;
   final bool showBack;
-  final VoidCallback? onProfileTap;
   final Widget? trailing;
+  final int inboxCount;
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +61,9 @@ class FloatingAppBar extends StatelessWidget {
               ),
             ),
             trailing ??
-                _AppBarIconButton(
-                  icon: Icons.account_circle_outlined,
-                  onTap: onProfileTap,
+                _InboxBell(
+                  count: inboxCount,
+                  onTap: () => context.push('/inbox'),
                 ),
           ],
         ),
@@ -87,6 +88,53 @@ class _AppBarIconButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radius * 4),
         ),
         child: Icon(icon, color: AppColors.onSurfaceVariant, size: 24),
+      ),
+    );
+  }
+}
+
+class _InboxBell extends StatelessWidget {
+  const _InboxBell({required this.count, required this.onTap});
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Icon(Icons.mail_outline,
+                color: AppColors.onSurfaceVariant, size: 24),
+            if (count > 0)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryContainer,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.surface, width: 1.5),
+                  ),
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Text(
+                    count > 9 ? '9+' : '$count',
+                    style: const TextStyle(
+                      color: AppColors.onPrimaryContainer,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

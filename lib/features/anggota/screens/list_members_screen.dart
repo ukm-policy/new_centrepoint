@@ -154,7 +154,7 @@ class _MemberCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BrutalistCard(
-      onTap: () => context.go('/anggota/${member.id}'),
+      onTap: () => context.push('/anggota/${member.id}'),
       padding: const EdgeInsets.all(AppSpacing.innerPadding),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

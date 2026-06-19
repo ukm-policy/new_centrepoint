@@ -34,7 +34,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
     _QuickMenuData(icon: Icons.account_balance_wallet, label: 'Uang Khas', route: '/uang-khas', isPush: true),
     _QuickMenuData(icon: Icons.qr_code_scanner, label: 'Absensi', route: '/absensi', isPush: true),
     _QuickMenuData(icon: Icons.newspaper, label: 'Berita', route: '/berita'),
-    _QuickMenuData(icon: Icons.settings, label: 'Menu', route: '/menu'),
+    _QuickMenuData(icon: Icons.workspace_premium, label: 'Poin', route: '/poin', isPush: true),
   ];
 
   final _newsList = const [
@@ -67,7 +67,6 @@ class _BerandaScreenState extends State<BerandaScreen> {
       slivers: [
         SliverToBoxAdapter(
           child: FloatingAppBar(
-            onProfileTap: () => context.go('/anggota/me'),
           ),
         ),
         SliverPadding(
@@ -239,6 +238,7 @@ class _UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BrutalistCard(
+      onTap: () => context.push('/poin'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
@@ -479,7 +479,7 @@ class _NewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BrutalistCard(
-      onTap: () => context.go('/berita/${data.id}'),
+      onTap: () => context.push('/berita/${data.id}'),
       child: SizedBox(
         width: 240,
         child: Column(

@@ -68,7 +68,12 @@ class MenuSetelanScreen extends StatelessWidget {
                 _MenuItem(
                   icon: Icons.person_outline,
                   label: 'Edit Profil',
-                  onTap: () => context.go('/anggota/me'),
+                  onTap: () => context.push('/anggota/me'),
+                ),
+                _MenuItem(
+                  icon: Icons.workspace_premium_outlined,
+                  label: 'Poin Keaktifan',
+                  onTap: () => context.push('/poin'),
                 ),
                 _MenuItem(
                   icon: Icons.shield_outlined,

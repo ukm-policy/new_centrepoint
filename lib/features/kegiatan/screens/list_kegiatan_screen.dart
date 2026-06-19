@@ -61,7 +61,7 @@ class _ListKegiatanScreenState extends State<ListKegiatanScreen> {
           child: FloatingAppBar(
             title: 'Kegiatan',
             trailing: GestureDetector(
-              onTap: () => context.go('/kegiatan/riwayat'),
+              onTap: () => context.push('/kegiatan/riwayat'),
               child: Container(
                 margin: const EdgeInsets.all(4),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -114,7 +114,7 @@ class _ListKegiatanScreenState extends State<ListKegiatanScreen> {
               ..._filtered.map((k) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
                 child: BrutalistCard(
-                  onTap: () => context.go('/kegiatan/${k.id}'),
+                  onTap: () => context.push('/kegiatan/${k.id}'),
                   padding: const EdgeInsets.all(AppSpacing.innerPadding + 4),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [

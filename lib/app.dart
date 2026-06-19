@@ -15,6 +15,9 @@ import 'features/absensi/screens/absensi_screen.dart';
 import 'features/absensi/screens/riwayat_sekret_screen.dart';
 import 'features/uang_khas/screens/uang_khas_screen.dart';
 import 'features/menu/screens/menu_setelan_screen.dart';
+import 'features/poin/screens/poin_screen.dart';
+import 'features/inbox/screens/inbox_screen.dart';
+import 'features/inbox/screens/detail_pengumuman_screen.dart';
 import 'shared/widgets/bottom_nav_bar.dart';
 import 'shared/widgets/app_drawer.dart';
 
@@ -84,8 +87,23 @@ final _router = GoRouter(
           builder: (_, _) => const UangKhasScreen(),
         ),
         GoRoute(
+          path: '/poin',
+          builder: (_, _) => const PoinScreen(),
+        ),
+        GoRoute(
           path: '/menu',
           builder: (_, _) => const MenuSetelanScreen(),
+        ),
+        GoRoute(
+          path: '/inbox',
+          builder: (_, _) => const InboxScreen(),
+          routes: [
+            GoRoute(
+              path: 'pengumuman/:id',
+              builder: (_, state) =>
+                  DetailPengumumanScreen(id: state.pathParameters['id']!),
+            ),
+          ],
         ),
       ],
     ),

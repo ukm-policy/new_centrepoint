@@ -97,6 +97,13 @@ class AppDrawer extends StatelessWidget {
                       route: '/anggota',
                       currentRoute: currentRoute,
                     ),
+                    _DrawerItem(
+                      icon: Icons.workspace_premium_outlined,
+                      activeIcon: Icons.workspace_premium,
+                      label: 'Poin Keaktifan',
+                      route: '/poin',
+                      currentRoute: currentRoute,
+                    ),
                     const SizedBox(height: 12),
                     _DrawerSection(label: 'LAINNYA'),
                     _DrawerItem(

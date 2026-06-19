@@ -35,7 +35,7 @@ class UangKhasScreen extends StatelessWidget {
 
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: FloatingAppBar(title: 'Uang Khas')),
+        SliverToBoxAdapter(child: FloatingAppBar(title: 'Uang Khas', showBack: true)),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.marginPage, AppSpacing.stackGap,

@@ -7,13 +7,13 @@ class FloatingAppBar extends StatelessWidget {
   const FloatingAppBar({
     super.key,
     this.title = 'POLICY CENTREPOINT',
-    this.onMenuTap,
+    this.showBack = false,
     this.onProfileTap,
     this.trailing,
   });
 
   final String title;
-  final VoidCallback? onMenuTap;
+  final bool showBack;
   final VoidCallback? onProfileTap;
   final Widget? trailing;
 
@@ -39,10 +39,15 @@ class FloatingAppBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _AppBarIconButton(
-              icon: Icons.menu,
-              onTap: onMenuTap,
-            ),
+            showBack
+                ? _AppBarIconButton(
+                    icon: Icons.arrow_back,
+                    onTap: () => Navigator.of(context).pop(),
+                  )
+                : _AppBarIconButton(
+                    icon: Icons.menu,
+                    onTap: () => Scaffold.of(context).openDrawer(),
+                  ),
             Expanded(
               child: Text(
                 title,

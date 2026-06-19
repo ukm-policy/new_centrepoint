@@ -16,6 +16,7 @@ import 'features/absensi/screens/riwayat_sekret_screen.dart';
 import 'features/uang_khas/screens/uang_khas_screen.dart';
 import 'features/menu/screens/menu_setelan_screen.dart';
 import 'shared/widgets/bottom_nav_bar.dart';
+import 'shared/widgets/app_drawer.dart';
 
 final _router = GoRouter(
   initialLocation: '/login',
@@ -105,50 +106,51 @@ class App extends StatelessWidget {
   }
 }
 
-class _AppShell extends StatefulWidget {
+class _AppShell extends StatelessWidget {
   const _AppShell({required this.child});
   final Widget child;
 
-  @override
-  State<_AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<_AppShell> {
-  int _navIndex = 0;
-
-  // Index 0=Beranda, 1=Berita, 2=Kegiatan, 3=Menu
   static const _navRoutes = ['/', '/berita', '/kegiatan', '/menu'];
+  static const _mainRoutes = {'/', '/berita', '/kegiatan', '/menu', '/absensi'};
 
-  void _onNavTap(int index) {
-    if (_navIndex == index) return;
-    setState(() => _navIndex = index);
-    context.go(_navRoutes[index]);
+  // Kembalikan index active (-1 = tidak ada yg active, misal Absensi)
+  static int _navIndexOf(String path) {
+    if (path == '/') return 0;
+    if (path == '/berita') return 1;
+    if (path == '/kegiatan') return 2;
+    if (path == '/menu') return 3;
+    return -1;
   }
-
-  void _onAbsensiTap() => context.go('/absensi');
 
   @override
   Widget build(BuildContext context) {
+    final currentPath = GoRouterState.of(context).uri.path;
+    final showNav = _mainRoutes.contains(currentPath);
+    final navIndex = _navIndexOf(currentPath);
+    final navClearance = 96 + MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: const Color(0xFFEFECEC),
+      drawer: const AppDrawer(),
       body: SafeArea(
         bottom: false,
         child: Stack(
           children: [
             Positioned.fill(
-              bottom: 96 + MediaQuery.of(context).padding.bottom,
-              child: widget.child,
+              bottom: showNav ? navClearance : 0,
+              child: child,
             ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: FloatingBottomNavBar(
-                currentIndex: _navIndex,
-                onTap: _onNavTap,
-                onAbsensiTap: _onAbsensiTap,
+            if (showNav)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: FloatingBottomNavBar(
+                  currentIndex: navIndex,
+                  onTap: (i) => context.go(_navRoutes[i]),
+                  onAbsensiTap: () => context.push('/absensi'),
+                ),
               ),
-            ),
           ],
         ),
       ),

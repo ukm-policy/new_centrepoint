@@ -48,7 +48,7 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: FloatingAppBar(title: 'Daftar Anggota'),
+          child: FloatingAppBar(title: 'Daftar Anggota', showBack: true),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(

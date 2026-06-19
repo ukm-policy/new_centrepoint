@@ -29,10 +29,10 @@ class _BerandaScreenState extends State<BerandaScreen> {
   ];
 
   final _quickMenu = const [
-    _QuickMenuData(icon: Icons.groups, label: 'All Members', route: '/anggota'),
+    _QuickMenuData(icon: Icons.groups, label: 'All Members', route: '/anggota', isPush: true),
     _QuickMenuData(icon: Icons.event_note, label: 'Kegiatan', route: '/kegiatan'),
-    _QuickMenuData(icon: Icons.account_balance_wallet, label: 'Uang Khas', route: '/uang-khas'),
-    _QuickMenuData(icon: Icons.qr_code_scanner, label: 'Absensi', route: '/absensi'),
+    _QuickMenuData(icon: Icons.account_balance_wallet, label: 'Uang Khas', route: '/uang-khas', isPush: true),
+    _QuickMenuData(icon: Icons.qr_code_scanner, label: 'Absensi', route: '/absensi', isPush: true),
     _QuickMenuData(icon: Icons.newspaper, label: 'Berita', route: '/berita'),
     _QuickMenuData(icon: Icons.settings, label: 'Menu', route: '/menu'),
   ];
@@ -67,7 +67,6 @@ class _BerandaScreenState extends State<BerandaScreen> {
       slivers: [
         SliverToBoxAdapter(
           child: FloatingAppBar(
-            onMenuTap: () => context.go('/menu'),
             onProfileTap: () => context.go('/anggota/me'),
           ),
         ),
@@ -240,37 +239,43 @@ class _UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BrutalistCard(
-      padding: const EdgeInsets.all(AppSpacing.innerPadding + 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           // Avatar
           Container(
-            width: 72,
-            height: 72,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerHigh,
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.blackCharcoal, width: 2),
               boxShadow: const [AppColors.hardShadowSm],
             ),
-            child: const Icon(Icons.person, size: 40, color: AppColors.tertiary),
+            child: const Icon(Icons.person, size: 28, color: AppColors.tertiary),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           // Name & role
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'Ahmad Ridhwan',
-                  style: AppTypography.headlineMd.copyWith(
+                  style: AppTypography.headlineSm.copyWith(
                     color: AppColors.blackCharcoal,
                     fontWeight: FontWeight.w800,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'Senior Policy Analyst',
-                  style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
+                  style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -286,19 +291,20 @@ class _UserCard extends StatelessWidget {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.secondaryContainer,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
-                    border: Border.all(color: AppColors.blackCharcoal, width: 2),
+                    border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
                     boxShadow: const [AppColors.hardShadowSm],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.star, size: 14, color: AppColors.onSecondaryContainer),
+                      const Icon(Icons.star, size: 12, color: AppColors.onSecondaryContainer),
                       const SizedBox(width: 4),
                       Text(
                         'Gold',
@@ -313,11 +319,11 @@ class _UserCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.monetization_on, size: 16, color: AppColors.primary),
+                    const Icon(Icons.monetization_on, size: 14, color: AppColors.primary),
                     const SizedBox(width: 4),
                     Text(
                       '1250 Pts',
-                      style: AppTypography.headlineSm.copyWith(
+                      style: AppTypography.bodyLg.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
                       ),
@@ -340,10 +346,12 @@ class _QuickMenuData {
     required this.icon,
     required this.label,
     required this.route,
+    this.isPush = false,
   });
   final IconData icon;
   final String label;
   final String route;
+  final bool isPush;
 }
 
 class _QuickAccessGrid extends StatelessWidget {
@@ -359,7 +367,7 @@ class _QuickAccessGrid extends StatelessWidget {
         crossAxisCount: 3,
         crossAxisSpacing: AppSpacing.gutterGrid,
         mainAxisSpacing: AppSpacing.gutterGrid,
-        childAspectRatio: 1,
+        childAspectRatio: 0.9,
       ),
       itemCount: items.length,
       itemBuilder: (_, i) => _QuickMenuCell(data: items[i]),
@@ -374,19 +382,19 @@ class _QuickMenuCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BrutalistCard(
-      onTap: () => context.go(data.route),
+      onTap: () => data.isPush ? context.push(data.route) : context.go(data.route),
       padding: const EdgeInsets.all(AppSpacing.innerPadding),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerHigh,
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.blackCharcoal, width: 1),
             ),
-            child: Icon(data.icon, size: 26, color: AppColors.onSurface),
+            child: Icon(data.icon, size: 22, color: AppColors.onSurface),
           ),
           const SizedBox(height: 8),
           Text(
@@ -452,7 +460,7 @@ class _HorizontalNewsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 200,
+      height: 220,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,

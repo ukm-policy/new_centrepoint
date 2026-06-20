@@ -11,6 +11,10 @@ import 'features/berita/screens/list_berita_screen.dart';
 import 'features/berita/screens/detail_berita_screen.dart';
 import 'features/kegiatan/screens/list_kegiatan_screen.dart';
 import 'features/kegiatan/screens/detail_kegiatan_screen.dart';
+import 'features/kegiatan/screens/create_kegiatan_screen.dart';
+import 'features/kegiatan/screens/riwayat_kegiatan_screen.dart';
+import 'features/kegiatan/screens/detail_rapat_screen.dart';
+import 'features/kegiatan/screens/create_rapat_screen.dart';
 import 'features/anggota/screens/list_members_screen.dart';
 import 'features/anggota/screens/detail_member_screen.dart';
 import 'features/absensi/screens/absensi_screen.dart';
@@ -72,6 +76,29 @@ final _router = GoRouter(
           path: '/kegiatan',
           builder: (_, _) => const ListKegiatanScreen(),
           routes: [
+            GoRoute(
+              path: 'buat',
+              builder: (_, _) => const CreateKegiatanScreen(),
+            ),
+            GoRoute(
+              path: 'riwayat',
+              builder: (_, _) => const RiwayatKegiatanScreen(),
+            ),
+            GoRoute(
+              path: 'rapat',
+              builder: (_, _) => const ListKegiatanScreen(),
+              routes: [
+                GoRoute(
+                  path: 'buat',
+                  builder: (_, _) => const CreateRapatScreen(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) =>
+                      DetailRapatScreen(id: state.pathParameters['id']!),
+                ),
+              ],
+            ),
             GoRoute(
               path: ':id',
               builder: (_, state) =>

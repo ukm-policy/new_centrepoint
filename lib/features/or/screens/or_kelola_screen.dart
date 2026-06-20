@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../or_data.dart';
+import '../../../data/models/or_model.dart';
+import '../../../data/repositories/or_repository.dart';
 
 class OrKelolaScreen extends StatefulWidget {
   const OrKelolaScreen({super.key});
@@ -26,7 +28,7 @@ class _OrKelolaScreenState extends State<OrKelolaScreen> {
   @override
   void initState() {
     super.initState();
-    final p = kOrPeriode;
+    final p = context.read<ORRepository>().orPeriode;
     _isManuallyOpen = p.isManuallyOpen;
     _tanggalBuka = p.tanggalBuka;
     _tanggalTutup = p.tanggalTutup;
@@ -64,7 +66,16 @@ class _OrKelolaScreenState extends State<OrKelolaScreen> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    await Future.delayed(const Duration(milliseconds: 800));
+    final orRepo = context.read<ORRepository>();
+    final newPeriode = orRepo.orPeriode.copyWith(
+      isManuallyOpen: _isManuallyOpen,
+      tanggalBuka: _tanggalBuka,
+      tanggalTutup: _tanggalTutup,
+      kuota: _kuota,
+      deskripsi: _deskripsi,
+    );
+    orRepo.updatePeriode(newPeriode);
+    await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -79,6 +90,9 @@ class _OrKelolaScreenState extends State<OrKelolaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final orRepo = context.watch<ORRepository>();
+    final acceptedCount = orRepo.applicants.where((a) => a.status == ApplicantStatus.diterima).length;
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: CustomScrollView(
@@ -206,7 +220,7 @@ class _OrKelolaScreenState extends State<OrKelolaScreen> {
                     ]),
                     const SizedBox(height: 10),
                     Center(child: Text(
-                      '${kApplicants.where((a) => a.status == ApplicantStatus.diterima).length} sudah diterima',
+                      '$acceptedCount sudah diterima',
                       style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
                     )),
                   ]),

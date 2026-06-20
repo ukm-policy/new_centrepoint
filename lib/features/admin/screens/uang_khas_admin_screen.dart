@@ -5,7 +5,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../anggota/anggota_data.dart';
+import 'package:provider/provider.dart';
+import '../../../data/models/member_model.dart';
+import '../../../data/repositories/member_repository.dart';
 
 class UangKhasAdminScreen extends StatefulWidget {
   const UangKhasAdminScreen({super.key});
@@ -21,14 +23,15 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
 
   // Mock iuran: map each member to a 12-month boolean payment list (true = lunas)
   late Map<String, List<bool>> _paymentMap;
+  bool _initialized = false;
 
-  @override
-  void initState() {
-    super.initState();
+  void _initPaymentMap(List<MemberModel> members) {
+    if (_initialized) return;
     _paymentMap = {
-      for (final m in kMemberList)
+      for (final m in members)
         m.id: List.generate(12, (index) => index < 6), // 6 months paid by default
     };
+    _initialized = true;
   }
 
   void _toggleMonthPayment(String memberId, int monthIdx) {
@@ -42,6 +45,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
 
   int get _totalPaidMonths {
     int total = 0;
+    if (!_initialized) return 0;
     for (final list in _paymentMap.values) {
       total += list.where((paid) => paid).length;
     }
@@ -50,6 +54,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
 
   int get _totalUnpaidMonths {
     int total = 0;
+    if (!_initialized) return 0;
     for (final list in _paymentMap.values) {
       total += list.where((paid) => !paid).length;
     }
@@ -59,17 +64,19 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
   int get _totalFundsCollected => _totalPaidMonths * 20000; // Rp 20.000 per month iuran
   int get _totalPendingFunds => _totalUnpaidMonths * 20000;
 
-  List<Member> get _filtered => kMemberList.where((m) {
-        final matchDiv = _filterDiv == 'Semua' || m.division == _filterDiv;
-        final matchSearch = _search.isEmpty ||
-            m.name.toLowerCase().contains(_search.toLowerCase()) ||
-            m.nim.contains(_search);
-        return matchDiv && matchSearch;
-      }).toList();
+  List<MemberModel> _getFiltered(List<MemberModel> members) {
+    return members.where((m) {
+      final matchDiv = _filterDiv == 'Semua' || m.bidang == _filterDiv;
+      final matchSearch = _search.isEmpty ||
+          m.nama.toLowerCase().contains(_search.toLowerCase()) ||
+          m.nim.contains(_search);
+      return matchDiv && matchSearch;
+    }).toList();
+  }
 
   final List<String> _months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-  void _showPaymentUpdateSheet(Member member) {
+  void _showPaymentUpdateSheet(MemberModel member) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -96,7 +103,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(member.name, style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
+                  Text(member.nama, style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
                   Text('${member.role} · NIM ${member.nim}', style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 12),
                   const MyDivider(color: AppColors.borderSlate),
@@ -151,6 +158,10 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final members = context.watch<MemberRepository>().members;
+    _initPaymentMap(members);
+    final filteredList = _getFiltered(members);
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       appBar: PreferredSize(
@@ -288,9 +299,9 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage),
-                itemCount: _filtered.length,
+                itemCount: filteredList.length,
                 itemBuilder: (context, i) {
-                  final member = _filtered[i];
+                  final member = filteredList[i];
                   final monthsList = _paymentMap[member.id]!;
                   final paidCount = monthsList.where((paid) => paid).length;
 
@@ -308,8 +319,8 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(member.name, style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold)),
-                                  Text('${member.division} · NIM ${member.nim}', style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
+                                  Text(member.nama, style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold)),
+                                  Text('${member.bidang ?? "-"} · NIM ${member.nim}', style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
                                 ],
                               ),
                               Container(

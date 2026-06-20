@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
-import '../inbox_data.dart';
+import '../../../data/repositories/inbox_repository.dart';
 
 class DetailPengumumanScreen extends StatelessWidget {
   const DetailPengumumanScreen({super.key, required this.id});
   final String id;
 
-  InboxPengumumanItem get _item =>
-      kInboxPengumuman.firstWhere((p) => p.id == id);
-
-  Color get _catColor => switch (_item.category) {
+  Color _getCatColor(String category) => switch (category) {
         'PENTING' => AppColors.primaryContainer,
         'KEGIATAN' => AppColors.errorContainer,
         'KEUANGAN' => const Color(0xFFFEF3C7),
@@ -22,7 +20,7 @@ class DetailPengumumanScreen extends StatelessWidget {
         _ => AppColors.surfaceContainerHigh,
       };
 
-  Color get _catText => switch (_item.category) {
+  Color _getCatText(String category) => switch (category) {
         'PENTING' => AppColors.onPrimaryContainer,
         'KEGIATAN' => AppColors.primary,
         'KEUANGAN' => const Color(0xFFB45309),
@@ -31,7 +29,7 @@ class DetailPengumumanScreen extends StatelessWidget {
         _ => AppColors.onSurface,
       };
 
-  IconData get _catIcon => switch (_item.category) {
+  IconData _getCatIcon(String category) => switch (category) {
         'PENTING' => Icons.warning_amber_rounded,
         'KEGIATAN' => Icons.event_note,
         'KEUANGAN' => Icons.account_balance_wallet,
@@ -40,8 +38,23 @@ class DetailPengumumanScreen extends StatelessWidget {
         _ => Icons.campaign,
       };
 
+  String _fmtDate(DateTime d) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final inboxRepo = context.watch<InboxRepository>();
+    final item = inboxRepo.pengumuman.firstWhere(
+      (p) => p.id == id,
+      orElse: () => inboxRepo.pengumuman.first,
+    );
+
+    final catColor = _getCatColor(item.kategori);
+    final catText = _getCatText(item.kategori);
+    final catIcon = _getCatIcon(item.kategori);
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: SafeArea(
@@ -126,7 +139,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                _catColor.withValues(alpha: 0.35),
+                                catColor.withValues(alpha: 0.35),
                                 AppColors.blackCharcoal,
                               ],
                               begin: Alignment.topLeft,
@@ -148,15 +161,15 @@ class DetailPengumumanScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: _catColor.withValues(alpha: 0.2),
+                                color: catColor.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: _catColor.withValues(alpha: 0.6),
+                                  color: catColor.withValues(alpha: 0.6),
                                   width: 2,
                                 ),
                               ),
-                              child: Icon(_catIcon,
-                                  size: 32, color: _catColor),
+                              child: Icon(catIcon,
+                                  size: 32, color: catColor),
                             ),
                             const SizedBox(height: 12),
                             Row(
@@ -166,7 +179,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
-                                    color: _catColor,
+                                    color: catColor,
                                     borderRadius: BorderRadius.circular(
                                         AppSpacing.radiusSm),
                                     border: Border.all(
@@ -174,15 +187,15 @@ class DetailPengumumanScreen extends StatelessWidget {
                                         width: 1.5),
                                   ),
                                   child: Text(
-                                    _item.category,
+                                    item.kategori,
                                     style: AppTypography.labelBold.copyWith(
-                                      color: _catText,
+                                      color: catText,
                                       fontSize: 11,
                                       letterSpacing: 1,
                                     ),
                                   ),
                                 ),
-                                if (_item.isNew) ...[
+                                if (item.isNew) ...[
                                   const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -248,7 +261,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                                 size: 12, color: AppColors.tertiary),
                             const SizedBox(width: 5),
                             Text(
-                              _item.date,
+                              _fmtDate(item.tanggal),
                               style: AppTypography.labelBold.copyWith(
                                 color: AppColors.tertiary,
                                 fontSize: 11,
@@ -275,7 +288,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                                 size: 12, color: AppColors.tertiary),
                             const SizedBox(width: 5),
                             Text(
-                              '${_item.content.length * 2} mnt baca',
+                              '${item.konten.length * 2} mnt baca',
                               style: AppTypography.labelBold.copyWith(
                                 color: AppColors.tertiary,
                                 fontSize: 11,
@@ -290,7 +303,7 @@ class DetailPengumumanScreen extends StatelessWidget {
 
                   // Title
                   Text(
-                    _item.title,
+                    item.judul,
                     style: AppTypography.headlineMd.copyWith(
                       fontWeight: FontWeight.w800,
                       height: 1.25,
@@ -310,7 +323,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Content paragraphs
-                  ..._item.content.map(
+                  ...item.konten.map(
                     (para) => Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
@@ -324,8 +337,8 @@ class DetailPengumumanScreen extends StatelessWidget {
                   ),
 
                   // ── Action Card ───────────────────────────────────────
-                  if (_item.actionLabel != null &&
-                      _item.actionRoute != null) ...[
+                  if (item.actionLabel != null &&
+                      item.actionRoute != null) ...[
                     const SizedBox(height: 8),
                     BrutalistCard(
                       padding: const EdgeInsets.all(AppSpacing.innerPadding),
@@ -358,7 +371,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  _item.actionLabel!,
+                                  item.actionLabel!,
                                   style: AppTypography.bodyLg.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -367,7 +380,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.push(_item.actionRoute!),
+                            onTap: () => context.push(item.actionRoute!),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 10),

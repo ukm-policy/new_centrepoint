@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../kegiatan/kegiatan_models.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
 
 class QrGeneratorScreen extends StatefulWidget {
   const QrGeneratorScreen({super.key});
@@ -26,8 +27,9 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
   @override
   void initState() {
     super.initState();
-    if (kKegiatanList.isNotEmpty) {
-      _selectedKegiatanId = kKegiatanList.first.id;
+    final kegiatanRepo = context.read<KegiatanRepository>();
+    if (kegiatanRepo.kegiatan.isNotEmpty) {
+      _selectedKegiatanId = kegiatanRepo.kegiatan.first.id;
     }
   }
 
@@ -55,9 +57,21 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final activeKegiatan = kKegiatanList.firstWhere(
+    final kegiatanRepo = Provider.of<KegiatanRepository>(context);
+    final kegiatanList = kegiatanRepo.kegiatan;
+
+    if (kegiatanList.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.bgGray,
+        body: Center(
+          child: Text('Tidak ada kegiatan tersedia.', style: AppTypography.bodyMd),
+        ),
+      );
+    }
+
+    final activeKegiatan = kegiatanList.firstWhere(
       (k) => k.id == _selectedKegiatanId,
-      orElse: () => kKegiatanList.first,
+      orElse: () => kegiatanList.first,
     );
 
     return Scaffold(
@@ -118,15 +132,15 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
                         Text('PILIH KEGIATAN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          initialValue: _selectedKegiatanId,
+                          value: _selectedKegiatanId,
                           onChanged: (v) => setState(() => _selectedKegiatanId = v),
                           style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                           decoration: const InputDecoration(
                             contentPadding: EdgeInsets.symmetric(horizontal: 12),
                           ),
-                          items: kKegiatanList.map((k) => DropdownMenuItem(
+                          items: kegiatanList.map((k) => DropdownMenuItem(
                             value: k.id,
-                            child: Text(k.title, overflow: TextOverflow.ellipsis),
+                            child: Text(k.judul, overflow: TextOverflow.ellipsis),
                           )).toList(),
                         ),
                         const SizedBox(height: AppSpacing.stackGap),
@@ -163,7 +177,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
                     child: Column(
                       children: [
                         Text(
-                          activeKegiatan.title.toUpperCase(),
+                          activeKegiatan.judul.toUpperCase(),
                           style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
                           textAlign: TextAlign.center,
                         ),
@@ -291,3 +305,5 @@ class _FakeQrPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+

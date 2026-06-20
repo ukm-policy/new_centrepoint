@@ -1,25 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/session/app_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../kegiatan_models.dart';
+import '../../../data/models/kegiatan_model.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
 
 class DetailKegiatanScreen extends StatelessWidget {
   const DetailKegiatanScreen({super.key, required this.id});
   final String id;
 
-  KegiatanItem get _item =>
-      kKegiatanList.firstWhere((k) => k.id == id, orElse: () => kKegiatanList.first);
-
   bool get _canEdit => AppSession.isAdmin || AppSession.level >= 2;
+
+  String _fmtDate(DateTime d) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final item = _item;
+    final repo = context.watch<KegiatanRepository>();
+    final item = repo.kegiatan.firstWhere((k) => k.id == id, orElse: () => repo.kegiatan.first);
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
@@ -93,13 +101,13 @@ class DetailKegiatanScreen extends StatelessWidget {
                         ]),
                       ]),
                       const SizedBox(height: 12),
-                      Text(item.title,
+                      Text(item.judul,
                         style: AppTypography.headlineMd.copyWith(fontWeight: FontWeight.w800)),
                       const SizedBox(height: 16),
                       const MyDivider(color: AppColors.borderSlate),
                       const SizedBox(height: 16),
                       _InfoRow(icon: Icons.calendar_today_outlined,
-                        text: '${item.tanggal}, ${item.waktu}'),
+                        text: '${_fmtDate(item.tanggal)}, ${item.waktu}'),
                       const SizedBox(height: 8),
                       _InfoRow(icon: Icons.location_on_outlined, text: item.lokasi),
                     ]),
@@ -234,11 +242,16 @@ class DetailKegiatanScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // ── Action button ──────────────────────────────────────────
-                  if (item.status == 'Upcoming')
+                  if (item.status == 'Upcoming' || item.status == 'Akan Datang')
                     BrutalistButton(
                       label: 'DAFTAR SEKARANG',
                       icon: Icons.how_to_reg,
-                      onPressed: () {},
+                      onPressed: () {
+                        context.read<KegiatanRepository>().registerParticipant(item.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Berhasil mendaftar kegiatan!')),
+                        );
+                      },
                     )
                   else if (item.status == 'Berlangsung')
                     BrutalistButton(
@@ -288,7 +301,7 @@ class _PanitiaRow extends StatelessWidget {
     this.isPrimary = false,
   });
   final String jabatan;
-  final PanitiaItem panitia;
+  final PanitiaModel panitia;
   final bool isPrimary;
 
   @override
@@ -335,7 +348,7 @@ class _PanitiaRow extends StatelessWidget {
 
 class _SieSection extends StatelessWidget {
   const _SieSection({required this.sie});
-  final SieItem sie;
+  final SieModel sie;
 
   @override
   Widget build(BuildContext context) {
@@ -458,7 +471,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, textColor) = switch (status) {
-      'Upcoming'    => (AppColors.secondaryContainer, AppColors.onSecondaryContainer),
+      'Upcoming' || 'Akan Datang' => (AppColors.secondaryContainer, AppColors.onSecondaryContainer),
       'Berlangsung' => (AppColors.primaryContainer, AppColors.onPrimaryContainer),
       _             => (AppColors.surfaceContainerHigh, AppColors.tertiary),
     };
@@ -491,3 +504,4 @@ class _InfoRow extends StatelessWidget {
     ]);
   }
 }
+

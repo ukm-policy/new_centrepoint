@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../kegiatan_models.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
 
 class _LocalRiwayat {
   const _LocalRiwayat({
@@ -28,15 +29,22 @@ class RiwayatKegiatanScreen extends StatefulWidget {
 }
 
 class _RiwayatKegiatanScreenState extends State<RiwayatKegiatanScreen> {
-  late List<_LocalRiwayat> _items;
   String _filter = 'Semua';
 
+  String _fmtDate(DateTime d) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
   @override
-  void initState() {
-    super.initState();
+  Widget build(BuildContext context) {
+    final kegiatanList = context.watch<KegiatanRepository>().kegiatan;
     final List<_LocalRiwayat> list = [];
 
-    for (final k in kKegiatanList) {
+    for (final k in kegiatanList) {
       bool isPanitia = false;
       String roleLabel = 'Peserta';
 
@@ -66,11 +74,11 @@ class _RiwayatKegiatanScreenState extends State<RiwayatKegiatanScreen> {
 
       if (isPanitia || k.status == 'Selesai') {
         list.add(_LocalRiwayat(
-          title: k.title,
-          date: k.tanggal,
+          title: k.judul,
+          date: _fmtDate(k.tanggal),
           hadir: k.id != '2', // mock absence for id 2
           role: roleLabel,
-          year: k.tanggal.contains('2023') ? '2023' : '2026',
+          year: k.tanggal.year.toString(),
         ));
       }
     }
@@ -79,16 +87,10 @@ class _RiwayatKegiatanScreenState extends State<RiwayatKegiatanScreen> {
       list.addAll([
         const _LocalRiwayat(title: 'Seminar Kebijakan Publik 2023', date: '28 Oktober 2023', hadir: true, role: 'Peserta', year: '2023'),
         const _LocalRiwayat(title: 'Pelatihan Advokasi Kebijakan', date: '5 Oktober 2023', hadir: true, role: 'Panitia', year: '2023'),
-        const _LocalRiwayat(title: 'Musyawarah Anggota Q3', date: '10 Oktober 2023', hadir: true, role: 'Ketua Pelaksana', year: '2023'),
       ]);
     }
 
-    _items = list;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = _items.where((item) {
+    final filtered = list.where((item) {
       if (_filter == 'Semua') return true;
       if (_filter == 'Tahun Ini') return item.year == '2026';
       return item.year == '2023';

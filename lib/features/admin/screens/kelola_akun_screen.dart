@@ -1,28 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../anggota/anggota_data.dart';
-
-class _LocalMember {
-  _LocalMember({
-    required this.id,
-    required this.name,
-    required this.nim,
-    required this.role,
-    required this.division,
-    required this.angkatan,
-    required this.status,
-    required this.level,
-  });
-  final String id, name, nim, role, division, angkatan;
-  String status;
-  int level;
-}
+import '../../../data/repositories/member_repository.dart';
+import '../../../data/models/member_model.dart';
 
 class KelolaAkunScreen extends StatefulWidget {
   const KelolaAkunScreen({super.key});
@@ -32,7 +18,6 @@ class KelolaAkunScreen extends StatefulWidget {
 }
 
 class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
-  late List<_LocalMember> _members;
   String _search = '';
   String _filterStatus = 'Semua';
   String _filterDiv = 'Semua';
@@ -40,33 +25,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
   final List<String> _statuses = ['Semua', 'Aktif', 'Pending', 'Suspended'];
   final List<String> _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
-  @override
-  void initState() {
-    super.initState();
-    _members = kMemberList.map((m) => _LocalMember(
-      id: m.id,
-      name: m.name,
-      nim: m.nim,
-      role: m.role,
-      division: m.division,
-      angkatan: m.angkatan,
-      status: m.id == '4' ? 'Pending' : (m.id == '5' ? 'Suspended' : 'Aktif'),
-      level: m.id == '1' ? 4 : (m.id == '3' ? 3 : (m.id == '6' ? 5 : 2)),
-    )).toList();
-  }
-
-  List<_LocalMember> get _filtered {
-    return _members.where((m) {
-      final matchSearch = _search.isEmpty ||
-          m.name.toLowerCase().contains(_search.toLowerCase()) ||
-          m.nim.contains(_search);
-      final matchStatus = _filterStatus == 'Semua' || m.status == _filterStatus;
-      final matchDiv = _filterDiv == 'Semua' || m.division == _filterDiv;
-      return matchSearch && matchStatus && matchDiv;
-    }).toList();
-  }
-
-  void _showEditSheet(_LocalMember member) {
+  void _showEditSheet(BuildContext context, MemberModel member) {
     String tempStatus = member.status;
     int tempLevel = member.level;
 
@@ -74,9 +33,9 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (modalContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (modalContext, setModalState) {
             return Container(
               decoration: const BoxDecoration(
                 color: AppColors.surface,
@@ -90,7 +49,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   right: BorderSide(color: AppColors.blackCharcoal, width: 2.5),
                 ),
               ),
-              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(modalContext).viewInsets.bottom),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -101,7 +60,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${member.name} · NIM ${member.nim}',
+                    '${member.nama} · NIM ${member.nim}',
                     style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
                   ),
                   const SizedBox(height: 12),
@@ -112,7 +71,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   Text('STATUS AKUN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
-                    initialValue: tempStatus,
+                    value: tempStatus,
                     onChanged: (v) => setModalState(() => tempStatus = v ?? 'Aktif'),
                     style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                     decoration: const InputDecoration(
@@ -130,7 +89,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   Text('LEVEL AKSES', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<int>(
-                    initialValue: tempLevel,
+                    value: tempLevel,
                     onChanged: (v) => setModalState(() => tempLevel = v ?? 2),
                     style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                     decoration: const InputDecoration(
@@ -150,15 +109,16 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   BrutalistButton(
                     label: 'SIMPAN PERUBAHAN',
                     onPressed: () {
-                      setState(() {
-                        member.status = tempStatus;
-                        member.level = tempLevel;
-                      });
-                      Navigator.pop(context);
+                      Provider.of<MemberRepository>(context, listen: false).updateStatusAndLevel(
+                        member.id,
+                        status: tempStatus,
+                        level: tempLevel,
+                      );
+                      Navigator.pop(modalContext);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            'Akun ${member.name} berhasil diperbarui.',
+                            'Akun ${member.nama} berhasil diperbarui.',
                             style: AppTypography.bodyMd.copyWith(color: Colors.white),
                           ),
                           backgroundColor: AppColors.success,
@@ -187,7 +147,20 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalUsers = _filtered.length;
+    final memberRepo = Provider.of<MemberRepository>(context);
+    final members = memberRepo.members;
+
+    final filtered = members.where((m) {
+      final matchSearch = _search.isEmpty ||
+          m.nama.toLowerCase().contains(_search.toLowerCase()) ||
+          m.nim.contains(_search);
+      final matchStatus = _filterStatus == 'Semua' || m.status == _filterStatus;
+      final matchDiv = _filterDiv == 'Semua' || m.bidang == _filterDiv;
+      return matchSearch && matchStatus && matchDiv;
+    }).toList();
+
+    final totalUsers = filtered.length;
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       appBar: PreferredSize(
@@ -314,7 +287,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
 
             // Members list
             Expanded(
-              child: _filtered.isEmpty
+              child: filtered.isEmpty
                   ? Center(
                       child: Text(
                         'Tidak ada anggota ditemukan.',
@@ -323,17 +296,17 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage),
-                      itemCount: _filtered.length,
+                      itemCount: filtered.length,
                       itemBuilder: (context, i) {
-                        final m = _filtered[i];
-                        final initialName = m.name.isNotEmpty
-                            ? m.name.split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+                        final m = filtered[i];
+                        final initialName = m.nama.isNotEmpty
+                            ? m.nama.split(' ').map((e) => e[0]).take(2).join().toUpperCase()
                             : 'M';
                         
                         return Padding(
                           padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
                           child: BrutalistCard(
-                            onTap: () => _showEditSheet(m),
+                            onTap: () => _showEditSheet(context, m),
                             padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
@@ -364,12 +337,12 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        m.name,
+                                        m.nama,
                                         style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '${m.role} · NIM ${m.nim} (${m.angkatan})',
+                                        '${m.jabatan ?? m.role.toUpperCase()} · NIM ${m.nim} (${m.angkatan})',
                                         style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 12),
                                       ),
                                       const SizedBox(height: 6),

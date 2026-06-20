@@ -1,31 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/session/app_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../kegiatan_models.dart';
-import '../rapat_models.dart';
+import '../../../data/models/rapat_model.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
+import '../../../data/repositories/rapat_repository.dart';
 
 class DetailRapatScreen extends StatelessWidget {
   const DetailRapatScreen({super.key, required this.id});
   final String id;
 
-  RapatItem get _item =>
-      kRapatList.firstWhere((r) => r.id == id, orElse: () => kRapatList.first);
-
   bool get _canEdit => AppSession.isAdmin || AppSession.level >= 3;
 
-  KegiatanItem? _kegiatan(String? kegiatanId) => kegiatanId == null
-      ? null
-      : kKegiatanList.where((k) => k.id == kegiatanId).firstOrNull;
+  String _fmtDate(DateTime d) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final rapat = _item;
-    final kegiatan = _kegiatan(rapat.kegiatanId);
+    final rapatRepo = context.watch<RapatRepository>();
+    final kegiatanRepo = context.watch<KegiatanRepository>();
+
+    final rapat = rapatRepo.rapat.firstWhere((r) => r.id == id, orElse: () => rapatRepo.rapat.first);
+    final kegiatan = rapat.kegiatanId == null
+        ? null
+        : kegiatanRepo.kegiatan.where((k) => k.id == rapat.kegiatanId).firstOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
@@ -105,7 +113,7 @@ class DetailRapatScreen extends StatelessWidget {
                                 Text('Terkait Acara',
                                   style: AppTypography.labelBold.copyWith(
                                     color: AppColors.primary, fontSize: 10)),
-                                Text(kegiatan.title,
+                                Text(kegiatan.judul,
                                   style: AppTypography.bodyMd.copyWith(
                                     fontWeight: FontWeight.w600),
                                   overflow: TextOverflow.ellipsis),
@@ -149,7 +157,7 @@ class DetailRapatScreen extends StatelessWidget {
                       const MyDivider(color: AppColors.borderSlate),
                       const SizedBox(height: 16),
                       _InfoRow(icon: Icons.calendar_today_outlined,
-                        text: '${rapat.tanggal}  •  ${rapat.waktu}'),
+                        text: '${_fmtDate(rapat.tanggal)}  •  ${rapat.waktu}'),
                       const SizedBox(height: 8),
                       _InfoRow(icon: Icons.location_on_outlined, text: rapat.lokasi),
                     ]),
@@ -242,7 +250,7 @@ class DetailRapatScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                             border: Border.all(color: AppColors.borderSlate, width: 1.5),
                           ),
-                          child: Text('${rapat.peserta.length} orang',
+                          child: Text('${rapat.pesertaIds.length} orang',
                             style: AppTypography.labelBold.copyWith(
                               color: AppColors.tertiary, fontSize: 11)),
                         ),
@@ -250,7 +258,7 @@ class DetailRapatScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       const MyDivider(color: AppColors.borderSlate, height: 12),
                       const SizedBox(height: 8),
-                      ...rapat.peserta.asMap().entries.map((e) {
+                      ...rapat.pesertaIds.asMap().entries.map((e) {
                         final isCurrentUser = e.value == AppSession.nama;
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 6),
@@ -346,9 +354,37 @@ class DetailRapatScreen extends StatelessWidget {
                     BrutalistButton(
                       label: 'TAMBAH NOTULENSI',
                       icon: Icons.edit_note_outlined,
-                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Fitur notulensi segera hadir')),
-                      ),
+                      onPressed: () {
+                        final ctrl = TextEditingController();
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Tambah Notulensi'),
+                            content: TextField(
+                              controller: ctrl,
+                              maxLines: 5,
+                              decoration: const InputDecoration(
+                                hintText: 'Tulis notulensi rapat di sini...',
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('Batal'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  if (ctrl.text.trim().isNotEmpty) {
+                                    context.read<RapatRepository>().updateNotulensi(rapat.id, ctrl.text.trim());
+                                  }
+                                  Navigator.pop(ctx);
+                                },
+                                child: const Text('Simpan'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
 
                   const SizedBox(height: 8),

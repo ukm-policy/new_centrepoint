@@ -6,7 +6,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../anggota/anggota_data.dart';
+import 'package:provider/provider.dart';
+import '../../../data/repositories/member_repository.dart';
 
 class _BidangDetail {
   const _BidangDetail({
@@ -113,7 +114,7 @@ class _InfoBidangScreenState extends State<InfoBidangScreen> {
     final detail = _details[_selectedDiv] ?? _details['Pemrograman']!;
     
     // Filter members belonging to the active division
-    final members = kMemberList.where((m) => m.division == _selectedDiv).toList();
+    final members = context.watch<MemberRepository>().members.where((m) => m.bidang == _selectedDiv).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
@@ -263,9 +264,9 @@ class _InfoBidangScreenState extends State<InfoBidangScreen> {
                   itemCount: members.length,
                   itemBuilder: (context, idx) {
                     final m = members[idx];
-                    final isKetua = m.role.contains('Lead') || m.role.contains('Manager') || m.role.contains('Senior');
-                    final initials = m.name.split(' ').map((e) => e[0]).take(2).join().toUpperCase();
-
+                    final isKetua = m.jabatan?.contains('Kepala Bidang') ?? false;
+                    final initials = m.nama.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+ 
                     return Column(
                       children: [
                         Padding(
@@ -292,7 +293,7 @@ class _InfoBidangScreenState extends State<InfoBidangScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(m.name, style: AppTypography.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+                                    Text(m.nama, style: AppTypography.bodyMd.copyWith(fontWeight: FontWeight.bold)),
                                     Text(m.nim, style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 11)),
                                   ],
                                 ),

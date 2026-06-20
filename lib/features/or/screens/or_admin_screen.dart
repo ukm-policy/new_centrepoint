@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../or_data.dart';
+import '../../../data/models/or_model.dart';
+import '../../../data/repositories/or_repository.dart';
 
 class OrAdminScreen extends StatefulWidget {
   const OrAdminScreen({super.key});
@@ -18,9 +20,19 @@ class OrAdminScreen extends StatefulWidget {
 class _OrAdminScreenState extends State<OrAdminScreen> {
   String _filter = 'Semua';
 
-  List<ORApplicant> get _filtered {
-    if (_filter == 'Semua') return kApplicants;
-    return kApplicants.where((a) {
+  @override
+  Widget build(BuildContext context) {
+    final orRepo = context.watch<ORRepository>();
+    final periode = orRepo.orPeriode;
+    final isOpen = periode.status == ORStatus.buka;
+    final applicants = orRepo.applicants;
+
+    final totalPending = applicants.where((a) => a.status == ApplicantStatus.pending).length;
+    final totalDiterima = applicants.where((a) => a.status == ApplicantStatus.diterima).length;
+    final totalDitolak = applicants.where((a) => a.status == ApplicantStatus.ditolak).length;
+
+    final filtered = applicants.where((a) {
+      if (_filter == 'Semua') return true;
       return switch (_filter) {
         'Pending' => a.status == ApplicantStatus.pending,
         'Diterima' => a.status == ApplicantStatus.diterima,
@@ -28,16 +40,6 @@ class _OrAdminScreenState extends State<OrAdminScreen> {
         _ => true,
       };
     }).toList();
-  }
-
-  int get _totalPending => kApplicants.where((a) => a.status == ApplicantStatus.pending).length;
-  int get _totalDiterima => kApplicants.where((a) => a.status == ApplicantStatus.diterima).length;
-  int get _totalDitolak => kApplicants.where((a) => a.status == ApplicantStatus.ditolak).length;
-
-  @override
-  Widget build(BuildContext context) {
-    final periode = kOrPeriode;
-    final isOpen = periode.status == ORStatus.buka;
 
     return CustomScrollView(
       slivers: [
@@ -103,26 +105,26 @@ class _OrAdminScreenState extends State<OrAdminScreen> {
               // ── Stats ─────────────────────────────────────────────────────
               Row(children: [
                 _StatBox(
-                  value: '${kApplicants.length}',
+                  value: '${applicants.length}',
                   label: 'Total',
                   color: AppColors.surfaceContainerHigh,
                 ),
                 const SizedBox(width: AppSpacing.gutterGrid),
                 _StatBox(
-                  value: '$_totalPending',
+                  value: '$totalPending',
                   label: 'Pending',
                   color: AppColors.secondaryContainer,
                 ),
                 const SizedBox(width: AppSpacing.gutterGrid),
                 _StatBox(
-                  value: '$_totalDiterima',
+                  value: '$totalDiterima',
                   label: 'Diterima',
                   color: AppColors.success,
                   textColor: AppColors.onSuccess,
                 ),
                 const SizedBox(width: AppSpacing.gutterGrid),
                 _StatBox(
-                  value: '$_totalDitolak',
+                  value: '$totalDitolak',
                   label: 'Ditolak',
                   color: AppColors.errorContainer,
                 ),
@@ -162,7 +164,7 @@ class _OrAdminScreenState extends State<OrAdminScreen> {
               const SizedBox(height: AppSpacing.stackGap),
 
               // ── List Pelamar ──────────────────────────────────────────────
-              if (_filtered.isEmpty)
+              if (filtered.isEmpty)
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
@@ -172,7 +174,7 @@ class _OrAdminScreenState extends State<OrAdminScreen> {
                   ),
                 )
               else
-                ..._filtered.map((app) => Padding(
+                ...filtered.map((app) => Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.gutterGrid),
                   child: BrutalistCard(
                     onTap: () => context.push('/admin/or/${app.id}'),
@@ -219,7 +221,7 @@ class _OrAdminScreenState extends State<OrAdminScreen> {
               const MyDivider(color: AppColors.borderSlate, height: 1),
               const SizedBox(height: 12),
               Center(child: Text(
-                'Kuota: $_totalDiterima/${kOrPeriode.kuota} telah terisi',
+                'Kuota: $totalDiterima/${periode.kuota} telah terisi',
                 style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
               )),
             ]),

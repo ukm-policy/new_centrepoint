@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../../../data/models/kegiatan_model.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
 
 // ── Sie Form Entry ─────────────────────────────────────────────────────────────
 
@@ -55,6 +58,7 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
 
   // Sie
   final List<_SieEntry> _sieList = [];
+  DateTime? _pickedDateRaw;
 
   @override
   void dispose() {
@@ -100,6 +104,58 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
     setState(() => _loading = true);
     await Future.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
+
+    final kegiatanRepo = context.read<KegiatanRepository>();
+    final newId = (kegiatanRepo.kegiatan.length + 1).toString();
+
+    // Map Sie
+    final List<SieModel> sieListMapped = [];
+    for (final s in _sieList) {
+      final membersList = s.anggotaCtrls
+          .where((c) => c.text.trim().isNotEmpty)
+          .map((c) => PanitiaModel(
+                memberId: '',
+                nama: c.text.trim(),
+                nim: '',
+              ))
+          .toList();
+
+      sieListMapped.add(
+        SieModel(
+          namaSie: s.namaCtrl.text.trim(),
+          ketua: s.ketuaCtrl.text.trim().isEmpty
+              ? null
+              : PanitiaModel(memberId: '', nama: s.ketuaCtrl.text.trim(), nim: ''),
+          anggota: membersList,
+        ),
+      );
+    }
+
+    final newKegiatan = KegiatanModel(
+      id: newId,
+      judul: _namaCtrl.text.trim(),
+      deskripsi: _deskripsiCtrl.text.trim(),
+      tanggal: _pickedDateRaw ?? DateTime.now(),
+      waktu: _waktuCtrl.text.trim(),
+      lokasi: _lokasiCtrl.text.trim(),
+      status: 'Akan Datang',
+      kuota: int.tryParse(_kuotaCtrl.text.trim()) ?? 0,
+      pesertaTerdaftar: 0,
+      ketuaPelaksana: _ketuaCtrl.text.trim().isEmpty
+          ? null
+          : PanitiaModel(memberId: '', nama: _ketuaCtrl.text.trim(), nim: ''),
+      sekretarisPelaksana: _sekretarisCtrl.text.trim().isEmpty
+          ? null
+          : PanitiaModel(memberId: '', nama: _sekretarisCtrl.text.trim(), nim: ''),
+      bendaharaPelaksana: _bendaharaCtrl.text.trim().isEmpty
+          ? null
+          : PanitiaModel(memberId: '', nama: _bendaharaCtrl.text.trim(), nim: ''),
+      sie: sieListMapped,
+      periodeId: 'p-1',
+    );
+
+    kegiatanRepo.addKegiatan(newKegiatan);
+
     setState(() => _loading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Kegiatan berhasil dibuat!')),
@@ -115,8 +171,9 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-                      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      _pickedDateRaw = picked;
+      final months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       _tanggalCtrl.text = '${picked.day} ${months[picked.month - 1]} ${picked.year}';
     }
   }

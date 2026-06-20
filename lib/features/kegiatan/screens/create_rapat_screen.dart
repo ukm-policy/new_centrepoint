@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/session/app_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../kegiatan_models.dart';
-import '../rapat_models.dart';
+import '../../../data/models/kegiatan_model.dart';
+import '../../../data/models/rapat_model.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
+import '../../../data/repositories/rapat_repository.dart';
 
 // ── Mock Bidang & Sie data ────────────────────────────────────────────────────
 
@@ -43,6 +46,7 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
 
   // Step 4: Agenda (dynamic)
   final List<TextEditingController> _agendaCtrls = [];
+  DateTime? _pickedDateRaw;
 
   // Available tipes based on user's role
   List<RapatTipe> get _availableTipes {
@@ -59,11 +63,10 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
     return [];
   }
 
-  // Sie list from selected kegiatan
-  List<String> get _sieFromKegiatan {
-    if (_selectedKegiatanId == null) return [];
-    return kKegiatanList
-        .where((k) => k.id == _selectedKegiatanId)
+  List<String> _sieFromKegiatan(String? kegiatanId, List<KegiatanModel> kegiatanList) {
+    if (kegiatanId == null) return [];
+    return kegiatanList
+        .where((k) => k.id == kegiatanId)
         .expand((k) => k.sie.map((s) => s.namaSie))
         .toList();
   }
@@ -99,8 +102,9 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-                      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      _pickedDateRaw = picked;
+      final months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       _tanggalCtrl.text = '${picked.day} ${months[picked.month - 1]} ${picked.year}';
     }
   }
@@ -116,6 +120,79 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
     setState(() => _loading = true);
     await Future.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
+
+    final rapatRepo = context.read<RapatRepository>();
+    final newId = 'r${rapatRepo.rapat.length + 1}';
+
+    // Map agenda items
+    final agendaList = _agendaCtrls
+        .where((c) => c.text.trim().isNotEmpty)
+        .map((c) => AgendaModel(judul: c.text.trim()))
+        .toList();
+
+    // Map participants based on context
+    final List<String> peserta = [];
+    if (_tipe == RapatTipe.rapatStakeholderOrg) {
+      peserta.addAll(['Ahmad Rizky Pratama', 'Ratna Sari', 'Yoga Pratama']);
+      if (_denganKetuaBidang) {
+        peserta.addAll([
+          'Kepala Bidang Humas',
+          'Kepala Bidang Litbang',
+          'Kepala Bidang Kaderisasi',
+          'Kepala Bidang Advokasi'
+        ]);
+      }
+    } else if (_tipe == RapatTipe.rapatInternalBidang) {
+      peserta.add('Kepala Bidang $_selectedBidang');
+      peserta.addAll([
+        'Anggota $_selectedBidang A',
+        'Anggota $_selectedBidang B',
+      ]);
+    } else {
+      // Acara related, fetch from Kegiatan
+      final kegiatanList = context.read<KegiatanRepository>().kegiatan;
+      final k = kegiatanList.where((k) => k.id == _selectedKegiatanId).firstOrNull;
+      if (k != null) {
+        if (_tipe == RapatTipe.rapatStakeholderAcara) {
+          if (k.ketuaPelaksana != null) peserta.add(k.ketuaPelaksana!.nama);
+          if (k.sekretarisPelaksana != null) peserta.add(k.sekretarisPelaksana!.nama);
+          if (k.bendaharaPelaksana != null) peserta.add(k.bendaharaPelaksana!.nama);
+        } else if (_tipe == RapatTipe.rapatUmumAcara) {
+          if (k.ketuaPelaksana != null) peserta.add(k.ketuaPelaksana!.nama);
+          if (k.sekretarisPelaksana != null) peserta.add(k.sekretarisPelaksana!.nama);
+          if (k.bendaharaPelaksana != null) peserta.add(k.bendaharaPelaksana!.nama);
+          for (final s in k.sie) {
+            if (s.ketua != null) peserta.add(s.ketua!.nama);
+            peserta.addAll(s.anggota.map((a) => a.nama));
+          }
+        } else if (_tipe == RapatTipe.rapatSie) {
+          final s = k.sie.where((s) => s.namaSie == _selectedSie).firstOrNull;
+          if (s != null) {
+            if (s.ketua != null) peserta.add(s.ketua!.nama);
+            peserta.addAll(s.anggota.map((a) => a.nama));
+          }
+        }
+      }
+    }
+
+    final newRapat = RapatModel(
+      id: newId,
+      judul: _judulCtrl.text.trim(),
+      tipe: _tipe!,
+      status: RapatStatus.terjadwal,
+      tanggal: _pickedDateRaw ?? DateTime.now(),
+      waktu: _waktuCtrl.text.trim(),
+      lokasi: _lokasiCtrl.text.trim(),
+      agenda: agendaList,
+      pesertaIds: peserta,
+      kegiatanId: _selectedKegiatanId,
+      namaSie: _selectedSie,
+      namaBidang: _selectedBidang,
+      denganKetuaBidang: _denganKetuaBidang,
+    );
+
+    rapatRepo.addRapat(newRapat);
+
     setState(() => _loading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Rapat berhasil dibuat!')),
@@ -125,6 +202,7 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final kegiatanList = context.watch<KegiatanRepository>().kegiatan;
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: SafeArea(
@@ -197,7 +275,7 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
                       _SectionCard(
                         icon: Icons.link_outlined,
                         title: 'Konteks',
-                        child: _buildKonteksSection(),
+                        child: _buildKonteksSection(kegiatanList),
                       ),
                       const SizedBox(height: AppSpacing.stackGap),
                     ],
@@ -384,7 +462,7 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
     );
   }
 
-  Widget _buildKonteksSection() {
+  Widget _buildKonteksSection(List<KegiatanModel> kegiatanList) {
     final tipe = _tipe!;
 
     switch (tipe) {
@@ -404,9 +482,9 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
               hintText: 'Pilih acara/event',
               prefixIcon: Icon(Icons.event_outlined, size: 20),
             ),
-            items: kKegiatanList.map((k) => DropdownMenuItem(
+            items: kegiatanList.map((k) => DropdownMenuItem(
               value: k.id,
-              child: Text(k.title, overflow: TextOverflow.ellipsis),
+              child: Text(k.judul, overflow: TextOverflow.ellipsis),
             )).toList(),
             validator: (v) => v == null ? 'Pilih acara terkait' : null,
           ),
@@ -427,9 +505,9 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
               hintText: 'Pilih acara/event',
               prefixIcon: Icon(Icons.event_outlined, size: 20),
             ),
-            items: kKegiatanList.map((k) => DropdownMenuItem(
+            items: kegiatanList.map((k) => DropdownMenuItem(
               value: k.id,
-              child: Text(k.title, overflow: TextOverflow.ellipsis),
+              child: Text(k.judul, overflow: TextOverflow.ellipsis),
             )).toList(),
             validator: (v) => v == null ? 'Pilih acara terkait' : null,
           ),
@@ -445,7 +523,7 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
                 hintText: 'Pilih sie',
                 prefixIcon: Icon(Icons.workspaces_outlined, size: 20),
               ),
-              items: _sieFromKegiatan.map((s) => DropdownMenuItem(
+              items: _sieFromKegiatan(_selectedKegiatanId, kegiatanList).map((s) => DropdownMenuItem(
                 value: s,
                 child: Text(s),
               )).toList(),

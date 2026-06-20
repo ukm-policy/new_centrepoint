@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../or_data.dart';
+import '../../../data/models/or_model.dart';
+import '../../../data/repositories/or_repository.dart';
 
 class OrDetailScreen extends StatefulWidget {
   const OrDetailScreen({super.key, required this.id});
@@ -20,14 +22,17 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
   final _catatanCtrl = TextEditingController();
   bool _saving = false;
 
-  ORApplicant get _app =>
-      kApplicants.firstWhere((a) => a.id == widget.id);
+  ORApplicantModel get _app {
+    final orRepo = context.read<ORRepository>();
+    return orRepo.applicants.firstWhere((a) => a.id == widget.id);
+  }
 
   @override
   void initState() {
     super.initState();
-    _status = _app.status;
-    _catatanCtrl.text = _app.catatan ?? '';
+    final app = context.read<ORRepository>().applicants.firstWhere((a) => a.id == widget.id);
+    _status = app.status;
+    _catatanCtrl.text = app.catatan ?? '';
   }
 
   @override
@@ -41,7 +46,9 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
       _saving = true;
       _status = newStatus;
     });
-    await Future.delayed(const Duration(milliseconds: 700));
+    final orRepo = context.read<ORRepository>();
+    orRepo.reviewApplicant(widget.id, newStatus, catatan: _catatanCtrl.text);
+    await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -62,7 +69,9 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final app = _app;
+    // Watch applicant state
+    final orRepo = context.watch<ORRepository>();
+    final app = orRepo.applicants.firstWhere((a) => a.id == widget.id);
     final isPending = _status == ApplicantStatus.pending;
 
     return Scaffold(
@@ -164,7 +173,10 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   _ResetButton(
-                    onTap: () => setState(() => _status = ApplicantStatus.pending),
+                    onTap: () {
+                      setState(() => _status = ApplicantStatus.pending);
+                      context.read<ORRepository>().reviewApplicant(widget.id, ApplicantStatus.pending);
+                    },
                   ),
                 ],
 

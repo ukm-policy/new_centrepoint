@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../kegiatan/kegiatan_models.dart';
+import '../../../data/models/kegiatan_model.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
 
 class KelolaKegiatanScreen extends StatefulWidget {
   const KelolaKegiatanScreen({super.key});
@@ -16,18 +18,9 @@ class KelolaKegiatanScreen extends StatefulWidget {
 
 class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
   String _filterStatus = 'Semua';
-  late List<KegiatanItem> _kegiatanList;
 
-  @override
-  void initState() {
-    super.initState();
-    _kegiatanList = List.from(kKegiatanList);
-  }
-
-  void _handleDelete(String id) {
-    setState(() {
-      _kegiatanList.removeWhere((k) => k.id == id);
-    });
+  void _handleDelete(BuildContext context, String id) {
+    Provider.of<KegiatanRepository>(context, listen: false).deleteKegiatan(id);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Kegiatan berhasil dihapus.', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
@@ -38,10 +31,10 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
     );
   }
 
-  void _showStatusDialog(KegiatanItem item) {
+  void _showStatusDialog(BuildContext context, KegiatanModel item) {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (modalContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -56,20 +49,20 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
               _StatusOption(
                 label: 'Upcoming',
                 color: AppColors.surfaceContainerHigh,
-                onTap: () => _updateStatus(item.id, 'Upcoming'),
+                onTap: () => _updateStatus(context, item, 'Upcoming'),
               ),
               const SizedBox(height: 8),
               _StatusOption(
                 label: 'Berlangsung',
                 color: AppColors.secondaryContainer,
-                onTap: () => _updateStatus(item.id, 'Berlangsung'),
+                onTap: () => _updateStatus(context, item, 'Berlangsung'),
               ),
               const SizedBox(height: 8),
               _StatusOption(
                 label: 'Selesai',
                 color: AppColors.success,
                 textColor: Colors.white,
-                onTap: () => _updateStatus(item.id, 'Selesai'),
+                onTap: () => _updateStatus(context, item, 'Selesai'),
               ),
             ],
           ),
@@ -78,28 +71,10 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
     );
   }
 
-  void _updateStatus(String id, String newStatus) {
-    setState(() {
-      final idx = _kegiatanList.indexWhere((k) => k.id == id);
-      if (idx != -1) {
-        final k = _kegiatanList[idx];
-        _kegiatanList[idx] = KegiatanItem(
-          id: k.id,
-          title: k.title,
-          tanggal: k.tanggal,
-          waktu: k.waktu,
-          lokasi: k.lokasi,
-          status: newStatus,
-          kuota: k.kuota,
-          pesertaTerdaftar: k.pesertaTerdaftar,
-          deskripsi: k.deskripsi,
-          ketuaPelaksana: k.ketuaPelaksana,
-          sekretarisPelaksana: k.sekretarisPelaksana,
-          bendaharaPelaksana: k.bendaharaPelaksana,
-          sie: k.sie,
-        );
-      }
-    });
+  void _updateStatus(BuildContext context, KegiatanModel item, String newStatus) {
+    Provider.of<KegiatanRepository>(context, listen: false).updateKegiatan(
+      item.copyWith(status: newStatus),
+    );
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -111,11 +86,6 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
     );
   }
 
-  List<KegiatanItem> get _filtered => _kegiatanList.where((k) {
-        if (_filterStatus == 'Semua') return true;
-        return k.status == _filterStatus;
-      }).toList();
-
   Color _statusColor(String status) {
     return switch (status) {
       'Upcoming' => AppColors.surfaceContainerHigh,
@@ -126,6 +96,14 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final kegiatanRepo = Provider.of<KegiatanRepository>(context);
+    final kegiatanList = kegiatanRepo.kegiatan;
+
+    final filtered = kegiatanList.where((k) {
+      if (_filterStatus == 'Semua') return true;
+      return k.status == _filterStatus;
+    }).toList();
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       appBar: PreferredSize(
@@ -215,7 +193,7 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
 
             // Kegiatan list
             Expanded(
-              child: _filtered.isEmpty
+              child: filtered.isEmpty
                   ? Center(
                       child: Text(
                         'Tidak ada kegiatan ditemukan.',
@@ -224,9 +202,9 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage),
-                      itemCount: _filtered.length,
+                      itemCount: filtered.length,
                       itemBuilder: (context, i) {
-                        final k = _filtered[i];
+                        final k = filtered[i];
                         final isSelesai = k.status == 'Selesai';
 
                         return Padding(
@@ -242,7 +220,7 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        k.title,
+                                        k.judul,
                                         style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
                                       ),
                                     ),
@@ -271,14 +249,14 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
                                 Row(
                                   children: [
                                     TextButton.icon(
-                                      onPressed: () => _showStatusDialog(k),
+                                      onPressed: () => _showStatusDialog(context, k),
                                       icon: const Icon(Icons.change_circle_outlined, size: 16, color: AppColors.primary),
                                       label: Text('Ubah Status', style: AppTypography.labelBold.copyWith(color: AppColors.primary)),
                                     ),
                                     const Spacer(),
                                     IconButton(
                                       icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
-                                      onPressed: () => _handleDelete(k.id),
+                                      onPressed: () => _handleDelete(context, k.id),
                                     ),
                                   ],
                                 ),

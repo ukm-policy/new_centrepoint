@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../anggota/anggota_data.dart';
+import '../../../data/repositories/member_repository.dart';
 
 class _LocalAssignment {
   _LocalAssignment({
@@ -61,26 +62,69 @@ class _AssignJabatanScreenState extends State<AssignJabatanScreen> {
   @override
   void initState() {
     super.initState();
-    _assignments = kMemberList.map((m) {
-      // Map specialized roles to generic ones for dropdown choices
-      String genericRole = 'Anggota Bidang';
-      if (m.role.contains('Lead') || m.role.contains('Manager')) {
-        genericRole = 'Kepala Bidang';
-      } else if (m.role.contains('Senior')) {
-        genericRole = 'Staff Ahli';
+    final memberRepo = context.read<MemberRepository>();
+    _assignments = memberRepo.members.map((m) {
+      String currentJabatan = m.jabatan ?? 'Anggota Umum';
+      if (!_roles.contains(currentJabatan)) {
+        if (currentJabatan.contains('Kepala Bidang')) {
+          currentJabatan = 'Kepala Bidang';
+        } else if (currentJabatan.contains('Staff Bidang') || currentJabatan.contains('Anggota Bidang')) {
+          currentJabatan = 'Anggota Bidang';
+        } else if (currentJabatan.contains('Staff Ahli')) {
+          currentJabatan = 'Staff Ahli';
+        } else if (currentJabatan.contains('Ketua Umum')) {
+          currentJabatan = 'Ketua Umum';
+        } else if (currentJabatan.contains('Sekretaris')) {
+          currentJabatan = 'Sekretaris';
+        } else if (currentJabatan.contains('Bendahara')) {
+          currentJabatan = 'Bendahara';
+        } else {
+          currentJabatan = 'Anggota Umum';
+        }
       }
       return _LocalAssignment(
         id: m.id,
-        name: m.name,
+        name: m.nama,
         nim: m.nim,
-        role: genericRole,
-        division: m.division,
+        role: currentJabatan,
+        division: m.bidang ?? 'Umum',
       );
     }).toList();
   }
 
   void _saveAssignments() {
-    // Simulate saving
+    final memberRepo = context.read<MemberRepository>();
+    for (final assign in _assignments) {
+      String roleVal = 'anggota';
+      String? bidangVal = assign.division == 'Umum' ? null : assign.division;
+      String? jabatanVal;
+
+      if (assign.role == 'Ketua Umum') {
+        roleVal = 'ketua';
+        jabatanVal = 'Ketua Umum';
+      } else if (assign.role == 'Sekretaris') {
+        roleVal = 'staff';
+        jabatanVal = 'Sekretaris';
+      } else if (assign.role == 'Bendahara') {
+        roleVal = 'staff';
+        jabatanVal = 'Bendahara';
+      } else if (assign.role == 'Kepala Bidang') {
+        roleVal = 'staff';
+        jabatanVal = 'Kepala Bidang ${assign.division}';
+      } else if (assign.role == 'Staff Ahli') {
+        roleVal = 'staff';
+        jabatanVal = 'Staff Ahli ${assign.division}';
+      } else if (assign.role == 'Anggota Bidang') {
+        roleVal = 'anggota';
+        jabatanVal = 'Staff Bidang ${assign.division}';
+      } else {
+        roleVal = 'anggota';
+        jabatanVal = null;
+      }
+
+      memberRepo.assignRoleAndJabatan(assign.id, role: roleVal, bidang: bidangVal, jabatan: jabatanVal);
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -226,7 +270,7 @@ class _AssignJabatanScreenState extends State<AssignJabatanScreen> {
                                     Text('JABATAN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 9)),
                                     const SizedBox(height: 4),
                                     DropdownButtonFormField<String>(
-                                      initialValue: assign.role,
+                                      value: assign.role,
                                       onChanged: (v) {
                                         setState(() {
                                           assign.role = v ?? assign.role;
@@ -254,7 +298,7 @@ class _AssignJabatanScreenState extends State<AssignJabatanScreen> {
                                     Text('BIDANG / DIVISI', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 9)),
                                     const SizedBox(height: 4),
                                     DropdownButtonFormField<String>(
-                                      initialValue: assign.division,
+                                      value: assign.division,
                                       onChanged: (v) {
                                         setState(() {
                                           assign.division = v ?? assign.division;

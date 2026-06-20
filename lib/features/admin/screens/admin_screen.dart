@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../or/or_data.dart';
-
-// ── Mock stats (nanti dari DB) ─────────────────────────────────────────────────
-
-const _kTotalUser = 48;
-const _kAnggotaAktif = 36;
-const _kPendingVerif = 4;
-final _kPendingOR = kApplicants.where((a) => a.status == ApplicantStatus.pending).length;
+import '../../../data/models/or_model.dart';
+import '../../../data/repositories/member_repository.dart';
+import '../../../data/repositories/or_repository.dart';
 
 // ── Admin Menu Data ────────────────────────────────────────────────────────────
 
@@ -45,164 +41,6 @@ class _AdminCategory {
   final List<_AdminMenu> menus;
 }
 
-final _kCategories = [
-  _AdminCategory(
-    label: 'Pengguna & Keanggotaan',
-    color: AppColors.primaryContainer,
-    menus: [
-      _AdminMenu(
-        icon: Icons.manage_accounts_outlined,
-        label: 'Kelola Akun Pengguna',
-        subtitle: '$_kTotalUser pengguna terdaftar',
-        route: '/admin/users',
-        implemented: true,
-      ),
-      _AdminMenu(
-        icon: Icons.verified_user_outlined,
-        label: 'Verifikasi Anggota Baru',
-        subtitle: '$_kPendingVerif menunggu verifikasi',
-        route: '/admin/verifikasi',
-        badgeCount: _kPendingVerif,
-        implemented: true,
-      ),
-      _AdminMenu(
-        icon: Icons.badge_outlined,
-        label: 'Assign Jabatan',
-        subtitle: 'Atur role & jabatan anggota',
-        route: '/admin/periode/jabatan',
-        implemented: true,
-      ),
-    ],
-  ),
-  _AdminCategory(
-    label: 'Open Recruitment',
-    color: AppColors.secondaryContainer,
-    menus: [
-      _AdminMenu(
-        icon: Icons.assignment_ind_outlined,
-        label: 'Dashboard OR',
-        subtitle: '${kApplicants.length} total pelamar',
-        route: '/admin/or',
-        badgeCount: _kPendingOR,
-      ),
-      _AdminMenu(
-        icon: Icons.tune_outlined,
-        label: 'Kelola Periode OR',
-        subtitle: kOrPeriode.status == ORStatus.buka
-            ? 'Sedang buka · ${kOrPeriode.sisaHari} hari lagi'
-            : 'Periode tidak aktif',
-        route: '/admin/or/kelola',
-      ),
-    ],
-  ),
-  _AdminCategory(
-    label: 'Konten & Komunikasi',
-    color: AppColors.tertiaryContainer,
-    menus: [
-      _AdminMenu(
-        icon: Icons.article_outlined,
-        label: 'Kelola Berita',
-        subtitle: 'Buat & edit berita & pengumuman',
-        route: '/admin/berita',
-        implemented: true,
-      ),
-      _AdminMenu(
-        icon: Icons.campaign_outlined,
-        label: 'Kirim Pengumuman',
-        subtitle: 'Broadcast ke semua anggota',
-        route: '/admin/pengumuman/buat',
-        implemented: true,
-      ),
-    ],
-  ),
-  _AdminCategory(
-    label: 'Kegiatan & Absensi',
-    color: AppColors.surfaceContainerHighest,
-    menus: [
-      _AdminMenu(
-        icon: Icons.event_available_outlined,
-        label: 'Kelola Semua Kegiatan',
-        subtitle: 'Manajemen kegiatan seluruh bidang',
-        route: '/admin/kegiatan',
-        implemented: true,
-      ),
-      _AdminMenu(
-        icon: Icons.how_to_reg_outlined,
-        label: 'Rekap Absensi',
-        subtitle: 'Riwayat absensi semua anggota',
-        route: '/absensi/riwayat-sekret',
-      ),
-      _AdminMenu(
-        icon: Icons.qr_code_2_outlined,
-        label: 'Generator QR Absensi',
-        subtitle: 'Buat QR untuk kegiatan',
-        route: '/admin/qr-generator',
-        implemented: true,
-      ),
-    ],
-  ),
-  _AdminCategory(
-    label: 'Keuangan',
-    color: AppColors.errorContainer,
-    menus: [
-      _AdminMenu(
-        icon: Icons.payments_outlined,
-        label: 'Uang Khas Semua Anggota',
-        subtitle: 'Pantau pembayaran iuran',
-        route: '/admin/uang-khas',
-        implemented: true,
-      ),
-      _AdminMenu(
-        icon: Icons.verified_outlined,
-        label: 'Verifikasi Pembayaran',
-        subtitle: 'Konfirmasi bukti bayar masuk',
-        route: '/admin/uang-khas/verifikasi',
-        implemented: true,
-      ),
-      _AdminMenu(
-        icon: Icons.bar_chart_outlined,
-        label: 'Rekap & Export Keuangan',
-        subtitle: 'Laporan keuangan keseluruhan',
-        route: '/admin/keuangan',
-        implemented: true,
-      ),
-    ],
-  ),
-  _AdminCategory(
-    label: 'Poin & Prestasi',
-    color: AppColors.surfaceContainerHighest,
-    menus: [
-      _AdminMenu(
-        icon: Icons.stars_outlined,
-        label: 'Kelola Poin Semua Anggota',
-        subtitle: 'Tambah / kurangi poin keaktifan',
-        route: '/admin/poin',
-        implemented: true,
-      ),
-    ],
-  ),
-  _AdminCategory(
-    label: 'Pengaturan Sistem',
-    color: AppColors.surfaceContainerHigh,
-    menus: [
-      _AdminMenu(
-        icon: Icons.calendar_month_outlined,
-        label: 'Kelola Periode Kepengurusan',
-        subtitle: 'Atur masa jabatan & regenerasi',
-        route: '/admin/periode',
-        implemented: true,
-      ),
-      _AdminMenu(
-        icon: Icons.receipt_long_outlined,
-        label: 'Log Aktivitas Sistem',
-        subtitle: 'Audit trail seluruh aksi admin',
-        route: '/admin/log',
-        implemented: true,
-      ),
-    ],
-  ),
-];
-
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
 class AdminScreen extends StatelessWidget {
@@ -210,6 +48,176 @@ class AdminScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final memberRepo = Provider.of<MemberRepository>(context);
+    final members = memberRepo.members;
+    final totalUser = members.length;
+    final anggotaAktif = members.where((m) => m.status == 'Aktif').length;
+    final pendingVerif = members.where((m) => m.status == 'Pending').length;
+
+    final orRepo = Provider.of<ORRepository>(context);
+    final applicants = orRepo.applicants;
+    final pendingOR = applicants.where((a) => a.status == ApplicantStatus.pending).length;
+    final totalApplicants = applicants.length;
+    final orPeriode = orRepo.orPeriode;
+
+    final categories = [
+      _AdminCategory(
+        label: 'Pengguna & Keanggotaan',
+        color: AppColors.primaryContainer,
+        menus: [
+          _AdminMenu(
+            icon: Icons.manage_accounts_outlined,
+            label: 'Kelola Akun Pengguna',
+            subtitle: '$totalUser pengguna terdaftar',
+            route: '/admin/users',
+            implemented: true,
+          ),
+          _AdminMenu(
+            icon: Icons.verified_user_outlined,
+            label: 'Verifikasi Anggota Baru',
+            subtitle: '$pendingVerif menunggu verifikasi',
+            route: '/admin/verifikasi',
+            badgeCount: pendingVerif,
+            implemented: true,
+          ),
+          _AdminMenu(
+            icon: Icons.badge_outlined,
+            label: 'Assign Jabatan',
+            subtitle: 'Atur role & jabatan anggota',
+            route: '/admin/periode/jabatan',
+            implemented: true,
+          ),
+        ],
+      ),
+      _AdminCategory(
+        label: 'Open Recruitment',
+        color: AppColors.secondaryContainer,
+        menus: [
+          _AdminMenu(
+            icon: Icons.assignment_ind_outlined,
+            label: 'Dashboard OR',
+            subtitle: '$totalApplicants total pelamar',
+            route: '/admin/or',
+            badgeCount: pendingOR,
+          ),
+          _AdminMenu(
+            icon: Icons.tune_outlined,
+            label: 'Kelola Periode OR',
+            subtitle: orPeriode.status == ORStatus.buka
+                ? 'Sedang buka · ${orPeriode.sisaHari} hari lagi'
+                : 'Periode tidak aktif',
+            route: '/admin/or/kelola',
+          ),
+        ],
+      ),
+      _AdminCategory(
+        label: 'Konten & Komunikasi',
+        color: AppColors.tertiaryContainer,
+        menus: [
+          _AdminMenu(
+            icon: Icons.article_outlined,
+            label: 'Kelola Berita',
+            subtitle: 'Buat & edit berita & pengumuman',
+            route: '/admin/berita',
+            implemented: true,
+          ),
+          _AdminMenu(
+            icon: Icons.campaign_outlined,
+            label: 'Kirim Pengumuman',
+            subtitle: 'Broadcast ke semua anggota',
+            route: '/admin/pengumuman/buat',
+            implemented: true,
+          ),
+        ],
+      ),
+      _AdminCategory(
+        label: 'Kegiatan & Absensi',
+        color: AppColors.surfaceContainerHighest,
+        menus: [
+          _AdminMenu(
+            icon: Icons.event_available_outlined,
+            label: 'Kelola Semua Kegiatan',
+            subtitle: 'Manajemen kegiatan seluruh bidang',
+            route: '/admin/kegiatan',
+            implemented: true,
+          ),
+          _AdminMenu(
+            icon: Icons.how_to_reg_outlined,
+            label: 'Rekap Absensi',
+            subtitle: 'Riwayat absensi semua anggota',
+            route: '/absensi/riwayat-sekret',
+          ),
+          _AdminMenu(
+            icon: Icons.qr_code_2_outlined,
+            label: 'Generator QR Absensi',
+            subtitle: 'Buat QR untuk kegiatan',
+            route: '/admin/qr-generator',
+            implemented: true,
+          ),
+        ],
+      ),
+      _AdminCategory(
+        label: 'Keuangan',
+        color: AppColors.errorContainer,
+        menus: [
+          _AdminMenu(
+            icon: Icons.payments_outlined,
+            label: 'Uang Khas Semua Anggota',
+            subtitle: 'Pantau pembayaran iuran',
+            route: '/admin/uang-khas',
+            implemented: true,
+          ),
+          _AdminMenu(
+            icon: Icons.verified_outlined,
+            label: 'Verifikasi Pembayaran',
+            subtitle: 'Konfirmasi bukti bayar masuk',
+            route: '/admin/uang-khas/verifikasi',
+            implemented: true,
+          ),
+          _AdminMenu(
+            icon: Icons.bar_chart_outlined,
+            label: 'Rekap & Export Keuangan',
+            subtitle: 'Laporan keuangan keseluruhan',
+            route: '/admin/keuangan',
+            implemented: true,
+          ),
+        ],
+      ),
+      _AdminCategory(
+        label: 'Poin & Prestasi',
+        color: AppColors.surfaceContainerHighest,
+        menus: [
+          _AdminMenu(
+            icon: Icons.stars_outlined,
+            label: 'Kelola Poin Semua Anggota',
+            subtitle: 'Tambah / kurangi poin keaktifan',
+            route: '/admin/poin',
+            implemented: true,
+          ),
+        ],
+      ),
+      _AdminCategory(
+        label: 'Pengaturan Sistem',
+        color: AppColors.surfaceContainerHigh,
+        menus: [
+          _AdminMenu(
+            icon: Icons.calendar_month_outlined,
+            label: 'Kelola Periode Kepengurusan',
+            subtitle: 'Atur masa jabatan & regenerasi',
+            route: '/admin/periode',
+            implemented: true,
+          ),
+          _AdminMenu(
+            icon: Icons.receipt_long_outlined,
+            label: 'Log Aktivitas Sistem',
+            subtitle: 'Audit trail seluruh aksi admin',
+            route: '/admin/log',
+            implemented: true,
+          ),
+        ],
+      ),
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: CustomScrollView(
@@ -294,14 +302,14 @@ class AdminScreen extends StatelessWidget {
                 // ── Quick Stats ───────────────────────────────────────────
                 Row(children: [
                   _StatCard(
-                    value: '$_kTotalUser',
+                    value: '$totalUser',
                     label: 'Total User',
                     icon: Icons.people_outline,
                     color: AppColors.surfaceContainerLowest,
                   ),
                   const SizedBox(width: AppSpacing.gutterGrid),
                   _StatCard(
-                    value: '$_kAnggotaAktif',
+                    value: '$anggotaAktif',
                     label: 'Aktif',
                     icon: Icons.verified_outlined,
                     color: AppColors.success,
@@ -309,14 +317,14 @@ class AdminScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.gutterGrid),
                   _StatCard(
-                    value: '$_kPendingVerif',
+                    value: '$pendingVerif',
                     label: 'Verif.',
                     icon: Icons.hourglass_top_outlined,
                     color: AppColors.secondaryContainer,
                   ),
                   const SizedBox(width: AppSpacing.gutterGrid),
                   _StatCard(
-                    value: '$_kPendingOR',
+                    value: '$pendingOR',
                     label: 'Pend. OR',
                     icon: Icons.assignment_late_outlined,
                     color: AppColors.errorContainer,
@@ -325,7 +333,7 @@ class AdminScreen extends StatelessWidget {
                 const SizedBox(height: AppSpacing.stackGap),
 
                 // ── Categories ────────────────────────────────────────────
-                for (final cat in _kCategories) ...[
+                for (final cat in categories) ...[
                   _CategorySection(category: cat),
                   const SizedBox(height: AppSpacing.stackGap),
                 ],

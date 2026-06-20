@@ -5,9 +5,11 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
+import 'package:provider/provider.dart';
 import '../../../core/session/app_session.dart';
-import '../../anggota/anggota_data.dart';
-import '../../berita/berita_data.dart';
+import '../../../data/models/berita_model.dart';
+import '../../../data/repositories/member_repository.dart';
+import '../../../data/repositories/berita_repository.dart';
 
 class BerandaScreen extends StatefulWidget {
   const BerandaScreen({super.key});
@@ -19,8 +21,6 @@ class BerandaScreen extends StatefulWidget {
 class _BerandaScreenState extends State<BerandaScreen> {
   final _pageCtrl = PageController();
   int _bannerIndex = 0;
-
-  final _banners = kBeritaList.take(2).toList();
 
   List<_QuickMenuData> get _quickMenu {
     final isDemisioner = AppSession.kodeRole == 'demisioner';
@@ -36,8 +36,6 @@ class _BerandaScreenState extends State<BerandaScreen> {
     ];
   }
 
-  final _newsList = kBeritaList.take(3).toList();
-
   @override
   void dispose() {
     _pageCtrl.dispose();
@@ -46,11 +44,15 @@ class _BerandaScreenState extends State<BerandaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final beritaRepo = context.watch<BeritaRepository>();
+    final newsList = beritaRepo.publishedBerita;
+    final banners = newsList.take(2).toList();
+    final horizontalNews = newsList.take(3).toList();
+
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: FloatingAppBar(
-          ),
+        const SliverToBoxAdapter(
+          child: FloatingAppBar(),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
@@ -63,7 +65,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
             delegate: SliverChildListDelegate([
               // Banner carousel
               _BannerCarousel(
-                banners: _banners,
+                banners: banners,
                 controller: _pageCtrl,
                 currentIndex: _bannerIndex,
                 onPageChanged: (i) => setState(() => _bannerIndex = i),
@@ -84,7 +86,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
                 onViewAll: () => context.go('/berita'),
               ),
               const SizedBox(height: 12),
-              _HorizontalNewsList(news: _newsList),
+              _HorizontalNewsList(news: horizontalNews),
             ]),
           ),
         ),
@@ -102,12 +104,11 @@ class _BannerCarousel extends StatelessWidget {
     required this.currentIndex,
     required this.onPageChanged,
   });
-
-  final List<BeritaItem> banners;
+  final List<BeritaModel> banners;
   final PageController controller;
   final int currentIndex;
   final ValueChanged<int> onPageChanged;
-
+ 
   @override
   Widget build(BuildContext context) {
     return BrutalistCard(
@@ -149,11 +150,11 @@ class _BannerCarousel extends StatelessWidget {
     );
   }
 }
-
+ 
 class _BannerItem extends StatelessWidget {
   const _BannerItem({required this.data});
-  final BeritaItem data;
-
+  final BeritaModel data;
+ 
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -187,13 +188,13 @@ class _BannerItem extends StatelessWidget {
                     border: Border.all(color: AppColors.blackCharcoal, width: 1),
                   ),
                   child: Text(
-                    data.category.toUpperCase(),
+                    data.kategori.toUpperCase(),
                     style: AppTypography.labelBold.copyWith(color: AppColors.onPrimaryContainer),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  data.title,
+                  data.judul,
                   style: AppTypography.headlineSm.copyWith(
                     color: AppColors.surfaceContainerLowest,
                   ),
@@ -207,18 +208,17 @@ class _BannerItem extends StatelessWidget {
   }
 }
 
-// ── User Card ────────────────────────────────────────────────────────────────
-
 class _UserCard extends StatelessWidget {
   const _UserCard();
-
+ 
   @override
   Widget build(BuildContext context) {
-    final currentMember = kMemberList.firstWhere(
-      (m) => m.name == AppSession.nama,
-      orElse: () => kMemberList.first,
+    final members = context.watch<MemberRepository>().members;
+    final currentMember = members.firstWhere(
+      (m) => m.nama == AppSession.nama,
+      orElse: () => members.first,
     );
-
+ 
     return BrutalistCard(
       onTap: () => context.push('/poin'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -304,7 +304,7 @@ class _UserCard extends StatelessWidget {
                     const Icon(Icons.monetization_on, size: 14, color: AppColors.primary),
                     const SizedBox(width: 4),
                     Text(
-                      '${currentMember.poin} Pts',
+                      '${currentMember.totalPoin} Pts',
                       style: AppTypography.bodyLg.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
@@ -430,7 +430,7 @@ class _SectionHeader extends StatelessWidget {
 
 class _HorizontalNewsList extends StatelessWidget {
   const _HorizontalNewsList({required this.news});
-  final List<BeritaItem> news;
+  final List<BeritaModel> news;
 
   @override
   Widget build(BuildContext context) {
@@ -449,7 +449,12 @@ class _HorizontalNewsList extends StatelessWidget {
 
 class _NewsCard extends StatelessWidget {
   const _NewsCard({required this.data});
-  final BeritaItem data;
+  final BeritaModel data;
+
+  String _fmtDate(DateTime d) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -479,12 +484,12 @@ class _NewsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      data.date,
+                      _fmtDate(data.tanggalPublish),
                       style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      data.title,
+                      data.judul,
                       style: AppTypography.headlineSm,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

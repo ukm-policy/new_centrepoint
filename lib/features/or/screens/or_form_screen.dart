@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../or_data.dart';
+import '../../../data/models/or_model.dart';
+import '../../../data/repositories/or_repository.dart';
 
 class OrFormScreen extends StatefulWidget {
   const OrFormScreen({super.key});
@@ -46,9 +48,11 @@ class _OrFormScreenState extends State<OrFormScreen> {
     if (!mounted) return;
     setState(() => _submitting = false);
 
-    // Insert new applicant into kApplicants
-    final newApp = ORApplicant(
-      id: 'app-${kApplicants.length + 1}',
+    final orRepo = context.read<ORRepository>();
+    // Insert new applicant into repository
+    final newApp = ORApplicantModel(
+      id: 'app-${orRepo.applicants.length + 1}',
+      periodeId: orRepo.orPeriode.id,
       nama: _namaCtrl.text,
       nim: _nimCtrl.text,
       prodi: _prodiCtrl.text,
@@ -60,13 +64,16 @@ class _OrFormScreenState extends State<OrFormScreen> {
       status: ApplicantStatus.pending,
       tanggalDaftar: DateTime.now(),
     );
-    kApplicants.insert(0, newApp);
+    orRepo.addApplicant(newApp);
 
     context.pushReplacement('/or/status', extra: _nimCtrl.text);
   }
 
   @override
   Widget build(BuildContext context) {
+    final orRepo = context.watch<ORRepository>();
+    final listBidang = orRepo.orPeriode.bidangTersedia;
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -94,7 +101,7 @@ class _OrFormScreenState extends State<OrFormScreen> {
                     const Icon(Icons.info_outline, size: 16, color: AppColors.onSecondaryContainer),
                     const SizedBox(width: 8),
                     Expanded(child: Text(
-                      kOrPeriode.nama,
+                      orRepo.orPeriode.nama,
                       style: AppTypography.labelBold.copyWith(
                         color: AppColors.onSecondaryContainer,
                       ),
@@ -157,7 +164,7 @@ class _OrFormScreenState extends State<OrFormScreen> {
                 _DropdownField(
                   label: 'Bidang yang Diminati',
                   value: _selectedBidang,
-                  items: kBidangList,
+                  items: listBidang,
                   onChanged: (v) => setState(() => _selectedBidang = v),
                   validator: (v) => v == null ? 'Pilih bidang minat' : null,
                 ),

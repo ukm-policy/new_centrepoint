@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
-import '../anggota_data.dart';
+import '../../../data/models/member_model.dart';
+import '../../../data/repositories/member_repository.dart';
 
 class ListMembersScreen extends StatefulWidget {
   const ListMembersScreen({super.key});
@@ -20,16 +22,17 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
 
   final _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
-  List<Member> get _filtered => kMemberList.where((m) {
-        final matchDiv = _filterDiv == 'Semua' || m.division == _filterDiv;
-        final matchSearch = _search.isEmpty ||
-            m.name.toLowerCase().contains(_search.toLowerCase()) ||
-            m.nim.contains(_search);
-        return matchDiv && matchSearch;
-      }).toList();
-
   @override
   Widget build(BuildContext context) {
+    final allMembers = context.watch<MemberRepository>().members.where((m) => m.isActive).toList();
+    final filtered = allMembers.where((m) {
+      final matchDiv = _filterDiv == 'Semua' || m.bidang == _filterDiv;
+      final matchSearch = _search.isEmpty ||
+          m.nama.toLowerCase().contains(_search.toLowerCase()) ||
+          m.nim.contains(_search);
+      return matchDiv && matchSearch;
+    }).toList();
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -53,12 +56,12 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
                   onChanged: (v) => setState(() => _search = v),
                   style: AppTypography.bodyMd,
                   decoration: const InputDecoration(
-                    hintText: 'Cari anggota...',
-                    prefixIcon: Icon(Icons.search, size: 20),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 14),
+                     hintText: 'Cari anggota...',
+                     prefixIcon: Icon(Icons.search, size: 20),
+                     border: InputBorder.none,
+                     enabledBorder: InputBorder.none,
+                     focusedBorder: InputBorder.none,
+                     contentPadding: EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
@@ -98,7 +101,7 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
 
               // Member count
               Text(
-                '${_filtered.length} anggota',
+                '${filtered.length} anggota',
                 style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
               ),
               const SizedBox(height: 12),
@@ -113,8 +116,8 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
                   mainAxisSpacing: AppSpacing.gutterGrid,
                   childAspectRatio: 0.85,
                 ),
-                itemCount: _filtered.length,
-                itemBuilder: (_, i) => _MemberCard(member: _filtered[i]),
+                itemCount: filtered.length,
+                itemBuilder: (_, i) => _MemberCard(member: filtered[i]),
               ),
             ]),
           ),
@@ -126,7 +129,7 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
 
 class _MemberCard extends StatelessWidget {
   const _MemberCard({required this.member});
-  final Member member;
+  final MemberModel member;
 
   Color get _tierColor {
     return switch (member.tier) {
@@ -155,12 +158,12 @@ class _MemberCard extends StatelessWidget {
             child: const Icon(Icons.person, size: 32, color: AppColors.tertiary),
           ),
           const SizedBox(height: 10),
-          Text(member.name,
+          Text(member.nama,
             style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
             maxLines: 2, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
-          Text(member.division,
+          Text(member.bidang ?? '-',
             style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
             textAlign: TextAlign.center),
           const SizedBox(height: 8),

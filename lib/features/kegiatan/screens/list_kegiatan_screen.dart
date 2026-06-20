@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/session/app_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -7,8 +8,10 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../kegiatan_models.dart';
-import '../rapat_models.dart';
+import '../../../data/models/kegiatan_model.dart';
+import '../../../data/models/rapat_model.dart';
+import '../../../data/repositories/kegiatan_repository.dart';
+import '../../../data/repositories/rapat_repository.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -212,12 +215,25 @@ class _AcaraTab extends StatefulWidget {
 class _AcaraTabState extends State<_AcaraTab> {
   String _filter = 'Semua';
 
-  List<KegiatanItem> get _filtered => kKegiatanList
-      .where((k) => _filter == 'Semua' || k.status == _filter)
-      .toList();
+  String _fmtDate(DateTime d) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final kegiatanList = context.watch<KegiatanRepository>().kegiatan;
+    final filtered = kegiatanList.where((k) {
+      if (_filter == 'Semua') return true;
+      if (_filter == 'Upcoming' || _filter == 'Akan Datang') {
+        return k.status == 'Akan Datang' || k.status == 'Upcoming';
+      }
+      return k.status == _filter;
+    }).toList();
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.marginPage, AppSpacing.stackGap,
@@ -227,8 +243,8 @@ class _AcaraTabState extends State<_AcaraTab> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: ['Semua', 'Upcoming', 'Berlangsung', 'Selesai'].map((f) {
-              final active = _filter == f;
+            children: ['Semua', 'Akan Datang', 'Berlangsung', 'Selesai'].map((f) {
+              final active = _filter == f || (_filter == 'Upcoming' && f == 'Akan Datang');
               return GestureDetector(
                 onTap: () => setState(() => _filter = f),
                 child: AnimatedContainer(
@@ -259,7 +275,7 @@ class _AcaraTabState extends State<_AcaraTab> {
         ),
         const SizedBox(height: AppSpacing.stackGap),
 
-        ..._filtered.map((k) => Padding(
+        ...filtered.map((k) => Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
           child: BrutalistCard(
             onTap: () => context.push('/kegiatan/${k.id}'),
@@ -276,14 +292,14 @@ class _AcaraTabState extends State<_AcaraTab> {
                 ]),
               ]),
               const SizedBox(height: 10),
-              Text(k.title, style: AppTypography.headlineSm),
+              Text(k.judul, style: AppTypography.headlineSm),
               const SizedBox(height: 10),
               const MyDivider(color: AppColors.borderSlate, height: 12),
               const SizedBox(height: 10),
               Row(children: [
                 const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.tertiary),
                 const SizedBox(width: 6),
-                Text(k.tanggal,
+                Text(_fmtDate(k.tanggal),
                   style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
               ]),
               const SizedBox(height: 4),
@@ -324,18 +340,72 @@ class _RapatTab extends StatefulWidget {
 class _RapatTabState extends State<_RapatTab> {
   String _category = 'Semua'; // 'Semua' | 'Acara' | 'Kepengurusan'
 
-  List<RapatItem> get _visible => kRapatList
-      .where(isRapatVisible)
-      .where((r) {
-        if (_category == 'Acara') return r.tipe.isAcaraRelated;
-        if (_category == 'Kepengurusan') return !r.tipe.isAcaraRelated;
-        return true;
-      })
-      .toList();
+  String _fmtDate(DateTime d) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
+  bool _isRapatVisible(RapatModel rapat, List<KegiatanModel> kegiatanList) {
+    if (AppSession.kodeRole == 'demisioner') {
+      return rapat.pesertaIds.contains(AppSession.nama);
+    }
+    if (AppSession.isAdmin) return true;
+
+    switch (rapat.tipe) {
+      case RapatTipe.rapatUmumAcara:
+      case RapatTipe.rapatStakeholderAcara:
+        if (rapat.kegiatanId == null) return false;
+        final kegiatan = kegiatanList
+            .where((k) => k.id == rapat.kegiatanId)
+            .firstOrNull;
+        if (kegiatan == null) return false;
+        final isPanitiaInti =
+            kegiatan.ketuaPelaksana?.nama == AppSession.nama ||
+            kegiatan.sekretarisPelaksana?.nama == AppSession.nama ||
+            kegiatan.bendaharaPelaksana?.nama == AppSession.nama;
+        if (rapat.tipe == RapatTipe.rapatStakeholderAcara) return isPanitiaInti;
+        return isPanitiaInti ||
+            kegiatan.sie.any((s) =>
+                s.ketua?.nama == AppSession.nama ||
+                s.anggota.any((a) => a.nama == AppSession.nama));
+
+      case RapatTipe.rapatSie:
+        if (rapat.kegiatanId == null || rapat.namaSie == null) return false;
+        final kegiatan = kegiatanList
+            .where((k) => k.id == rapat.kegiatanId)
+            .firstOrNull;
+        if (kegiatan == null) return false;
+        return kegiatan.sie
+            .where((s) => s.namaSie == rapat.namaSie)
+            .any((s) =>
+                s.ketua?.nama == AppSession.nama ||
+                s.anggota.any((a) => a.nama == AppSession.nama));
+
+      case RapatTipe.rapatStakeholderOrg:
+        if (AppSession.level >= 4) return true;
+        return AppSession.level == 3 && rapat.denganKetuaBidang;
+
+      case RapatTipe.rapatInternalBidang:
+        return AppSession.bidang == rapat.namaBidang && AppSession.level >= 2;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final visible = _visible;
+    final rapatList = context.watch<RapatRepository>().rapat;
+    final kegiatanList = context.watch<KegiatanRepository>().kegiatan;
+
+    final visible = rapatList
+        .where((r) => _isRapatVisible(r, kegiatanList))
+        .where((r) {
+          if (_category == 'Acara') return r.tipe.isAcaraRelated;
+          if (_category == 'Kepengurusan') return !r.tipe.isAcaraRelated;
+          return true;
+        })
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -437,7 +507,7 @@ class _RapatTabState extends State<_RapatTab> {
               Row(children: [
                 const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.tertiary),
                 const SizedBox(width: 6),
-                Text('${r.tanggal}  •  ${r.waktu}',
+                Text('${_fmtDate(r.tanggal)}  •  ${r.waktu}',
                   style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
               ]),
               const SizedBox(height: 4),
@@ -452,7 +522,7 @@ class _RapatTabState extends State<_RapatTab> {
               Row(children: [
                 const Icon(Icons.people_outline, size: 14, color: AppColors.tertiary),
                 const SizedBox(width: 6),
-                Text('${r.peserta.length} peserta',
+                Text('${r.pesertaIds.length} peserta',
                   style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
               ]),
             ]),
@@ -472,7 +542,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, textColor) = switch (status) {
-      'Upcoming'    => (AppColors.secondaryContainer, AppColors.onSecondaryContainer),
+      'Upcoming' || 'Akan Datang' => (AppColors.secondaryContainer, AppColors.onSecondaryContainer),
       'Berlangsung' => (AppColors.primaryContainer, AppColors.onPrimaryContainer),
       _             => (AppColors.surfaceContainerHigh, AppColors.tertiary),
     };
@@ -537,13 +607,13 @@ class _AcaraLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final kegiatan = kKegiatanList
+    final kegiatan = context.watch<KegiatanRepository>().kegiatan
         .where((k) => k.id == kegiatanId)
         .firstOrNull;
     if (kegiatan == null) return const SizedBox.shrink();
     final label = namaSie != null
-        ? '${kegiatan.title} · $namaSie'
-        : kegiatan.title;
+        ? '${kegiatan.judul} · $namaSie'
+        : kegiatan.judul;
     return Row(children: [
       const Icon(Icons.event_note_outlined, size: 12, color: AppColors.primary),
       const SizedBox(width: 4),
@@ -554,3 +624,4 @@ class _AcaraLabel extends StatelessWidget {
     ]);
   }
 }
+

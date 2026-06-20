@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../or_data.dart';
+import '../../../data/models/or_model.dart';
+import '../../../data/repositories/or_repository.dart';
 
 class OrScreen extends StatelessWidget {
   const OrScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final periode = kOrPeriode;
+    final orRepo = context.watch<ORRepository>();
+    final periode = orRepo.orPeriode;
     final status = periode.status;
     final isOpen = status == ORStatus.buka;
-    final accepted = kApplicants.where((a) => a.status == ApplicantStatus.diterima).length;
+    final accepted = orRepo.applicants.where((a) => a.status == ApplicantStatus.diterima).length;
 
     return CustomScrollView(
       slivers: [
@@ -115,7 +118,7 @@ class OrScreen extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: kBidangList.map((b) => Container(
+                    children: periode.bidangTersedia.map((b) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.secondaryContainer,
@@ -171,7 +174,7 @@ class OrScreen extends StatelessWidget {
 class _StatusBanner extends StatelessWidget {
   const _StatusBanner({required this.status, required this.periode});
   final ORStatus status;
-  final ORPeriode periode;
+  final ORPeriodeModel periode;
 
   @override
   Widget build(BuildContext context) {

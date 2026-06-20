@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
-import '../inbox_data.dart';
+import '../../../data/models/inbox_model.dart';
+import '../../../data/repositories/inbox_repository.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -19,16 +21,12 @@ class _InboxScreenState extends State<InboxScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
   bool _onlyUnread = false;
-  final Set<String> _readIds = {};
 
   @override
   void initState() {
     super.initState();
     _tab = TabController(length: 2, vsync: this);
     _tab.addListener(() => setState(() {}));
-    for (final n in kInboxNotif) {
-      if (n.isRead) _readIds.add(n.id);
-    }
   }
 
   @override
@@ -37,20 +35,33 @@ class _InboxScreenState extends State<InboxScreen>
     super.dispose();
   }
 
-  bool _isRead(String id) => _readIds.contains(id);
+  void _markAllRead() {
+    context.read<InboxRepository>().markAllAsRead();
+  }
 
-  void _markAllRead() =>
-      setState(() => _readIds.addAll(kInboxNotif.map((n) => n.id)));
-
-  int get _unreadCount => kInboxNotif.where((n) => !_isRead(n.id)).length;
-
-  void _handleNotifTap(InboxNotifItem item) {
-    setState(() => _readIds.add(item.id));
+  void _handleNotifTap(NotifModel item) {
+    context.read<InboxRepository>().markAsRead(item.id);
     if (item.route != null) context.push(item.route!);
+  }
+
+  String _fmtTimeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Baru saja';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} mnt lalu';
+    if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+    return '${diff.inDays} hari lalu';
+  }
+
+  String _fmtDate(DateTime d) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
 
   @override
   Widget build(BuildContext context) {
+    final inboxRepo = context.watch<InboxRepository>();
+    final unreadCount = inboxRepo.unreadCount;
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: SafeArea(
@@ -59,7 +70,7 @@ class _InboxScreenState extends State<InboxScreen>
           children: [
             _InboxAppBar(
               onBack: () => context.pop(),
-              unreadCount: _unreadCount,
+              unreadCount: unreadCount,
               onMarkAll: _markAllRead,
             ),
             _BrutalistTabBar(controller: _tab),
@@ -68,14 +79,17 @@ class _InboxScreenState extends State<InboxScreen>
                 controller: _tab,
                 children: [
                   _NotifTab(
-                    items: kInboxNotif,
+                    items: inboxRepo.notifications,
                     onlyUnread: _onlyUnread,
-                    isRead: _isRead,
                     onToggleFilter: () =>
                         setState(() => _onlyUnread = !_onlyUnread),
                     onTap: _handleNotifTap,
+                    fmtTimeAgo: _fmtTimeAgo,
                   ),
-                  _PengumumanTab(items: kInboxPengumuman),
+                  _PengumumanTab(
+                    items: inboxRepo.pengumuman,
+                    fmtDate: _fmtDate,
+                  ),
                 ],
               ),
             ),
@@ -262,20 +276,20 @@ class _NotifTab extends StatelessWidget {
   const _NotifTab({
     required this.items,
     required this.onlyUnread,
-    required this.isRead,
     required this.onToggleFilter,
     required this.onTap,
+    required this.fmtTimeAgo,
   });
-  final List<InboxNotifItem> items;
+  final List<NotifModel> items;
   final bool onlyUnread;
-  final bool Function(String id) isRead;
   final VoidCallback onToggleFilter;
-  final void Function(InboxNotifItem item) onTap;
+  final void Function(NotifModel item) onTap;
+  final String Function(DateTime) fmtTimeAgo;
 
   @override
   Widget build(BuildContext context) {
     final filtered =
-        onlyUnread ? items.where((n) => !isRead(n.id)).toList() : items;
+        onlyUnread ? items.where((n) => !n.isRead).toList() : items;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -337,8 +351,9 @@ class _NotifTab extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: _NotifCard(
                 item: n,
-                read: isRead(n.id),
+                read: n.isRead,
                 onTap: () => onTap(n),
+                fmtTimeAgo: fmtTimeAgo,
               ),
             ),
           ),
@@ -352,32 +367,34 @@ class _NotifCard extends StatelessWidget {
     required this.item,
     required this.read,
     required this.onTap,
+    required this.fmtTimeAgo,
   });
-  final InboxNotifItem item;
+  final NotifModel item;
   final bool read;
   final VoidCallback onTap;
+  final String Function(DateTime) fmtTimeAgo;
 
-  IconData get _icon => switch (item.type) {
-        'poin' => Icons.workspace_premium,
-        'kegiatan' => Icons.event_note,
-        'absensi' => Icons.qr_code_scanner,
-        'uang_khas' => Icons.account_balance_wallet,
+  IconData get _icon => switch (item.tipe) {
+        TipeNotif.poin => Icons.workspace_premium,
+        TipeNotif.kegiatan => Icons.event_note,
+        TipeNotif.absensi => Icons.qr_code_scanner,
+        TipeNotif.uangKhas => Icons.account_balance_wallet,
         _ => Icons.info_outline,
       };
 
-  Color get _iconColor => switch (item.type) {
-        'poin' => AppColors.onSecondaryContainer,
-        'kegiatan' => AppColors.primary,
-        'absensi' => AppColors.secondary,
-        'uang_khas' => const Color(0xFFB45309),
+  Color get _iconColor => switch (item.tipe) {
+        TipeNotif.poin => AppColors.onSecondaryContainer,
+        TipeNotif.kegiatan => AppColors.primary,
+        TipeNotif.absensi => AppColors.secondary,
+        TipeNotif.uangKhas => const Color(0xFFB45309),
         _ => AppColors.tertiary,
       };
 
-  Color get _iconBg => switch (item.type) {
-        'poin' => AppColors.secondaryContainer,
-        'kegiatan' => AppColors.errorContainer,
-        'absensi' => const Color(0xFFD1FAE5),
-        'uang_khas' => const Color(0xFFFEF3C7),
+  Color get _iconBg => switch (item.tipe) {
+        TipeNotif.poin => AppColors.secondaryContainer,
+        TipeNotif.kegiatan => AppColors.errorContainer,
+        TipeNotif.absensi => const Color(0xFFD1FAE5),
+        TipeNotif.uangKhas => const Color(0xFFFEF3C7),
         _ => AppColors.surfaceContainerHigh,
       };
 
@@ -423,7 +440,7 @@ class _NotifCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          item.title,
+                          item.judul,
                           style: AppTypography.bodyLg.copyWith(
                             fontWeight:
                                 read ? FontWeight.w500 : FontWeight.w700,
@@ -445,7 +462,7 @@ class _NotifCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    item.body,
+                    item.isi,
                     style: AppTypography.bodyMd.copyWith(
                       color: AppColors.tertiary,
                       height: 1.4,
@@ -457,7 +474,7 @@ class _NotifCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        item.time,
+                        fmtTimeAgo(item.waktu),
                         style: AppTypography.labelBold.copyWith(
                           color: AppColors.onSurfaceVariant,
                           fontSize: 11,
@@ -508,8 +525,9 @@ class _NotifCard extends StatelessWidget {
 // ── Pengumuman Tab ────────────────────────────────────────────────────────────
 
 class _PengumumanTab extends StatelessWidget {
-  const _PengumumanTab({required this.items});
-  final List<InboxPengumumanItem> items;
+  const _PengumumanTab({required this.items, required this.fmtDate});
+  final List<PengumumanModel> items;
+  final String Function(DateTime) fmtDate;
 
   @override
   Widget build(BuildContext context) {
@@ -522,16 +540,20 @@ class _PengumumanTab extends StatelessWidget {
       ),
       itemCount: items.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, i) => _PengumumanCard(item: items[i]),
+      itemBuilder: (_, i) => _PengumumanCard(
+        item: items[i],
+        fmtDate: fmtDate,
+      ),
     );
   }
 }
 
 class _PengumumanCard extends StatelessWidget {
-  const _PengumumanCard({required this.item});
-  final InboxPengumumanItem item;
+  const _PengumumanCard({required this.item, required this.fmtDate});
+  final PengumumanModel item;
+  final String Function(DateTime) fmtDate;
 
-  Color get _catColor => switch (item.category) {
+  Color get _catColor => switch (item.kategori) {
         'PENTING' => AppColors.primaryContainer,
         'KEGIATAN' => AppColors.errorContainer,
         'KEUANGAN' => const Color(0xFFFEF3C7),
@@ -540,7 +562,7 @@ class _PengumumanCard extends StatelessWidget {
         _ => AppColors.surfaceContainerHigh,
       };
 
-  Color get _catText => switch (item.category) {
+  Color get _catText => switch (item.kategori) {
         'PENTING' => AppColors.onPrimaryContainer,
         'KEGIATAN' => AppColors.primary,
         'KEUANGAN' => const Color(0xFFB45309),
@@ -570,7 +592,7 @@ class _PengumumanCard extends StatelessWidget {
                       color: AppColors.blackCharcoal, width: 1.5),
                 ),
                 child: Text(
-                  item.category,
+                  item.kategori,
                   style: AppTypography.labelBold.copyWith(
                     color: _catText,
                     fontSize: 10,
@@ -600,7 +622,7 @@ class _PengumumanCard extends StatelessWidget {
               ],
               const Spacer(),
               Text(
-                item.date,
+                fmtDate(item.tanggal),
                 style: AppTypography.labelBold.copyWith(
                   color: AppColors.tertiary,
                   fontSize: 11,
@@ -610,14 +632,14 @@ class _PengumumanCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            item.title,
+            item.judul,
             style: AppTypography.headlineSm.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            item.excerpt,
+            item.ringkasan,
             style: AppTypography.bodyMd.copyWith(
               color: AppColors.tertiary,
               height: 1.5,

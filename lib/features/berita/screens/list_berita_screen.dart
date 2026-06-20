@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../berita_data.dart';
+import '../../../data/repositories/berita_repository.dart';
 
 class ListBeritaScreen extends StatefulWidget {
   const ListBeritaScreen({super.key});
@@ -19,15 +20,21 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
   String _filter = 'Semua';
   String _search = '';
 
-  List<BeritaItem> get _filtered => kBeritaList.where((b) {
-        final matchCat = _filter == 'Semua' || b.category == _filter;
-        final matchSearch = _search.isEmpty ||
-            b.title.toLowerCase().contains(_search.toLowerCase());
-        return matchCat && matchSearch;
-      }).toList();
+  String _fmtDate(DateTime d) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final allBerita = context.watch<BeritaRepository>().publishedBerita;
+    final filtered = allBerita.where((b) {
+      final matchCat = _filter == 'Semua' || b.kategori == _filter;
+      final matchSearch = _search.isEmpty ||
+          b.judul.toLowerCase().contains(_search.toLowerCase());
+      return matchCat && matchSearch;
+    }).toList();
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -111,7 +118,7 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
               const SizedBox(height: AppSpacing.stackGap),
 
               // List
-              ..._filtered.map((b) => Padding(
+              ...filtered.map((b) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
                     child: BrutalistCard(
                       onTap: () => context.push('/berita/${b.id}'),
@@ -133,17 +140,17 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    _CategoryBadge(label: b.category),
+                                    _CategoryBadge(label: b.kategori),
                                     const Spacer(),
                                     Text(
-                                      b.date,
+                                      _fmtDate(b.tanggalPublish),
                                       style: AppTypography.labelBold.copyWith(
                                           color: AppColors.tertiary),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                Text(b.title, style: AppTypography.headlineSm),
+                                Text(b.judul, style: AppTypography.headlineSm),
                                 const SizedBox(height: 8),
                                 const MyDivider(color: AppColors.borderSlate, height: 12),
                                 const SizedBox(height: 8),

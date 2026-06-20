@@ -6,7 +6,9 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../../anggota/anggota_data.dart';
+import 'package:provider/provider.dart';
+import '../../../data/models/member_model.dart';
+import '../../../data/repositories/member_repository.dart';
 
 class _LocalMutation {
   const _LocalMutation({
@@ -29,38 +31,39 @@ class KelolaPoinScreen extends StatefulWidget {
 class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
   late Map<String, int> _pointsMap;
   late Map<String, List<_LocalMutation>> _mutationHistory;
+  bool _initialized = false;
   
   String _search = '';
   String _filterDiv = 'Semua';
   final List<String> _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
-  @override
-  void initState() {
-    super.initState();
+  void _initMaps(List<MemberModel> members) {
+    if (_initialized) return;
     _pointsMap = {
-      for (final m in kMemberList) m.id: int.tryParse(m.poin) ?? 0,
+      for (final m in members) m.id: m.totalPoin,
     };
     _mutationHistory = {
-      for (final m in kMemberList)
+      for (final m in members)
         m.id: [
           const _LocalMutation(amount: 50, reason: 'Kehadiran Seminar Nasional', date: '18 Juni 2026'),
           const _LocalMutation(amount: -25, reason: 'Terlambat Rapat Evaluasi', date: '15 Juni 2026'),
           const _LocalMutation(amount: 100, reason: 'Menjadi Panitia Kegiatan', date: '10 Juni 2026'),
         ],
     };
+    _initialized = true;
   }
 
-  List<Member> get _filtered {
-    return kMemberList.where((m) {
+  List<MemberModel> _getFiltered(List<MemberModel> members) {
+    return members.where((m) {
       final matchSearch = _search.isEmpty ||
-          m.name.toLowerCase().contains(_search.toLowerCase()) ||
+          m.nama.toLowerCase().contains(_search.toLowerCase()) ||
           m.nim.contains(_search);
-      final matchDiv = _filterDiv == 'Semua' || m.division == _filterDiv;
+      final matchDiv = _filterDiv == 'Semua' || (m.bidang == _filterDiv);
       return matchSearch && matchDiv;
     }).toList();
   }
 
-  void _showAdjustPoinSheet(Member member) {
+  void _showAdjustPoinSheet(MemberModel member) {
     final amountCtrl = TextEditingController();
     final reasonCtrl = TextEditingController();
     bool isAddition = true; // toggle between + and -
@@ -108,7 +111,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                                 style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
                               ),
                               Text(
-                                '${member.name} (Poin saat ini: $currentPoin)',
+                                '${member.nama} (Poin saat ini: $currentPoin)',
                                 style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
                               ),
                             ],
@@ -270,6 +273,8 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                         final inputVal = int.parse(amountCtrl.text);
                         final actualVal = isAddition ? inputVal : -inputVal;
 
+                        context.read<MemberRepository>().updatePoin(member.id, actualVal);
+
                         setState(() {
                           _pointsMap[member.id] = currentPoin + actualVal;
                           _mutationHistory[member.id]!.insert(
@@ -286,7 +291,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Poin ${member.name} berhasil diperbarui.',
+                              'Poin ${member.nama} berhasil diperbarui.',
                               style: AppTypography.bodyMd.copyWith(color: Colors.white),
                             ),
                             backgroundColor: AppColors.success,
@@ -308,6 +313,10 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final members = context.watch<MemberRepository>().members;
+    _initMaps(members);
+    final filteredList = _getFiltered(members);
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       appBar: PreferredSize(
@@ -405,7 +414,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
 
             // Members Point List
             Expanded(
-              child: _filtered.isEmpty
+              child: filteredList.isEmpty
                   ? Center(
                       child: Text(
                         'Tidak ada anggota ditemukan.',
@@ -414,12 +423,12 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage),
-                      itemCount: _filtered.length,
+                      itemCount: filteredList.length,
                       itemBuilder: (context, i) {
-                        final m = _filtered[i];
+                        final m = filteredList[i];
                         final pts = _pointsMap[m.id] ?? 0;
-                        final initialName = m.name.isNotEmpty
-                            ? m.name.split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+                        final initialName = m.nama.isNotEmpty
+                            ? m.nama.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
                             : 'M';
 
                         return Padding(
@@ -456,11 +465,11 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        m.name,
+                                        m.nama,
                                         style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
                                       ),
                                       Text(
-                                        '${m.division} · NIM ${m.nim}',
+                                        '${m.bidang ?? "-"} · NIM ${m.nim}',
                                         style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 12),
                                       ),
                                     ],

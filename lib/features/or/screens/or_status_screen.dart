@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -8,7 +9,8 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../or_data.dart';
+import '../../../data/models/or_model.dart';
+import '../../../data/repositories/or_repository.dart';
 
 class OrStatusScreen extends StatelessWidget {
   const OrStatusScreen({super.key, this.nim});
@@ -16,12 +18,13 @@ class OrStatusScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final orRepo = context.watch<ORRepository>();
     // Look up applicant by nim (if passed) or AppSession.nim (if present)
-    ORApplicant? app;
+    ORApplicantModel? app;
     final lookupNim = nim ?? AppSession.nim;
-    final index = kApplicants.indexWhere((a) => a.nim == lookupNim);
+    final index = orRepo.applicants.indexWhere((a) => a.nim == lookupNim);
     if (index != -1) {
-      app = kApplicants[index];
+      app = orRepo.applicants[index];
     }
 
     if (app == null) {

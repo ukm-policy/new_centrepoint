@@ -1,20 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../anggota_data.dart';
+import '../../../data/models/absensi_model.dart';
+import '../../../data/repositories/member_repository.dart';
+import '../../../data/repositories/absensi_repository.dart';
 
 class DetailMemberScreen extends StatelessWidget {
   const DetailMemberScreen({super.key, required this.id});
   final String id;
 
+  static const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
   @override
   Widget build(BuildContext context) {
-    final member = kMemberList.firstWhere(
+    final memberRepo = context.watch<MemberRepository>();
+    final absensiRepo = context.watch<AbsensiRepository>();
+
+    final member = memberRepo.members.firstWhere(
       (m) => m.id == id,
-      orElse: () => kMemberList.first,
+      orElse: () => memberRepo.members.first,
     );
+
+    final memberAbsensi = absensiRepo.absensi.where((a) => a.memberId == id).toList();
+    final recentActivities = memberAbsensi.map((a) {
+      final isPresent = a.status == StatusAbsensi.hadir;
+      final dateStr = a.waktuScan != null 
+          ? '${a.waktuScan!.day} ${_months[a.waktuScan!.month - 1]} ${a.waktuScan!.year}' 
+          : '-';
+      return (a.kegiatanJudul, dateStr, isPresent);
+    }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
@@ -54,7 +71,7 @@ class DetailMemberScreen extends StatelessWidget {
               child: const Icon(Icons.person, size: 52, color: AppColors.tertiary),
             ),
             const SizedBox(height: 12),
-            Text(member.name,
+            Text(member.nama,
               style: AppTypography.headlineMd.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
             Text(member.role,
@@ -63,17 +80,17 @@ class DetailMemberScreen extends StatelessWidget {
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               _TierBadge(tier: member.tier),
               const SizedBox(width: 8),
-              _DivisionBadge(division: member.division),
+              _DivisionBadge(division: member.bidang ?? '-'),
             ]),
             const SizedBox(height: 16),
             const MyDivider(color: AppColors.borderSlate),
             const SizedBox(height: 16),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              _StatColumn(value: member.poin, label: 'Poin'),
+              _StatColumn(value: '${member.totalPoin}', label: 'Poin'),
               _VerticalDivider(),
-              _StatColumn(value: member.kegiatanCount, label: 'Kegiatan'),
+              _StatColumn(value: '${member.kegiatanCount}', label: 'Kegiatan'),
               _VerticalDivider(),
-              _StatColumn(value: member.kehadiranRate, label: 'Kehadiran'),
+              _StatColumn(value: '${(member.kehadiranRate * 100).toInt()}%', label: 'Kehadiran'),
             ]),
           ])),
           const SizedBox(height: AppSpacing.stackGap),
@@ -88,7 +105,7 @@ class DetailMemberScreen extends StatelessWidget {
             const SizedBox(height: 10),
             _ContactRow(icon: Icons.email_outlined, label: 'Email', value: member.email),
             const SizedBox(height: 10),
-            _ContactRow(icon: Icons.phone_outlined, label: 'No. HP', value: member.phone),
+            _ContactRow(icon: Icons.phone_outlined, label: 'No. HP', value: member.noHp),
             const SizedBox(height: 10),
             _ContactRow(icon: Icons.school_outlined, label: 'Angkatan', value: member.angkatan),
           ])),
@@ -100,21 +117,27 @@ class DetailMemberScreen extends StatelessWidget {
             const SizedBox(height: 12),
             const MyDivider(color: AppColors.borderSlate, height: 12),
             const SizedBox(height: 12),
-            ...member.recentActivities.map((r) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(children: [
-                Container(
-                  width: 8, height: 8,
-                  decoration: BoxDecoration(
-                    color: r.$3 ? AppColors.secondary : AppColors.error,
-                    shape: BoxShape.circle,
+            if (recentActivities.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text('Belum ada riwayat kegiatan', style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
+              )
+            else
+              ...recentActivities.map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(children: [
+                  Container(
+                    width: 8, height: 8,
+                    decoration: BoxDecoration(
+                      color: r.$3 ? AppColors.secondary : AppColors.error,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(child: Text(r.$1, style: AppTypography.bodyMd)),
-                Text(r.$2, style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
-              ]),
-            )),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(r.$1, style: AppTypography.bodyMd)),
+                  Text(r.$2, style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+                ]),
+              )),
           ])),
         ],
       ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/my_divider.dart';
-import '../berita_data.dart';
+import '../../../data/models/berita_model.dart';
+import '../../../data/repositories/berita_repository.dart';
 
 class DetailBeritaScreen extends StatefulWidget {
   const DetailBeritaScreen({super.key, required this.id});
@@ -16,10 +18,10 @@ class DetailBeritaScreen extends StatefulWidget {
 class _DetailBeritaScreenState extends State<DetailBeritaScreen> {
   bool _isBookmarked = false;
 
-  void _shareBerita(BeritaItem berita) {
+  void _shareBerita(BeritaModel berita) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Tautan berita "${berita.title}" telah disalin ke clipboard!',
+        content: Text('Tautan berita "${berita.judul}" telah disalin ke clipboard!',
             style: AppTypography.bodyMd.copyWith(color: Colors.white)),
         backgroundColor: AppColors.blackCharcoal,
         behavior: SnackBarBehavior.floating,
@@ -45,11 +47,17 @@ class _DetailBeritaScreenState extends State<DetailBeritaScreen> {
     );
   }
 
+  String _fmtDate(DateTime d) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final berita = kBeritaList.firstWhere(
+    final beritaRepo = context.watch<BeritaRepository>();
+    final berita = beritaRepo.berita.firstWhere(
       (b) => b.id == widget.id,
-      orElse: () => kBeritaList.first,
+      orElse: () => beritaRepo.berita.first,
     );
 
     return Scaffold(
@@ -85,10 +93,10 @@ class _DetailBeritaScreenState extends State<DetailBeritaScreen> {
                 children: [
                   Row(
                     children: [
-                      _Badge(label: berita.category.toUpperCase()),
+                      _Badge(label: berita.kategori.toUpperCase()),
                       const Spacer(),
                       Text(
-                        berita.date,
+                        _fmtDate(berita.tanggalPublish),
                         style: AppTypography.labelBold
                             .copyWith(color: AppColors.tertiary),
                       ),
@@ -96,7 +104,7 @@ class _DetailBeritaScreenState extends State<DetailBeritaScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    berita.title,
+                    berita.judul,
                     style: AppTypography.headlineMd.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -105,7 +113,7 @@ class _DetailBeritaScreenState extends State<DetailBeritaScreen> {
                   const MyDivider(color: AppColors.borderSlate),
                   const SizedBox(height: 16),
                   Text(
-                    berita.content,
+                    berita.konten,
                     style: AppTypography.bodyLg.copyWith(
                       color: AppColors.onSurface,
                       height: 1.7,

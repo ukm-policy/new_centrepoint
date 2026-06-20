@@ -416,21 +416,21 @@ class PeriodeModel {
 ## Roadmap Migrasi
 
 ### Fase 1 — Buat Model & Dummy Data
-- [ ] Buat semua file model di `lib/data/models/`
-- [ ] Pindahkan & standarisasi dummy data dari file lama ke `lib/data/dummy/`
-- [ ] Hapus file data lama (`anggota_data.dart`, `berita_data.dart`, `inbox_data.dart`, `kegiatan_models.dart`, `rapat_models.dart`, `or_data.dart`)
-- [ ] Update semua import di screen yang terpengaruh
+- [x] Buat semua file model di `lib/data/models/`
+- [x] Pindahkan & standarisasi dummy data dari file lama ke `lib/data/dummy/`
+- [x] Hapus file data lama (`anggota_data.dart`, `berita_data.dart`, `inbox_data.dart`, `kegiatan_models.dart`, `rapat_models.dart`, `or_data.dart`)
+- [x] Update semua import di screen yang terpengaruh
 
 ### Fase 2 — Koneksi ke Screen via Provider
-- [ ] Tambahkan dependency `provider` atau `riverpod` ke `pubspec.yaml`
-- [ ] Buat Repository interface untuk setiap domain
-- [ ] Buat DummyRepository yang mengembalikan data dari `lib/data/dummy/`
-- [ ] Inject repository ke screen via Provider
+- [x] Tambahkan dependency `provider` atau `riverpod` ke `pubspec.yaml`
+- [x] Buat Repository interface untuk setiap domain
+- [x] Buat DummyRepository yang mengembalikan data dari `lib/data/dummy/`
+- [x] Inject repository ke screen via Provider
 
 ### Fase 3 — Siap Backend (Future)
-- [ ] Buat ApiRepository yang implementasi interface yang sama
-- [ ] Tambahkan `fromJson` / `toJson` ke setiap model
-- [ ] Swap DummyRepository → ApiRepository tanpa mengubah screen
+- [x] Buat ApiRepository yang implementasi interface yang sama
+- [x] Tambahkan `fromJson` / `toJson` ke setiap model
+- [x] Swap DummyRepository → ApiRepository tanpa mengubah screen
 
 ---
 

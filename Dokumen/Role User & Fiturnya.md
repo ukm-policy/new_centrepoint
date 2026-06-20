@@ -1,6 +1,6 @@
 # Role, User & Fiturnya — POLICY CENTREPOINT
 
-**Versi:** 3.0  
+**Versi:** 4.0  
 **Tanggal:** 20 Juni 2026  
 **Status:** In Development
 
@@ -76,9 +76,9 @@ Kepengurusan berjalan per **periode akademik** (contoh: 2024/2025, 2025/2026). S
 ### Skema Database Periode
 
 ```sql
-bidang      → id, nama_bidang, deskripsi
-jabatan     → id, nama_jabatan, bidang_id (nullable), level_akses (1-5), kode_role
-periode     → id, nama_periode, tahun_mulai, tahun_selesai, is_aktif
+bidang       → id, nama_bidang, deskripsi
+jabatan      → id, nama_jabatan, bidang_id (nullable), level_akses (1-5), kode_role
+periode      → id, nama_periode, tahun_mulai, tahun_selesai, is_aktif
 kepengurusan → id, user_id, jabatan_id, periode_id, tanggal_mulai, tanggal_selesai
 ```
 
@@ -99,20 +99,45 @@ Sistem menggunakan **7 level akses**. Level 0 adalah User Public (belum terverif
 | **0** | `user_public` | — (belum terverifikasi) | Hanya akses profil & menunggu verifikasi |
 
 > **Catatan:** Level 4 (Sekretaris & Bendahara) memiliki domain akses berbeda, bukan hierarki vertikal.  
-> **Catatan:** Level 0 (User Public) tidak memiliki entri jabatan — statusnya dideteksi dari field `users.status = 'pending'`.
+> **Catatan:** `isAdmin` adalah flag terpisah dari `level` — admin selalu bisa lihat/edit semua data.
 
 ---
 
-## 4. Matriks Fitur per Role
+## 4. Struktur Kepanitiaan Kegiatan
 
-### 4.1 Akses Baca / View
+Setiap kegiatan/event memiliki dua lapisan kepanitiaan:
+
+### 4.1 Panitia Inti
+| Posisi | Keterangan |
+|--------|------------|
+| **Ketua Pelaksana** | Penanggung jawab utama kegiatan |
+| **Sekretaris Pelaksana** | Administrasi & dokumentasi kegiatan |
+| **Bendahara Pelaksana** | Keuangan & anggaran kegiatan |
+
+### 4.2 Susunan Sie (Dinamis)
+Satu kegiatan dapat memiliki banyak Sie. Setiap Sie terdiri dari:
+- **Nama Sie** (mis. Sie Acara, Sie Konsumsi, Sie Perlengkapan, Sie Dokumentasi)
+- 1 orang **Ketua Sie**
+- N orang **Anggota Sie**
+
+Posisi dalam kepanitiaan kegiatan menentukan visibilitas rapat terkait kegiatan tersebut.
+
+---
+
+## 5. Matriks Fitur per Role
+
+### 5.1 Akses Baca / View
 
 | Fitur | User Public | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
 |-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Beranda (terbatas) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Berita & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Kegiatan (baca) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| List Acara (Kegiatan) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Detail Kegiatan | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Riwayat Kegiatan | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| List Rapat (hanya yg relevan) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Detail Rapat (hanya yg relevan) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Daftar Anggota | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Profil Anggota Lain | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Uang Khas (milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -121,16 +146,24 @@ Sistem menggunakan **7 level akses**. Level 0 adalah User Public (belum terverif
 | Inbox & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Absensi (riwayat milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Riwayat Anggota Bidang | ❌ | ❌ | ✅ (bidangnya) | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| Semua Rapat (tanpa filter) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (isAdmin) |
 
-### 4.2 Aksi / Manage
+### 5.2 Aksi / Manage
 
 | Fitur | User Public | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
 |-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Edit Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Absensi (scan QR) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Absensi Sekret (foto) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Buat Kegiatan** | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Buat Rapat** (tipe terbatas) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Edit Kegiatan** | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Edit Rapat** | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | **Generate QR Absensi** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kelola Kegiatan** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kelola Kegiatan (Admin)** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Buat Rapat Stakeholder Org** | ❌ | ❌ | ❌ | ✅ (dgn kabid) | ✅ | ✅ | ✅ |
+| **Buat Rapat Internal Bidang** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Tambah Notulensi Rapat** | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
 | **Kelola Berita / Pengumuman** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 | **Kelola Uang Khas** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
 | **Verifikasi Pembayaran** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
@@ -145,175 +178,180 @@ Sistem menggunakan **7 level akses**. Level 0 adalah User Public (belum terverif
 
 ---
 
-## 5. Deskripsi Detail Fitur per Role
+## 6. Sistem Rapat — Visibilitas & Akses per Tipe
 
-### 5.0 User Public (Level 0)
-Pengguna yang telah mengunduh aplikasi dan mendaftarkan akun, **namun belum diverifikasi** oleh pengurus sebagai anggota resmi UKM POLICY. Status ini bersifat sementara sampai Sekretaris Umum atau Ketua Umum melakukan verifikasi & promosi ke `anggota_umum` atau jabatan yang relevan.
+### 6.1 Lima Jenis Rapat
+
+| Tipe | Nama | Peserta Default |
+|------|------|----------------|
+| `rapatUmumAcara` | Rapat Umum Acara | Semua panitia kegiatan (Inti + semua Sie) |
+| `rapatStakeholderAcara` | Rapat Stakeholder Acara | Ketua, Sekretaris, Bendahara Pelaksana saja |
+| `rapatSie` | Rapat Internal Sie | Ketua Sie + Anggota Sie dari satu Sie tertentu |
+| `rapatStakeholderOrg` | Rapat Stakeholder Org | KU + SU + BU, opsional + semua Ketua Bidang |
+| `rapatInternalBidang` | Rapat Internal Bidang | Semua anggota satu bidang tertentu |
+
+### 6.2 Aturan Visibilitas Rapat
+
+| Tipe | Siapa yang Bisa Melihat |
+|------|------------------------|
+| `rapatUmumAcara` | Panitia Inti kegiatan terkait (Ketua/Sekretaris/Bendahara Pelaksana) |
+| `rapatStakeholderAcara` | Panitia Inti kegiatan terkait |
+| `rapatSie` | Ketua Sie atau Anggota Sie dari Sie yang disebutkan di kegiatan terkait |
+| `rapatStakeholderOrg` | level ≥ 4 (KU/SU/BU), atau level == 3 jika `denganKetuaBidang = true` |
+| `rapatInternalBidang` | Anggota dengan `bidang == namaBidang` dan level ≥ 2 |
+| Semua | `isAdmin = true` → selalu tampil |
+
+### 6.3 Akses Buat Rapat per Level
+
+| Level | Tipe Rapat yang Bisa Dibuat |
+|-------|---------------------------|
+| `isAdmin` / level ≥ 4 | Semua 5 tipe |
+| level == 3 (Ketua Bidang) | `rapatUmumAcara`, `rapatStakeholderAcara`, `rapatSie`, `rapatStakeholderOrg` (dengan Ketua Bidang), `rapatInternalBidang` (bidangnya) |
+| level ≥ 1 (Anggota Umum / Anggota Bidang) | `rapatUmumAcara`, `rapatSie` |
+| level 0 (User Public) | Tidak bisa |
+
+---
+
+## 7. Deskripsi Detail Fitur per Role
+
+### 7.0 User Public (Level 0)
+Pengguna yang telah mengunduh aplikasi dan mendaftarkan akun, **namun belum diverifikasi** oleh pengurus sebagai anggota resmi UKM POLICY.
 
 **Bisa:**
 - Login & logout
 - Melihat & mengedit profil pribadi (nama, foto)
-- Melihat halaman "Menunggu Verifikasi" dengan informasi status pendaftaran
+- Melihat halaman "Menunggu Verifikasi"
 - Mengubah password
 
 **Tidak Bisa:**
-- Mengakses seluruh data internal organisasi:
-  - Daftar anggota, profil anggota lain
-  - Kegiatan & absensi
-  - Uang khas
-  - Poin & leaderboard
-  - Berita & pengumuman
-  - Inbox notifikasi organisasi
-- Menggunakan fitur apapun yang membutuhkan status keanggotaan aktif
-
-**Pengalaman di Aplikasi:**
-- Setelah login, diarahkan ke halaman "Menunggu Verifikasi" (pending screen)
-- Tidak memiliki akses ke Bottom Nav utama kecuali ikon profil
-- Tampil banner "Akun kamu sedang menunggu verifikasi pengurus"
-- Notifikasi push/email saat akun diverifikasi
-
-> **Field Database:** `users.status = 'pending'`. Setelah diverifikasi admin → `status = 'active'`.
+- Mengakses seluruh data internal organisasi (kegiatan, anggota, rapat, uang khas, dll.)
 
 ---
 
-### 5.1 Anggota Umum (Level 1)
-Anggota aktif UKM POLICY yang tidak sedang memegang jabatan di periode berjalan.
+### 7.1 Anggota Umum (Level 1)
 
 **Bisa:**
 - Melihat beranda, berita, kegiatan, daftar anggota
-- Scan QR absensi untuk kegiatan yang diikuti
-- Absensi sekretariat (foto)
-- Memantau status uang khas & riwayat bayar milik sendiri
-- Melihat poin & level keanggotaan milik sendiri
-- Melihat leaderboard poin
-- Menerima & membaca inbox / pengumuman
-- Edit profil pribadi
+- Scan QR absensi
+- Memantau uang khas & poin milik sendiri
+- Inbox / pengumuman
+- **Membuat kegiatan** (baru di v4.0)
+- **Membuat rapat** (tipe `rapatUmumAcara` & `rapatSie`)
+- **Melihat rapat** yang relevan (jika menjadi panitia/anggota sie kegiatan)
 
 **Tidak Bisa:**
-- Generate QR, kelola kegiatan, kelola anggota
-- Melihat uang khas orang lain
-- Manage poin
-- Kirim pengumuman
+- Edit kegiatan orang lain
+- Generate QR, kelola anggota, kirim pengumuman
 
 ---
 
-### 5.2 Anggota Bidang (Level 2)
-Anggota yang menjabat sebagai anggota dalam salah satu bidang di periode aktif.
+### 7.2 Anggota Bidang (Level 2)
 
 **Tambahan dari Anggota Umum:**
 - Melihat riwayat absensi & poin anggota lain di bidangnya
-- Akses info internal bidang (progres kegiatan bidang)
+- Akses info internal bidang
+- **Edit kegiatan** (baru di v4.0)
+- Melihat rapat internal bidangnya (jika `bidang` sesuai)
 
 ---
 
-### 5.3 Ketua Bidang (Level 3)
-Menjabat sebagai Ketua Bidang salah satu dari 6 bidang (Pemrograman, Jaringan, Multimedia, Humas, Pengembangan, Kaderisasi).
+### 7.3 Ketua Bidang (Level 3)
 
 **Tambahan dari Anggota Bidang:**
-- Generate QR absensi untuk kegiatan yang diselenggarakan bidangnya
+- Generate QR absensi untuk kegiatan bidangnya
 - Membuat & mengelola kegiatan untuk bidangnya
 - Melihat & mengelola data absensi anggota di bidangnya
 - Memberikan atau mengurangi poin anggota di bidangnya
-- Approve absensi manual untuk anggota bidangnya
-
-> **Batasan:** Hanya bisa kelola data bidangnya sendiri, tidak bidang lain.
+- **Edit & tambah notulensi rapat** (baru di v4.0)
+- **Buat rapat** (semua tipe yang relevan dengan bidang dan kegiatan)
+- Diundang ke `rapatStakeholderOrg` jika `denganKetuaBidang = true`
 
 ---
 
-### 5.4 Bendahara Umum (Level 4 — Domain Keuangan)
-Pengurus inti yang bertanggung jawab atas keuangan organisasi.
+### 7.4 Bendahara Umum (Level 4 — Domain Keuangan)
 
-**Tambahan dari Ketua Bidang:**
-- Melihat status uang khas **semua anggota** (bukan hanya sendiri)
-- Memperbarui status pembayaran uang khas (lunas/belum)
-- Verifikasi bukti pembayaran
-- Melihat rekap keuangan per bulan / per tahun
+**Tambahan:**
+- Melihat status uang khas **semua anggota**
+- Memperbarui status pembayaran uang khas
 - Export laporan keuangan
-
-> **Batasan:** Tidak bisa kelola konten (berita, kegiatan), tidak bisa generate QR, tidak bisa kelola anggota.
+- **Buat semua jenis rapat** termasuk `rapatStakeholderOrg`
+- Otomatis diundang ke semua `rapatStakeholderOrg`
 
 ---
 
-### 5.5 Sekretaris Umum (Level 4 — Domain Administrasi)
-Pengurus inti yang bertanggung jawab atas administrasi dan dokumentasi organisasi.
+### 7.5 Sekretaris Umum (Level 4 — Domain Administrasi)
 
-**Tambahan dari Ketua Bidang:**
+**Tambahan:**
 - Membuat & mengelola kegiatan untuk semua bidang
 - Membuat & mengelola berita / pengumuman
 - Kirim notifikasi pengumuman ke semua anggota
-- Melihat & mengelola data absensi semua anggota (lintas bidang)
+- Melihat & mengelola data absensi semua anggota
 - Kelola data profil anggota
 - Memberikan atau mengurangi poin untuk semua anggota
-
-> **Batasan:** Tidak bisa akses keuangan/uang khas semua anggota, tidak bisa kelola periode kepengurusan.
+- **Buat semua jenis rapat** termasuk `rapatStakeholderOrg`
+- Otomatis diundang ke semua `rapatStakeholderOrg`
 
 ---
 
-### 5.6 Ketua Umum (Level 5 — Full Access)
-Pimpinan tertinggi organisasi. Memiliki akses penuh ke seluruh fitur.
+### 7.6 Ketua Umum (Level 5 — Full Access)
 
 **Tambahan dari Sekretaris & Bendahara:**
 - Seluruh akses Sekretaris Umum dan Bendahara Umum
 - Kelola periode kepengurusan (buka/tutup periode, assign jabatan)
-- Assign atau ubah role/jabatan anggota
-- Panel Admin penuh: manajemen semua data sistem
-- Melihat log aktivitas / audit trail
-- Konfigurasi threshold level poin
+- Panel Admin penuh
+- `isAdmin = true` → melihat semua rapat tanpa filter
 
 ---
 
-## 6. Implementasi di Aplikasi
+## 8. Implementasi di Aplikasi
 
-### 6.1 Cara Menentukan Role Aktif
-Saat user login, aplikasi:
+### 8.1 Cara Menentukan Role Aktif
 1. Cek `users.status`:
-   - Jika `status = 'pending'` → role = `user_public` (level 0), **hentikan di sini** → tampilkan pending screen
-   - Jika `status = 'active'` → lanjutkan ke langkah 2
-2. Ambil `periode` dengan `is_aktif = true`
-3. Query `kepengurusan` → cari `user_id` di periode aktif
-4. Jika ditemukan → ambil `jabatan.kode_role` dan `jabatan.bidang_id`
-5. Jika tidak ditemukan → role = `anggota_umum` (level 1)
-6. Simpan ke Riverpod `currentUserProvider` untuk digunakan di seluruh app
+   - `'pending'` → role = `user_public` (level 0) → tampilkan pending screen
+   - `'active'` → lanjut ke langkah 2
+2. Query `kepengurusan` di periode aktif
+3. Jika ditemukan → ambil `kode_role`, `level_akses`, `bidang_id`
+4. Jika tidak ditemukan → role = `anggota_umum` (level 1)
+5. Simpan ke Riverpod `currentUserProvider`
 
-### 6.2 Guards & Conditional UI
-- **User Public (level 0):** redirect ke pending screen, semua route internal di-block via GoRouter redirect
-- Tombol admin / manage hanya dirender jika `userRole.level >= 3`
-- Fitur keuangan (`bendahara_umum`) dicek via `userRole.kode == 'bendahara_umum' || level == 5`
-- Batasan bidang: `jabatan.bidang_id == target.bidang_id || level >= 4`
-- Menu `Panel Admin` di drawer hanya muncul untuk level ≥ 4
+### 8.2 Guards & Conditional UI
+- **User Public (level 0):** redirect ke pending screen via GoRouter redirect
+- **Tombol Buat Kegiatan / Buat Rapat:** tampil jika `level >= 1`
+- **Tombol Edit Kegiatan:** tampil jika `isAdmin || level >= 2`
+- **Tombol Edit Rapat / Tambah Notulensi:** tampil jika `isAdmin || level >= 3`
+- **List Rapat:** difilter via `isRapatVisible(rapat)` sebelum ditampilkan
+- Menu admin di drawer hanya muncul untuk level ≥ 4
 
-### 6.3 Tabel `jabatan` (Seed Data)
+### 8.3 Mock Session (Development)
+```dart
+class AppSession {
+  static bool isAdmin = true;
+  static int level = 5;          // ketua_umum
+  static String nama = 'Ahmad Rizky Pratama';
+  static String bidang = '-';
+}
+```
+
+### 8.4 Tabel `jabatan` (Seed Data)
 
 | id | nama_jabatan | bidang_id | level_akses | kode_role |
 |----|-------------|-----------|-------------|-----------|
 | 1 | Ketua Umum | NULL | 5 | `ketua_umum` |
 | 2 | Sekretaris Umum | NULL | 4 | `sekretaris_umum` |
 | 3 | Bendahara Umum | NULL | 4 | `bendahara_umum` |
-| 4 | Ketua Bidang Pemrograman | 1 | 3 | `ketua_bidang` |
-| 5 | Ketua Bidang Jaringan | 2 | 3 | `ketua_bidang` |
-| 6 | Ketua Bidang Multimedia | 3 | 3 | `ketua_bidang` |
-| 7 | Ketua Bidang Humas | 4 | 3 | `ketua_bidang` |
-| 8 | Ketua Bidang Pengembangan | 5 | 3 | `ketua_bidang` |
-| 9 | Ketua Bidang Kaderisasi | 6 | 3 | `ketua_bidang` |
-| 10 | Anggota Bidang Pemrograman | 1 | 2 | `anggota_bidang` |
-| 11 | Anggota Bidang Jaringan | 2 | 2 | `anggota_bidang` |
-| 12 | Anggota Bidang Multimedia | 3 | 2 | `anggota_bidang` |
-| 13 | Anggota Bidang Humas | 4 | 2 | `anggota_bidang` |
-| 14 | Anggota Bidang Pengembangan | 5 | 2 | `anggota_bidang` |
-| 15 | Anggota Bidang Kaderisasi | 6 | 2 | `anggota_bidang` |
+| 4–9 | Ketua Bidang (6 bidang) | 1–6 | 3 | `ketua_bidang` |
+| 10–15 | Anggota Bidang (6 bidang) | 1–6 | 2 | `anggota_bidang` |
 | 16 | Anggota Umum | NULL | 1 | `anggota_umum` |
 
 ---
 
-## 7. Navigasi & UI per Role
+## 9. Navigasi & UI per Role
 
-### 7.1 Bottom Navigation Bar
+### 9.1 Bottom Navigation Bar
 - **User Public (level 0):** Tidak memiliki Bottom Nav. Hanya tampil halaman pending.
-- **Anggota Umum – Ketua Umum (level 1–5):** 4 tab utama + FAB Absensi:
-  `Beranda | Kegiatan | [QR FAB] | Fitur | Menu`
+- **Level 1–5:** 4 tab utama + FAB Absensi: `Beranda | Kegiatan | [QR FAB] | Fitur | Menu`
 
-### 7.2 Drawer Navigasi
-Level 1–5 mendapat akses ke drawer. Item yang ditampilkan tergantung level:
+### 9.2 Drawer Navigasi
 
 | Item Drawer | Level Min |
 |-------------|-----------|
@@ -330,20 +368,27 @@ Level 1–5 mendapat akses ke drawer. Item yang ditampilkan tergantung level:
 | **Kelola Uang Khas** | 4 (Bendahara/KU) |
 | **Panel Admin** | 4 |
 
-### 7.3 AppBar Actions
-- Level 1–2: Inbox icon + standard nav
-- Level 3–5: Inbox icon + badge notif admin
+### 9.3 Layar Kegiatan — Navigasi
+
+```
+/kegiatan             → ListKegiatanScreen (Tab Acara + Tab Rapat)
+  AppBar trailing     → /kegiatan/riwayat
+  FAB (Tab Acara)     → /kegiatan/buat
+  FAB (Tab Rapat)     → /kegiatan/rapat/buat
+  Tap card Acara      → /kegiatan/:id
+  Tap card Rapat      → /kegiatan/rapat/:id
+```
 
 ---
 
-## 8. Ringkasan Cepat
+## 10. Ringkasan Cepat
 
 ```
-Ketua Umum        → Semua fitur, semua data, kelola sistem
-Sekretaris Umum   → Konten + anggota + kegiatan semua bidang + verifikasi user
-Bendahara Umum    → Uang khas semua anggota
-Ketua Bidang      → Kegiatan + absensi + poin bidangnya
-Anggota Bidang    → View bidangnya + fitur anggota standar
-Anggota Umum      → Fitur dasar: baca, scan, pantau sendiri
+Ketua Umum        → Semua fitur, semua rapat, kelola sistem (isAdmin)
+Sekretaris Umum   → Konten + anggota + kegiatan semua bidang + semua rapat + verifikasi user
+Bendahara Umum    → Uang khas semua anggota + semua rapat
+Ketua Bidang      → Kegiatan + absensi + poin bidangnya + buat rapat kegiatan/bidang
+Anggota Bidang    → View bidangnya + fitur anggota + edit kegiatan + rapat bidang
+Anggota Umum      → Fitur dasar + buat kegiatan + buat rapat relevan + lihat rapat relevan
 User Public       → Profil saja, menunggu verifikasi pengurus
 ```

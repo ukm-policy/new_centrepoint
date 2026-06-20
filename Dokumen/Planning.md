@@ -2,7 +2,7 @@
 
 > Design System: **Neo-Centric Brutalism**  
 > Stack: Flutter (Dart), `lib/` sebagai root source  
-> Versi: 3.0 — Diperbarui 20 Juni 2026
+> Versi: 4.0 — Diperbarui 20 Juni 2026
 
 ---
 
@@ -16,47 +16,38 @@
 | 2 | Beranda | `/` | ✅ Done |
 | 3 | List Berita | `/berita` | ✅ Done |
 | 4 | Detail Berita | `/berita/:id` | ✅ Done |
-| 5 | List Kegiatan | `/kegiatan` | ✅ Done |
+| 5 | List Kegiatan (Tab Acara + Rapat) | `/kegiatan` | ✅ Done |
 | 6 | Detail Kegiatan | `/kegiatan/:id` | ✅ Done |
 | 7 | Riwayat Kegiatan | `/kegiatan/riwayat` | ✅ Done |
-| 8 | Daftar Anggota | `/anggota` | ✅ Done |
-| 9 | Profil Anggota | `/anggota/:id` | ✅ Done |
-| 10 | Absensi | `/absensi` | ✅ Done |
-| 11 | Riwayat Absensi Sekret | `/absensi/riwayat-sekret` | ✅ Done |
-| 12 | Uang Khas | `/uang-khas` | ✅ Done |
-| 13 | Menu & Setelan | `/menu` | ✅ Done |
-| 14 | Poin Keaktifan | `/poin` | ✅ Done |
-| 15 | Inbox | `/inbox` | ✅ Done |
-| 16 | Detail Pengumuman | `/inbox/pengumuman/:id` | ✅ Done |
+| 8 | Buat Kegiatan | `/kegiatan/buat` | ✅ Done |
+| 9 | Detail Rapat | `/kegiatan/rapat/:id` | ✅ Done |
+| 10 | Buat Rapat | `/kegiatan/rapat/buat` | ✅ Done |
+| 11 | Daftar Anggota | `/anggota` | ✅ Done |
+| 12 | Profil Anggota | `/anggota/:id` | ✅ Done |
+| 13 | Absensi | `/absensi` | ✅ Done |
+| 14 | Riwayat Absensi Sekret | `/absensi/riwayat-sekret` | ✅ Done |
+| 15 | Uang Khas | `/uang-khas` | ✅ Done |
+| 16 | Menu & Setelan | `/menu` | ✅ Done |
+| 17 | Poin Keaktifan | `/poin` | ✅ Done |
+| 18 | Inbox | `/inbox` | ✅ Done |
+| 19 | Detail Pengumuman | `/inbox/pengumuman/:id` | ✅ Done |
 
 ### Belum Diimplementasi 🔲
 
 | # | Nama Layar | Route | Prioritas |
 |---|------------|-------|-----------|
-| 17 | Register | `/register` | Tinggi |
-| 18 | Lupa Password | `/forgot-password` | Tinggi |
-| 19 | Edit Profil | `/profil/edit` | Tinggi |
-| 20 | Generate QR Absensi | `/admin/qr-generator` | Tinggi |
-| 21 | Kelola Kegiatan (Admin) | `/admin/kegiatan` | Sedang |
-| 22 | Kelola Anggota (Admin) | `/admin/anggota` | Sedang |
-| 23 | Kelola Uang Khas (Admin) | `/admin/uang-khas` | Sedang |
-| 24 | Kelola Berita (Admin) | `/admin/berita` | Sedang |
-| 25 | Kirim Pengumuman | `/admin/pengumuman/buat` | Sedang |
-| 26 | Kelola Periode | `/admin/periode` | Rendah |
-| 27 | Assign Jabatan | `/admin/periode/:id/jabatan` | Rendah |
-| 28 | Notifikasi Settings | `/menu/notifikasi` | Rendah |
-
----
-
-## 2. Struktur Direktori `lib/` (Current)
-| 5 | `detail_berita_policy_centrepoint` | Detail Berita | `/berita/:id` |
-| 6 | `list_kegiatan_policy_centrepoint` | List Kegiatan | `/kegiatan` |
-| 7 | `detail_kegiatan_policy_centrepoint` | Detail Kegiatan | `/kegiatan/:id` |
-| 8 | `riwayat_kegiatan_policy_centrepoint` | Riwayat Kegiatan | `/kegiatan/riwayat` |
-| 9 | `list_members_policy_centrepoint` | Daftar Anggota | `/anggota` |
-| 10 | `detail_member_policy_centrepoint` | Profil Anggota | `/anggota/:id` |
-| 11 | `uang_khas_policy_centrepoint` | Uang Khas | `/uang-khas` |
-| 12 | `menu_setelan_policy_centrepoint` | Menu & Setelan | `/menu` |
+| 20 | Register | `/register` | Tinggi |
+| 21 | Lupa Password | `/forgot-password` | Tinggi |
+| 22 | Edit Profil | `/profil/edit` | Tinggi |
+| 23 | Generate QR Absensi | `/admin/qr-generator` | Tinggi |
+| 24 | Kelola Kegiatan (Admin) | `/admin/kegiatan` | Sedang |
+| 25 | Kelola Anggota (Admin) | `/admin/anggota` | Sedang |
+| 26 | Kelola Uang Khas (Admin) | `/admin/uang-khas` | Sedang |
+| 27 | Kelola Berita (Admin) | `/admin/berita` | Sedang |
+| 28 | Kirim Pengumuman | `/admin/pengumuman/buat` | Sedang |
+| 29 | Kelola Periode | `/admin/periode` | Rendah |
+| 30 | Assign Jabatan | `/admin/periode/:id/jabatan` | Rendah |
+| 31 | Notifikasi Settings | `/menu/notifikasi` | Rendah |
 
 ---
 
@@ -89,10 +80,16 @@ lib/
     ├── berita/screens/
     │   ├── list_berita_screen.dart
     │   └── detail_berita_screen.dart
-    ├── kegiatan/screens/
-    │   ├── list_kegiatan_screen.dart
-    │   ├── detail_kegiatan_screen.dart
-    │   └── riwayat_kegiatan_screen.dart
+    ├── kegiatan/
+    │   ├── kegiatan_models.dart      # PanitiaItem, SieItem, KegiatanItem, kKegiatanList
+    │   ├── rapat_models.dart         # RapatTipe, RapatStatus, AgendaItem, RapatItem, kRapatList
+    │   └── screens/
+    │       ├── list_kegiatan_screen.dart    # Tab Acara + Rapat, FAB, AppBar trailing Riwayat
+    │       ├── detail_kegiatan_screen.dart  # Panitia Inti + Susunan Sie
+    │       ├── create_kegiatan_screen.dart  # Form buat kegiatan lengkap
+    │       ├── riwayat_kegiatan_screen.dart # Riwayat kegiatan yg diikuti
+    │       ├── detail_rapat_screen.dart     # Detail rapat + agenda + peserta + notulensi
+    │       └── create_rapat_screen.dart     # Form buat rapat dengan 5 tipe
     ├── anggota/screens/
     │   ├── list_members_screen.dart
     │   └── detail_member_screen.dart
@@ -198,87 +195,99 @@ full    = circular
 
 ## 5. Rencana Implementasi per Layar
 
-### Fase 1 — Fondasi (Setup)
-- [ ] Tambah dependencies `pubspec.yaml`: `google_fonts`, `go_router`
-- [ ] Buat `app_colors.dart`, `app_typography.dart`, `app_spacing.dart`
-- [ ] Buat `app_theme.dart` (ThemeData dengan warna & font)
-- [ ] Buat `app.dart` dengan routing dasar
-- [ ] Buat semua shared widgets
+### Fase 1 — Fondasi (Setup) ✅
+- [x] Tambah dependencies `pubspec.yaml`: `google_fonts`, `go_router`
+- [x] Buat `app_colors.dart`, `app_typography.dart`, `app_spacing.dart`
+- [x] Buat `app_theme.dart` (ThemeData dengan warna & font)
+- [x] Buat `app.dart` dengan routing dasar
+- [x] Buat semua shared widgets
 
-### Fase 2 — Auth
-- [ ] `login_screen.dart`
-  - Logo / headline "POLICY CENTREPOINT"
-  - Input NIM / Email (2px border, label bold di atas)
-  - Input Password
-  - Button Login (BrutalistButton primary)
+### Fase 2 — Auth ✅
+- [x] `login_screen.dart`
 
-### Fase 3 — Shell & Beranda
-- [ ] Buat `ShellRoute` / scaffold dengan `FloatingAppBar` + `BottomNavBar`
-- [ ] `beranda_screen.dart`
-  - Carousel Banner (PageView)
-  - User Card (avatar, nama, jabatan, poin, badge member)
-  - Quick Access Bento Grid 3 kolom (Members, Kegiatan, Uang Khas)
-  - Horizontal scroll "Berita Terbaru" dengan news card
+### Fase 3 — Shell & Beranda ✅
+- [x] Buat `ShellRoute` / scaffold dengan `FloatingAppBar` + `BottomNavBar`
+- [x] `beranda_screen.dart`
 
-### Fase 4 — Berita
-- [ ] `list_berita_screen.dart`
-  - AppBar dengan judul "Berita & Pengumuman"
-  - Search bar
-  - Filter chip (Semua / Berita / Pengumuman)
-  - ListView BrutalistCard berita
-- [ ] `detail_berita_screen.dart`
-  - Hero image
-  - Judul, tanggal, badge kategori
-  - Body teks artikel
-  - Share/Simpan action
+### Fase 4 — Berita ✅
+- [x] `list_berita_screen.dart`
+- [x] `detail_berita_screen.dart`
 
-### Fase 5 — Kegiatan
-- [ ] `list_kegiatan_screen.dart`
-  - Filter chip: Upcoming / Selesai
-  - Card kegiatan (nama, tanggal, lokasi, badge status)
-- [ ] `detail_kegiatan_screen.dart`
-  - Header kegiatan (banner/gambar)
-  - Info detail (tanggal, lokasi, deskripsi)
-  - Tombol Daftar / Absensi
-  - Daftar peserta (preview)
-- [ ] `riwayat_kegiatan_screen.dart`
-  - Timeline riwayat kegiatan yang sudah diikuti
-  - Badge kehadiran (Hadir / Tidak Hadir)
+### Fase 5 — Kegiatan ✅
+- [x] `kegiatan_models.dart` — `PanitiaItem`, `SieItem`, `KegiatanItem`, mock data `kKegiatanList`
+- [x] `rapat_models.dart` — `RapatTipe`, `RapatStatus`, `AgendaItem`, `RapatItem`, `kRapatList`, `isRapatVisible()`
+- [x] `list_kegiatan_screen.dart`
+  - Tab **Acara** (filter chip Semua/Upcoming/Berlangsung/Selesai, pesertaTerdaftar/kuota, nama ketua)
+  - Tab **Rapat** (filter Semua/Acara/Kepengurusan, tipe badge + status badge + label acara)
+  - FAB di bawah kanan: label & icon berubah sesuai tab aktif ("Buat Acara" → `/kegiatan/buat` / "Buat Rapat" → `/kegiatan/rapat/buat`)
+  - AppBar trailing: icon Riwayat → `/kegiatan/riwayat`
+- [x] `detail_kegiatan_screen.dart`
+  - Panitia Inti: Ketua Pelaksana (highlight), Sekretaris Pelaksana, Bendahara Pelaksana
+  - Susunan Sie: tiap sie dengan Ketua Sie + daftar Anggota Sie
+  - Tombol Edit hanya tampil jika `isAdmin || level >= 2`
+  - Tombol aksi: "DAFTAR SEKARANG" (upcoming) / "ABSEN SEKARANG" (berlangsung)
+- [x] `create_kegiatan_screen.dart`
+  - AppBar: back (kiri) + judul "Buat Kegiatan" (kanan, via `Spacer()`)
+  - Seksi Info Dasar: nama, tanggal (date picker), waktu, lokasi, deskripsi, kuota
+  - Seksi Panitia Inti: 3 field (Ketua, Sekretaris, Bendahara Pelaksana)
+  - Seksi Susunan Sie: form dinamis (_SieEntry) — nama sie, ketua sie, tambah/hapus anggota
+- [x] `riwayat_kegiatan_screen.dart` — timeline kegiatan yang diikuti
+- [x] `detail_rapat_screen.dart`
+  - SliverAppBar: back + edit (jika `isAdmin || level >= 3`)
+  - Header: tipe badge + status badge, judul, konteks (acara atau kepengurusan)
+  - Agenda bernomor (primaryContainer circle), daftar peserta dengan badge "Anda", notulensi
+  - Aksi kontekstual: KONFIRMASI HADIR / ABSEN SEKARANG / TAMBAH NOTULENSI
+- [x] `create_rapat_screen.dart`
+  - AppBar: back (kiri) + judul "Buat Rapat" (kanan, via `Spacer()`)
+  - Seksi Tipe: 5 jenis rapat (card _TipeOption dengan icon + label + deskripsi)
+  - Seksi Konteks: dinamis sesuai tipe (dropdown kegiatan, dropdown sie cascade, bidang, toggle)
+  - Seksi Info Dasar: judul, tanggal+waktu (row), lokasi
+  - Seksi Agenda: list dinamis bernomor
 
-### Fase 6 — Anggota
-- [ ] `list_members_screen.dart`
-  - Search bar
-  - Grid/List anggota dengan avatar + nama + divisi
-  - Filter berdasarkan divisi / angkatan
-- [ ] `detail_member_screen.dart`
-  - Avatar besar + nama + jabatan
-  - Info kontak (NIM, email, no. HP)
-  - Badge member tier
-  - Statistik kehadiran & poin
-  - Riwayat kegiatan anggota
+### Fase 6 — Anggota ✅
+- [x] `list_members_screen.dart`
+- [x] `detail_member_screen.dart`
 
-### Fase 7 — Absensi
-- [ ] `absensi_screen.dart`
-  - QR Scanner atau kode manual
-  - Status absensi hari ini
-  - Daftar hadir per kegiatan
+### Fase 7 — Absensi ✅
+- [x] `absensi_screen.dart`
+- [x] `riwayat_sekret_screen.dart`
 
-### Fase 8 — Uang Khas
-- [ ] `uang_khas_screen.dart`
-  - Ringkasan saldo kas
-  - Status iuran anggota saat ini (Lunas / Belum)
-  - History transaksi masuk/keluar
-  - Badge "Lunas" warna success (#198754)
+### Fase 8 — Uang Khas ✅
+- [x] `uang_khas_screen.dart`
 
-### Fase 9 — Menu & Setelan
-- [ ] `menu_setelan_screen.dart`
-  - Profil user (mini card)
-  - List menu item (icon + label) dengan MyDivider
-  - Menu: Edit Profil, Notifikasi, Tentang Aplikasi, Logout
+### Fase 9 — Menu & Setelan ✅
+- [x] `menu_setelan_screen.dart`
 
 ---
 
-## 6. Dependencies yang Dibutuhkan
+## 6. Routing Kegiatan (GoRouter)
+
+```dart
+GoRoute(
+  path: '/kegiatan',
+  builder: (_, _) => const ListKegiatanScreen(),
+  routes: [
+    GoRoute(path: 'buat',    builder: (_, _) => const CreateKegiatanScreen()),
+    GoRoute(path: 'riwayat', builder: (_, _) => const RiwayatKegiatanScreen()),
+    GoRoute(
+      path: 'rapat',
+      // builder (bukan redirect) agar child routes tidak terintercept
+      builder: (_, _) => const ListKegiatanScreen(),
+      routes: [
+        GoRoute(path: 'buat', builder: (_, _) => const CreateRapatScreen()),
+        GoRoute(path: ':id',  builder: (_, s) => DetailRapatScreen(id: s.pathParameters['id']!)),
+      ],
+    ),
+    GoRoute(path: ':id', builder: (_, s) => DetailKegiatanScreen(id: s.pathParameters['id']!)),
+  ],
+),
+```
+
+> **Catatan GoRouter:** Setiap `GoRoute` wajib memiliki `builder`, `pageBuilder`, atau `redirect`. Parent route `rapat` menggunakan `builder` (bukan `redirect`) agar navigasi ke `/kegiatan/rapat/buat` dan `/kegiatan/rapat/:id` tidak terintercept.
+
+---
+
+## 7. Dependencies yang Dibutuhkan
 
 ```yaml
 dependencies:
@@ -297,22 +306,6 @@ dev_dependencies:
 
 ---
 
-## 7. Urutan Prioritas Implementasi
-
-```
-1. Setup (theme, token, shared widgets)    ← blockers semua layar
-2. Login                                   ← entry point
-3. Shell + Beranda                         ← home screen
-4. Berita (list + detail)
-5. Kegiatan (list + detail + riwayat)
-6. Anggota (list + detail)
-7. Absensi
-8. Uang Khas
-9. Menu & Setelan
-```
-
----
-
 ## 8. Catatan Desain Penting
 
 - **Tidak ada Gaussian blur / soft shadow** — selalu gunakan `BoxShadow` dengan `blurRadius: 0`
@@ -322,3 +315,5 @@ dev_dependencies:
 - Warna **success = #198754** untuk status "Lunas", "Hadir", dll
 - Warna **primary = #DC3545** untuk aksi utama dan branding
 - Semua teks heading weight minimal 700 (Bold)
+- **FAB di ListKegiatanScreen** diimplementasi sebagai `Stack` + `Positioned` karena Scaffold dimiliki `_AppShell` — ListView item diberi padding `bottom: 80` agar tidak tertutup FAB
+- **AppBar di create screens** — judul di kanan (`Spacer() + Text(...)`), back button di kiri

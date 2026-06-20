@@ -17,6 +17,7 @@ import 'features/menu/screens/menu_setelan_screen.dart';
 import 'features/poin/screens/poin_screen.dart';
 import 'features/fitur/screens/fitur_screen.dart';
 import 'features/inbox/screens/inbox_screen.dart';
+import 'features/admin/screens/admin_screen.dart';
 import 'features/or/screens/or_screen.dart';
 import 'features/or/screens/or_form_screen.dart';
 import 'features/or/screens/or_status_screen.dart';
@@ -112,6 +113,27 @@ final _router = GoRouter(
           ],
         ),
         GoRoute(
+          path: '/admin',
+          builder: (_, _) => const AdminScreen(),
+          routes: [
+            GoRoute(
+              path: 'or',
+              builder: (_, _) => const OrAdminScreen(),
+              routes: [
+                GoRoute(
+                  path: 'kelola',
+                  builder: (_, _) => const OrKelolaScreen(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) =>
+                      OrDetailScreen(id: state.pathParameters['id']!),
+                ),
+              ],
+            ),
+          ],
+        ),
+        GoRoute(
           path: '/or',
           builder: (_, _) => const OrScreen(),
           routes: [
@@ -122,21 +144,6 @@ final _router = GoRouter(
             GoRoute(
               path: 'status',
               builder: (_, _) => const OrStatusScreen(),
-            ),
-          ],
-        ),
-        GoRoute(
-          path: '/admin/or',
-          builder: (_, _) => const OrAdminScreen(),
-          routes: [
-            GoRoute(
-              path: 'kelola',
-              builder: (_, _) => const OrKelolaScreen(),
-            ),
-            GoRoute(
-              path: ':id',
-              builder: (_, state) =>
-                  OrDetailScreen(id: state.pathParameters['id']!),
             ),
           ],
         ),

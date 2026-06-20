@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 
@@ -120,7 +121,7 @@ const _roles = [
       _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Kelola Periode OR', route: '/admin/or/kelola'),
       _MenuItem(icon: Icons.calendar_month_outlined, label: 'Kelola Periode Kepengurusan', route: '/admin/periode', implemented: false),
       _MenuItem(icon: Icons.badge_outlined, label: 'Assign Jabatan Anggota', route: '/admin/periode/jabatan', implemented: false),
-      _MenuItem(icon: Icons.admin_panel_settings_outlined, label: 'Panel Admin Penuh', route: '/admin', implemented: false),
+      _MenuItem(icon: Icons.admin_panel_settings_outlined, label: 'Panel Admin Penuh', route: '/admin'),
       _MenuItem(icon: Icons.receipt_long_outlined, label: 'Log Aktivitas Sistem', route: '/admin/log', implemented: false),
     ],
   ),
@@ -143,6 +144,10 @@ class FiturScreen extends StatelessWidget {
           ),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              if (AppSession.isAdmin) ...[
+                _AdminAccessBanner(),
+                const SizedBox(height: 28),
+              ],
               for (final role in _roles) ...[
                 _RoleSection(role: role),
                 const SizedBox(height: 24),
@@ -152,6 +157,107 @@ class FiturScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+// ── Admin Access Banner ───────────────────────────────────────────────────────
+
+class _AdminAccessBanner extends StatefulWidget {
+  @override
+  State<_AdminAccessBanner> createState() => _AdminAccessBannerState();
+}
+
+class _AdminAccessBannerState extends State<_AdminAccessBanner> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Expanded(child: Text('Administrator', style: AppTypography.headlineSm)),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.blackCharcoal,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
+            border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
+            boxShadow: const [AppColors.hardShadowSm],
+          ),
+          child: Text(
+            'ADMIN',
+            style: AppTypography.labelBold.copyWith(
+              color: Colors.white,
+              fontSize: 10,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+      ]),
+      const SizedBox(height: 10),
+      const MyDivider(color: AppColors.blackCharcoal, height: 1),
+      const SizedBox(height: 10),
+      GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: () => context.push('/admin'),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          transform: _pressed ? Matrix4.translationValues(3, 3, 0) : Matrix4.identity(),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.innerPadding,
+            vertical: 14,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.blackCharcoal,
+            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            border: Border.all(color: AppColors.blackCharcoal, width: 2),
+            boxShadow: [BoxShadow(
+              color: AppColors.blackCharcoal,
+              offset: _pressed ? const Offset(1, 1) : const Offset(3, 3),
+              blurRadius: 0,
+            )],
+          ),
+          child: Row(children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: const Icon(
+                Icons.admin_panel_settings_outlined,
+                size: 20,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Panel Admin',
+                  style: AppTypography.bodyLg.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Kelola seluruh fitur & master data',
+                  style: AppTypography.bodyMd.copyWith(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            )),
+            const Icon(Icons.chevron_right, size: 18, color: Colors.white),
+          ]),
+        ),
+      ),
+    ]);
   }
 }
 

@@ -15,6 +15,7 @@ import 'features/absensi/screens/riwayat_sekret_screen.dart';
 import 'features/uang_khas/screens/uang_khas_screen.dart';
 import 'features/menu/screens/menu_setelan_screen.dart';
 import 'features/poin/screens/poin_screen.dart';
+import 'features/fitur/screens/fitur_screen.dart';
 import 'features/inbox/screens/inbox_screen.dart';
 import 'features/inbox/screens/detail_pengumuman_screen.dart';
 import 'shared/widgets/bottom_nav_bar.dart';
@@ -86,6 +87,10 @@ final _router = GoRouter(
           builder: (_, _) => const PoinScreen(),
         ),
         GoRoute(
+          path: '/fitur',
+          builder: (_, _) => const FiturScreen(),
+        ),
+        GoRoute(
           path: '/menu',
           builder: (_, _) => const MenuSetelanScreen(),
         ),
@@ -123,14 +128,14 @@ class _AppShell extends StatelessWidget {
   const _AppShell({required this.child});
   final Widget child;
 
-  static const _navRoutes = ['/', '/berita', '/kegiatan', '/menu'];
-  static const _mainRoutes = {'/', '/berita', '/kegiatan', '/menu', '/absensi'};
+  static const _navRoutes = ['/', '/kegiatan', '/fitur', '/menu'];
+  static const _mainRoutes = {'/', '/kegiatan', '/fitur', '/menu', '/absensi'};
 
   // Kembalikan index active (-1 = tidak ada yg active, misal Absensi)
   static int _navIndexOf(String path) {
     if (path == '/') return 0;
-    if (path == '/berita') return 1;
-    if (path == '/kegiatan') return 2;
+    if (path == '/kegiatan') return 1;
+    if (path == '/fitur') return 2;
     if (path == '/menu') return 3;
     return -1;
   }

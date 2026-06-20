@@ -18,10 +18,10 @@ class FloatingBottomNavBar extends StatelessWidget {
   // 4 nav items, index 0-3
   static const _leftItems = [
     (icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Beranda', index: 0),
-    (icon: Icons.newspaper_outlined, activeIcon: Icons.newspaper, label: 'Berita', index: 1),
+    (icon: Icons.event_note_outlined, activeIcon: Icons.event_note, label: 'Kegiatan', index: 1),
   ];
   static const _rightItems = [
-    (icon: Icons.event_note_outlined, activeIcon: Icons.event_note, label: 'Kegiatan', index: 2),
+    (icon: Icons.apps_outlined, activeIcon: Icons.apps, label: 'Fitur', index: 2),
     (icon: Icons.menu, activeIcon: Icons.menu, label: 'Menu', index: 3),
   ];
 

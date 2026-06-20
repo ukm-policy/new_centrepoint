@@ -61,6 +61,7 @@ Setiap bidang memiliki:
 | Status | Keterangan |
 |--------|------------|
 | **Anggota Umum** | Anggota aktif UKM POLICY yang tidak memegang jabatan di periode berjalan |
+| **User Public** | Pengguna yang telah mendaftar akun tetapi belum diverifikasi sebagai anggota oleh pengurus |
 
 ---
 
@@ -85,7 +86,7 @@ kepengurusan → id, user_id, jabatan_id, periode_id, tanggal_mulai, tanggal_sel
 
 ## 3. Hierarki Akses (Level)
 
-Sistem menggunakan **6 level akses** yang ditentukan dari jabatan di periode aktif. User yang tidak terdaftar di kepengurusan periode aktif otomatis berstatus Anggota Umum (level 1).
+Sistem menggunakan **7 level akses**. Level 0 adalah User Public (belum terverifikasi). Level 1–5 ditentukan dari jabatan di periode aktif. User yang terverifikasi namun tidak terdaftar di kepengurusan periode aktif otomatis berstatus Anggota Umum (level 1).
 
 | Level | Kode Role | Jabatan | Catatan |
 |-------|-----------|---------|---------|
@@ -95,8 +96,10 @@ Sistem menggunakan **6 level akses** yang ditentukan dari jabatan di periode akt
 | **3** | `ketua_bidang` | Ketua Bidang (semua bidang) | Kelola bidang masing-masing |
 | **2** | `anggota_bidang` | Anggota Bidang (semua bidang) | Fitur anggota + info bidang |
 | **1** | `anggota_umum` | Anggota Umum | Fitur dasar saja |
+| **0** | `user_public` | — (belum terverifikasi) | Hanya akses profil & menunggu verifikasi |
 
-> **Catatan:** Level 4 (Sekretaris & Bendahara) memiliki domain akses berbeda, bukan hierarki vertikal.
+> **Catatan:** Level 4 (Sekretaris & Bendahara) memiliki domain akses berbeda, bukan hierarki vertikal.  
+> **Catatan:** Level 0 (User Public) tidak memiliki entri jabatan — statusnya dideteksi dari field `users.status = 'pending'`.
 
 ---
 
@@ -104,43 +107,74 @@ Sistem menggunakan **6 level akses** yang ditentukan dari jabatan di periode akt
 
 ### 4.1 Akses Baca / View
 
-| Fitur | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
-|-------|:---:|:---:|:---:|:---:|:---:|:---:|
-| Beranda | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Berita (baca) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Kegiatan (baca) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Daftar Anggota | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Profil Anggota Lain | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Uang Khas (milik sendiri) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Poin & Level (milik sendiri) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Leaderboard Poin | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Inbox & Pengumuman | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Absensi (riwayat milik sendiri) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Riwayat Anggota Bidang | ❌ | ✅ (bidangnya) | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| Fitur | User Public | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
+|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Beranda (terbatas) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Berita & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Kegiatan (baca) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Daftar Anggota | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Profil Anggota Lain | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Uang Khas (milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Poin & Level (milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Leaderboard Poin | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Inbox & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Absensi (riwayat milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Riwayat Anggota Bidang | ❌ | ❌ | ✅ (bidangnya) | ✅ (bidangnya) | ❌ | ✅ | ✅ |
 
 ### 4.2 Aksi / Manage
 
-| Fitur | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
-|-------|:---:|:---:|:---:|:---:|:---:|:---:|
-| Absensi (scan QR) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Absensi Sekret (foto) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Edit Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Generate QR Absensi** | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kelola Kegiatan** | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kelola Berita / Pengumuman** | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Kelola Uang Khas** | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Verifikasi Pembayaran** | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Lihat Uang Khas Semua** | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Kelola Poin Anggota** | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kelola Data Anggota** | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kirim Pengumuman** | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Panel Admin Penuh** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Kelola Periode Kepengurusan** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Manajemen Role & Jabatan** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Fitur | User Public | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
+|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Edit Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Absensi (scan QR) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Absensi Sekret (foto) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Generate QR Absensi** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kelola Kegiatan** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kelola Berita / Pengumuman** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Kelola Uang Khas** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Verifikasi Pembayaran** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Lihat Uang Khas Semua** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Kelola Poin Anggota** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kelola Data Anggota** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kirim Pengumuman** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Verifikasi & Promosi User Public** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Panel Admin Penuh** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Kelola Periode Kepengurusan** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Manajemen Role & Jabatan** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
 ## 5. Deskripsi Detail Fitur per Role
+
+### 5.0 User Public (Level 0)
+Pengguna yang telah mengunduh aplikasi dan mendaftarkan akun, **namun belum diverifikasi** oleh pengurus sebagai anggota resmi UKM POLICY. Status ini bersifat sementara sampai Sekretaris Umum atau Ketua Umum melakukan verifikasi & promosi ke `anggota_umum` atau jabatan yang relevan.
+
+**Bisa:**
+- Login & logout
+- Melihat & mengedit profil pribadi (nama, foto)
+- Melihat halaman "Menunggu Verifikasi" dengan informasi status pendaftaran
+- Mengubah password
+
+**Tidak Bisa:**
+- Mengakses seluruh data internal organisasi:
+  - Daftar anggota, profil anggota lain
+  - Kegiatan & absensi
+  - Uang khas
+  - Poin & leaderboard
+  - Berita & pengumuman
+  - Inbox notifikasi organisasi
+- Menggunakan fitur apapun yang membutuhkan status keanggotaan aktif
+
+**Pengalaman di Aplikasi:**
+- Setelah login, diarahkan ke halaman "Menunggu Verifikasi" (pending screen)
+- Tidak memiliki akses ke Bottom Nav utama kecuali ikon profil
+- Tampil banner "Akun kamu sedang menunggu verifikasi pengurus"
+- Notifikasi push/email saat akun diverifikasi
+
+> **Field Database:** `users.status = 'pending'`. Setelah diverifikasi admin → `status = 'active'`.
+
+---
 
 ### 5.1 Anggota Umum (Level 1)
 Anggota aktif UKM POLICY yang tidak sedang memegang jabatan di periode berjalan.
@@ -232,13 +266,17 @@ Pimpinan tertinggi organisasi. Memiliki akses penuh ke seluruh fitur.
 
 ### 6.1 Cara Menentukan Role Aktif
 Saat user login, aplikasi:
-1. Ambil `periode` dengan `is_aktif = true`
-2. Query `kepengurusan` → cari `user_id` di periode aktif
-3. Jika ditemukan → ambil `jabatan.kode_role` dan `jabatan.bidang_id`
-4. Jika tidak ditemukan → role = `anggota_umum`
-5. Simpan ke Riverpod `currentUserProvider` untuk digunakan di seluruh app
+1. Cek `users.status`:
+   - Jika `status = 'pending'` → role = `user_public` (level 0), **hentikan di sini** → tampilkan pending screen
+   - Jika `status = 'active'` → lanjutkan ke langkah 2
+2. Ambil `periode` dengan `is_aktif = true`
+3. Query `kepengurusan` → cari `user_id` di periode aktif
+4. Jika ditemukan → ambil `jabatan.kode_role` dan `jabatan.bidang_id`
+5. Jika tidak ditemukan → role = `anggota_umum` (level 1)
+6. Simpan ke Riverpod `currentUserProvider` untuk digunakan di seluruh app
 
 ### 6.2 Guards & Conditional UI
+- **User Public (level 0):** redirect ke pending screen, semua route internal di-block via GoRouter redirect
 - Tombol admin / manage hanya dirender jika `userRole.level >= 3`
 - Fitur keuangan (`bendahara_umum`) dicek via `userRole.kode == 'bendahara_umum' || level == 5`
 - Batasan bidang: `jabatan.bidang_id == target.bidang_id || level >= 4`
@@ -270,11 +308,12 @@ Saat user login, aplikasi:
 ## 7. Navigasi & UI per Role
 
 ### 7.1 Bottom Navigation Bar
-Sama untuk semua role (5 tab):
-`Beranda | Berita | Kegiatan | Menu | Absensi`
+- **User Public (level 0):** Tidak memiliki Bottom Nav. Hanya tampil halaman pending.
+- **Anggota Umum – Ketua Umum (level 1–5):** 4 tab utama + FAB Absensi:
+  `Beranda | Kegiatan | [QR FAB] | Fitur | Menu`
 
 ### 7.2 Drawer Navigasi
-Semua role mendapat akses ke drawer. Item yang ditampilkan tergantung level:
+Level 1–5 mendapat akses ke drawer. Item yang ditampilkan tergantung level:
 
 | Item Drawer | Level Min |
 |-------------|-----------|
@@ -301,9 +340,10 @@ Semua role mendapat akses ke drawer. Item yang ditampilkan tergantung level:
 
 ```
 Ketua Umum        → Semua fitur, semua data, kelola sistem
-Sekretaris Umum   → Konten + anggota + kegiatan semua bidang
+Sekretaris Umum   → Konten + anggota + kegiatan semua bidang + verifikasi user
 Bendahara Umum    → Uang khas semua anggota
 Ketua Bidang      → Kegiatan + absensi + poin bidangnya
 Anggota Bidang    → View bidangnya + fitur anggota standar
 Anggota Umum      → Fitur dasar: baca, scan, pantau sendiri
+User Public       → Profil saja, menunggu verifikasi pengurus
 ```

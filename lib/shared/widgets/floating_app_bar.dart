@@ -43,7 +43,7 @@ class FloatingAppBar extends StatelessWidget {
             showBack
                 ? _AppBarIconButton(
                     icon: Icons.arrow_back,
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () => context.canPop() ? context.pop() : context.go('/'),
                   )
                 : _AppBarIconButton(
                     icon: Icons.menu,

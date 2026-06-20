@@ -266,7 +266,7 @@ class _DrawerItem extends StatelessWidget {
   final String label, route, currentRoute;
 
   // Hanya 4 tab bottom nav yang pakai go(); sisanya push() agar back berfungsi
-  static const _tabRoutes = {'/', '/berita', '/kegiatan', '/menu'};
+  static const _tabRoutes = {'/', '/kegiatan', '/fitur', '/menu'};
 
   bool get _isActive {
     if (route == '/') return currentRoute == '/';

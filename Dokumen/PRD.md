@@ -81,17 +81,19 @@ Setiap bidang dipimpin 1 **Ketua Bidang (Kabid)** dan memiliki beberapa **Anggot
 
 #### Non-Pengurus
 - **Anggota Umum** — Anggota aktif yang tidak memegang jabatan di periode berjalan
+- **User Public** — Pengguna yang mendaftar akun tetapi belum diverifikasi pengurus; akses sangat terbatas
 
 ### 2.2 Segmentasi Pengguna & Level Akses
 
 | Level | Kode Role | Jabatan | Hak Akses Utama |
 |-------|-----------|---------|-----------------|
 | 5 | `ketua_umum` | Ketua Umum | Full access: semua fitur + kelola sistem & periode |
-| 4 | `sekretaris_umum` | Sekretaris Umum | Konten, berita, kegiatan semua bidang, kelola anggota |
+| 4 | `sekretaris_umum` | Sekretaris Umum | Konten, berita, kegiatan semua bidang, kelola anggota, verifikasi user |
 | 4 | `bendahara_umum` | Bendahara Umum | Uang khas & keuangan semua anggota |
 | 3 | `ketua_bidang` | Ketua Bidang | Kelola kegiatan, absensi, poin bidangnya |
 | 2 | `anggota_bidang` | Anggota Bidang | Fitur anggota + info internal bidang |
 | 1 | `anggota_umum` | Anggota Umum | Baca, scan absensi, pantau data pribadi |
+| 0 | `user_public` | — | Profil pribadi saja; menunggu verifikasi pengurus |
 
 > Selengkapnya lihat **Dokumen/Role User & Fiturnya.md**
 
@@ -116,7 +118,8 @@ Setiap bidang dipimpin 1 **Ketua Bidang (Kabid)** dan memiliki beberapa **Anggot
 #### F-02: Registrasi & Verifikasi Email
 - Pendaftaran akun baru ke Supabase Auth
 - Insert data profil ke tabel `users` via trigger atau manual setelah signup
-- Default role baru: `anggota_umum` (belum terdaftar kepengurusan)
+- Default status baru: `status = 'pending'` → role = `user_public` (level 0)
+- Setelah Sekretaris Umum / Ketua Umum memverifikasi → `status = 'active'` → role naik ke `anggota_umum` atau jabatan yang diassign
 
 #### F-03: Manajemen Sesi & Logout
 - Cek `supabase.auth.currentSession` saat startup
@@ -288,7 +291,7 @@ Setiap bidang dipimpin 1 **Ketua Bidang (Kabid)** dan memiliki beberapa **Anggot
 ### 4.2 Skema Database (Supabase PostgreSQL)
 
 ```
-users            → id, username, fullname, email, nim, angkatan, points, profile_photo, created_at
+users            → id, username, fullname, email, nim, angkatan, points, profile_photo, status, created_at
 bidang           → id, nama_bidang, deskripsi, icon
 jabatan          → id, nama_jabatan, bidang_id (nullable), level_akses, kode_role
 periode          → id, nama_periode, tahun_mulai, tahun_selesai, is_aktif, created_at
@@ -417,13 +420,18 @@ lib/
 [Startup]
     │
     ├── supabase.auth.currentSession ada?
-    │       ├── Ya  → load user profile + jabatan aktif
+    │       ├── Ya  → load user profile
     │       └── Tidak → [LoginPage]
     │
 [LoginPage]
     ├── Email & Password → signInWithPassword()
     ├── Google Sign-In   → signInWithOAuth(Google)
     └── Keduanya → [DeteksiRole]
+                      │
+                      ├── Cek users.status
+                      │     ├── 'pending' → kode_role = 'user_public' (level 0)
+                      │     │               → redirect ke [PendingVerificationScreen]
+                      │     └── 'active'  → lanjut deteksi jabatan
                       │
                       ├── Query kepengurusan WHERE user_id = current AND periode.is_aktif = true
                       ├── Ditemukan → set kode_role + bidang_id dari jabatan
@@ -445,7 +453,9 @@ lib/
 ## 9. Kriteria Penerimaan (MVP)
 
 - [ ] Login via email & Google Sign-In terintegrasi Supabase
-- [ ] Role detection berdasarkan jabatan di periode aktif berjalan
+- [ ] Registrasi → status `pending` → tampil pending screen
+- [ ] Sekretaris/Ketua Umum dapat verifikasi & promosi User Public ke Anggota Umum
+- [ ] Role detection berdasarkan `users.status` lalu jabatan di periode aktif berjalan
 - [ ] Absensi QR Code tercatat ke tabel `absensi`, poin bertambah otomatis
 - [ ] Status uang khas per bulan real-time dari Supabase
 - [ ] Ketua Bidang dapat generate QR dan kelola kegiatan bidangnya

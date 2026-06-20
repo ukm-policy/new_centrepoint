@@ -34,7 +34,8 @@ POLICY CENTREPOINT adalah aplikasi manajemen terpadu UKM POLICY yang mencakup:
 | **Periode** | Masa kepengurusan (±1 tahun akademik), hanya satu yang aktif (`is_aktif`) |
 | **Kepengurusan** | Rekaman jabatan seorang user di suatu periode |
 | **Anggota Umum** | Anggota aktif yang tidak memegang jabatan di periode berjalan |
-| **Level Akses** | Angka 1–5 yang menentukan hak fitur; lihat Role User & Fiturnya.md |
+| **User Public** | Pengguna yang mendaftar akun namun belum diverifikasi pengurus (`users.status = 'pending'`) |
+| **Level Akses** | Angka 0–5 yang menentukan hak fitur; lihat Role User & Fiturnya.md |
 | **RLS** | Row Level Security — kebijakan akses baris pada PostgreSQL Supabase |
 | **RPC** | Remote Procedure Call — fungsi database server-side di Supabase |
 
@@ -89,15 +90,17 @@ Anggota Umum (tidak menjabat di periode berjalan)
 | Level | Kode Role | Jabatan | Domain Akses |
 |-------|-----------|---------|--------------|
 | 5 | `ketua_umum` | Ketua Umum | Semua fitur + kelola sistem & periode |
-| 4 | `sekretaris_umum` | Sekretaris Umum | Konten, kegiatan, anggota (lintas bidang) |
+| 4 | `sekretaris_umum` | Sekretaris Umum | Konten, kegiatan, anggota (lintas bidang), verifikasi user |
 | 4 | `bendahara_umum` | Bendahara Umum | Uang khas & keuangan semua anggota |
 | 3 | `ketua_bidang` | Ketua Bidang | Kelola bidangnya: kegiatan, absensi, poin |
 | 2 | `anggota_bidang` | Anggota Bidang | Fitur anggota + info internal bidang |
 | 1 | `anggota_umum` | Anggota Umum | Baca, scan, pantau data pribadi |
+| 0 | `user_public` | — | Profil sendiri saja; menunggu verifikasi |
 
 #### Sistem Periode
 - Hanya satu periode yang `is_aktif = true` pada satu waktu
-- User tidak terdaftar di `kepengurusan` periode aktif → otomatis `anggota_umum`
+- User dengan `status = 'pending'` → `user_public` (level 0), tidak dapat akses data internal
+- User `status = 'active'` tidak terdaftar di `kepengurusan` periode aktif → otomatis `anggota_umum` (level 1)
 - Riwayat jabatan periode lama tetap tersimpan (tidak dihapus)
 
 ### 2.4 Batasan Sistem
@@ -141,16 +144,20 @@ Anggota Umum (tidak menjabat di periode berjalan)
 1. User buka halaman Login
 2. Masuk via Email/Password atau Google Sign-In
 3. `supabase.auth.signInWithPassword()` / `signInWithOAuth(google)`
-4. Query `kepengurusan` JOIN `jabatan` WHERE `user_id = current` AND `periode.is_aktif = true`
-5. Jika ada → set `kode_role` + `level_akses` + `bidang_id` dari jabatan
-6. Jika kosong → set `kode_role = 'anggota_umum'`, `level_akses = 1`
-7. Simpan ke Riverpod `currentUserProvider`
+4. Cek `users.status`:
+   - `'pending'` → set `kode_role = 'user_public'`, `level_akses = 0` → redirect ke `PendingVerificationScreen`
+   - `'active'` → lanjut ke langkah 5
+5. Query `kepengurusan` JOIN `jabatan` WHERE `user_id = current` AND `periode.is_aktif = true`
+6. Jika ada → set `kode_role` + `level_akses` + `bidang_id` dari jabatan
+7. Jika kosong → set `kode_role = 'anggota_umum'`, `level_akses = 1`
+8. Simpan ke Riverpod `currentUserProvider`
 
 #### F-02: Registrasi
 1. Isi form: Nama, Email, NIM, Angkatan, Password
 2. `supabase.auth.signUp(email, password)`
 3. Verifikasi email via Supabase magic link / OTP
-4. Insert profil ke tabel `users` (poin default 0, belum ada kepengurusan)
+4. Insert profil ke tabel `users` (poin default 0, `status = 'pending'`, belum ada kepengurusan)
+5. User diarahkan ke `PendingVerificationScreen` — tidak bisa akses data internal sampai diverifikasi admin
 
 #### F-03: Manajemen Sesi
 - Auto-detect session saat startup via `authStateProvider`
@@ -364,6 +371,9 @@ Anggota Umum (tidak menjabat di periode berjalan)
 - `angkatan` (int2, nullable)
 - `points` (int4, default 0)
 - `profile_photo` (text, nullable)
+- `status` (varchar, default `'pending'`) — `'pending'` = user_public, `'active'` = anggota aktif, `'suspended'` = diblokir
+- `verified_by` (uuid, nullable, FK → users) — siapa yang memverifikasi akun ini
+- `verified_at` (timestamptz, nullable)
 - `created_at` (timestamptz)
 
 #### Tabel `activities`
@@ -470,16 +480,17 @@ absensiHistoryProvider    // AsyncValue<List<Absensi>>
 
 | Tabel | Policy |
 |-------|--------|
-| `users` | Baca: authenticated. Update: `auth.uid() = id` atau level ≥ 4 |
-| `absensi` | Baca: `user_id = auth.uid()` atau (Kabid AND `bidang_sesuai`) atau level ≥ 4 |
-| `uang_khas` | Baca: `user_id = auth.uid()` atau `bendahara_umum` / `ketua_umum` |
+| `users` | Baca sendiri: authenticated. Baca semua: level ≥ 1 (`status = 'active'`). Update: `auth.uid() = id` atau level ≥ 4. Update `status`: level ≥ 4 |
+| `absensi` | Baca: level ≥ 1 (`user_id = auth.uid()`) atau (Kabid AND `bidang_sesuai`) atau level ≥ 4. **Blok user_public** |
+| `uang_khas` | Baca: level ≥ 1 (`user_id = auth.uid()`) atau `bendahara_umum` / `ketua_umum`. **Blok user_public** |
 | `uang_khas` | Update: `bendahara_umum` / `ketua_umum` |
-| `point_history` | Baca: `user_id = auth.uid()` atau level ≥ 3 |
-| `activities` | Baca: authenticated. Insert/Update: level ≥ 3 |
-| `berita` | Baca: authenticated. Insert/Update: level ≥ 4 (sekretaris domain) |
-| `pengumuman` | Baca: authenticated. Insert: level ≥ 4 (sekretaris domain) |
-| `kepengurusan` | Baca: authenticated. Insert/Update: `ketua_umum` |
-| `periode` | Baca: authenticated. Insert/Update: `ketua_umum` |
+| `point_history` | Baca: level ≥ 1 (`user_id = auth.uid()`) atau level ≥ 3. **Blok user_public** |
+| `activities` | Baca: level ≥ 1. Insert/Update: level ≥ 3. **Blok user_public** |
+| `berita` | Baca: level ≥ 1. Insert/Update: level ≥ 4. **Blok user_public** |
+| `pengumuman` | Baca: level ≥ 1. Insert: level ≥ 4. **Blok user_public** |
+| `notifications` | Baca: level ≥ 1 (`user_id = auth.uid()`). **Blok user_public** |
+| `kepengurusan` | Baca: level ≥ 1. Insert/Update: `ketua_umum` |
+| `periode` | Baca: level ≥ 1. Insert/Update: `ketua_umum` |
 
 ### 5.4 Supabase Storage Buckets
 
@@ -568,7 +579,10 @@ absensiHistoryProvider    // AsyncValue<List<Absensi>>
 
 ### MVP
 - [ ] Login via email & Google, deteksi jabatan aktif periode berjalan
-- [ ] User tanpa jabatan aktif → anggota_umum (level 1) otomatis
+- [ ] Registrasi → `status = 'pending'` → tampil `PendingVerificationScreen`
+- [ ] Sekretaris / Ketua Umum dapat verifikasi user → `status = 'active'`
+- [ ] GoRouter redirect: `user_public` tidak bisa akses route internal
+- [ ] User `status = 'active'` tanpa jabatan aktif → anggota_umum (level 1) otomatis
 - [ ] Scan QR → absensi tercatat + poin bertambah via RPC
 - [ ] Uang khas per bulan real-time dari Supabase Stream
 - [ ] Ketua Bidang: generate QR & kelola kegiatan bidangnya

@@ -86,7 +86,7 @@ kepengurusan → id, user_id, jabatan_id, periode_id, tanggal_mulai, tanggal_sel
 
 ## 3. Hierarki Akses (Level)
 
-Sistem menggunakan **7 level akses**. Level 0 adalah User Public (belum terverifikasi). Level 1–5 ditentukan dari jabatan di periode aktif. User yang terverifikasi namun tidak terdaftar di kepengurusan periode aktif otomatis berstatus Anggota Umum (level 1).
+Sistem menggunakan **8 level/posisi akses** (termasuk Demisioner). Level 0 adalah User Public (belum terverifikasi). Level 1–5 ditentukan dari jabatan di periode aktif. User yang merupakan alumni atau mantan pengurus berstatus Demisioner (level 1 dengan role `demisioner`), sedangkan anggota biasa non-pengurus berstatus Anggota Umum (level 1).
 
 | Level | Kode Role | Jabatan | Catatan |
 |-------|-----------|---------|---------|
@@ -96,6 +96,7 @@ Sistem menggunakan **7 level akses**. Level 0 adalah User Public (belum terverif
 | **3** | `ketua_bidang` | Ketua Bidang (semua bidang) | Kelola bidang masing-masing |
 | **2** | `anggota_bidang` | Anggota Bidang (semua bidang) | Fitur anggota + info bidang |
 | **1** | `anggota_umum` | Anggota Umum | Fitur dasar saja |
+| **1** | `demisioner` | Demisioner | Alumni/mantan pengurus, bebas iuran khas, read-only |
 | **0** | `user_public` | — (belum terverifikasi) | Hanya akses profil & menunggu verifikasi |
 
 > **Catatan:** Level 4 (Sekretaris & Bendahara) memiliki domain akses berbeda, bukan hierarki vertikal.  
@@ -128,53 +129,53 @@ Posisi dalam kepanitiaan kegiatan menentukan visibilitas rapat terkait kegiatan 
 
 ### 5.1 Akses Baca / View
 
-| Fitur | User Public | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
-|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Beranda (terbatas) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Berita & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| List Acara (Kegiatan) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Detail Kegiatan | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Riwayat Kegiatan | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| List Rapat (hanya yg relevan) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Detail Rapat (hanya yg relevan) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Daftar Anggota | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Profil Anggota Lain | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Uang Khas (milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Poin & Level (milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Leaderboard Poin | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Inbox & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Absensi (riwayat milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Riwayat Anggota Bidang | ❌ | ❌ | ✅ (bidangnya) | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| Semua Rapat (tanpa filter) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (isAdmin) |
+| Fitur | User Public | Demisioner | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
+|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Beranda (terbatas) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Berita & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| List Acara (Kegiatan) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Detail Kegiatan | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Riwayat Kegiatan | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| List Rapat (hanya yg relevan) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Detail Rapat (hanya yg relevan) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Daftar Anggota | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Profil Anggota Lain | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Uang Khas (milik sendiri) | ❌ | ❌ (Bebas) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Poin & Level (milik sendiri) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Leaderboard Poin | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Inbox & Pengumuman | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Absensi (riwayat milik sendiri) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Riwayat Anggota Bidang | ❌ | ❌ | ❌ | ✅ (bidangnya) | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| Semua Rapat (tanpa filter) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (isAdmin) |
 
 ### 5.2 Aksi / Manage
 
-| Fitur | User Public | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
-|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Edit Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Absensi (scan QR) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Absensi Sekret (foto) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Buat Kegiatan** | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Buat Rapat** (tipe terbatas) | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Edit Kegiatan** | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Edit Rapat** | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **Generate QR Absensi** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kelola Kegiatan (Admin)** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Buat Rapat Stakeholder Org** | ❌ | ❌ | ❌ | ✅ (dgn kabid) | ✅ | ✅ | ✅ |
-| **Buat Rapat Internal Bidang** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Tambah Notulensi Rapat** | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **Kelola Berita / Pengumuman** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Kelola Uang Khas** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Verifikasi Pembayaran** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Lihat Uang Khas Semua** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Kelola Poin Anggota** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kelola Data Anggota** | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
-| **Kirim Pengumuman** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Verifikasi & Promosi User Public** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Panel Admin Penuh** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Kelola Periode Kepengurusan** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Manajemen Role & Jabatan** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Fitur | User Public | Demisioner | Anggota Umum | Anggota Bidang | Ketua Bidang | Bendahara | Sekretaris | Ketua Umum |
+|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Edit Profil Sendiri | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Absensi (scan QR) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Absensi Sekret (foto) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Buat Kegiatan** | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Buat Rapat** (tipe terbatas) | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Edit Kegiatan** | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Edit Rapat** | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Generate QR Absensi** | ❌ | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kelola Kegiatan (Admin)** | ❌ | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Buat Rapat Stakeholder Org** | ❌ | ❌ | ❌ | ❌ | ✅ (dgn kabid) | ✅ | ✅ | ✅ |
+| **Buat Rapat Internal Bidang** | ❌ | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Tambah Notulensi Rapat** | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Kelola Berita / Pengumuman** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Kelola Uang Khas** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Verifikasi Pembayaran** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Lihat Uang Khas Semua** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Kelola Poin Anggota** | ❌ | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kelola Data Anggota** | ❌ | ❌ | ❌ | ❌ | ✅ (bidangnya) | ❌ | ✅ | ✅ |
+| **Kirim Pengumuman** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Verifikasi & Promosi User Public** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Panel Admin Penuh** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Kelola Periode Kepengurusan** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Manajemen Role & Jabatan** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
@@ -242,6 +243,22 @@ Pengguna yang telah mengunduh aplikasi dan mendaftarkan akun, **namun belum dive
 **Tidak Bisa:**
 - Edit kegiatan orang lain
 - Generate QR, kelola anggota, kirim pengumuman
+
+---
+
+### 7.1a Demisioner (Level 1 — Special)
+Mantan pengurus atau alumni UKM POLICY yang diberikan akses arsip untuk memantau kemajuan organisasi.
+
+**Bisa:**
+- Melihat beranda, berita, kegiatan, daftar anggota
+- Melihat inbox / pengumuman
+- Melihat riwayat kegiatan & poin keaktifan masa lalunya secara read-only
+- Dibebaskan (exempt) dari kewajiban iuran uang khas organisasi
+
+**Tidak Bisa:**
+- Melakukan absensi (scan QR maupun foto sekret)
+- Membuat atau mengedit kegiatan dan rapat
+- Mengakses panel admin atau dashboard pengelolaan kepengurusan aktif
 
 ---
 
@@ -390,5 +407,6 @@ Bendahara Umum    → Uang khas semua anggota + semua rapat
 Ketua Bidang      → Kegiatan + absensi + poin bidangnya + buat rapat kegiatan/bidang
 Anggota Bidang    → View bidangnya + fitur anggota + edit kegiatan + rapat bidang
 Anggota Umum      → Fitur dasar + buat kegiatan + buat rapat relevan + lihat rapat relevan
+Demisioner        → Akses arsip berita & kegiatan, bebas iuran khas, read-only profil & anggota
 User Public       → Profil saja, menunggu verifikasi pengurus
 ```

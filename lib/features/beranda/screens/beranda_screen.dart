@@ -22,14 +22,19 @@ class _BerandaScreenState extends State<BerandaScreen> {
 
   final _banners = kBeritaList.take(2).toList();
 
-  final _quickMenu = const [
-    _QuickMenuData(icon: Icons.groups, label: 'All Members', route: '/anggota', isPush: true),
-    _QuickMenuData(icon: Icons.event_note, label: 'Kegiatan', route: '/kegiatan'),
-    _QuickMenuData(icon: Icons.account_balance_wallet, label: 'Uang Khas', route: '/uang-khas', isPush: true),
-    _QuickMenuData(icon: Icons.qr_code_scanner, label: 'Absensi', route: '/absensi', isPush: true),
-    _QuickMenuData(icon: Icons.newspaper, label: 'Berita', route: '/berita'),
-    _QuickMenuData(icon: Icons.workspace_premium, label: 'Poin', route: '/poin', isPush: true),
-  ];
+  List<_QuickMenuData> get _quickMenu {
+    final isDemisioner = AppSession.kodeRole == 'demisioner';
+    return [
+      const _QuickMenuData(icon: Icons.groups, label: 'All Members', route: '/anggota', isPush: true),
+      const _QuickMenuData(icon: Icons.event_note, label: 'Kegiatan', route: '/kegiatan'),
+      const _QuickMenuData(icon: Icons.account_balance_wallet, label: 'Uang Khas', route: '/uang-khas', isPush: true),
+      isDemisioner
+          ? const _QuickMenuData(icon: Icons.history, label: 'Riwayat', route: '/kegiatan/riwayat', isPush: true)
+          : const _QuickMenuData(icon: Icons.qr_code_scanner, label: 'Absensi', route: '/absensi', isPush: true),
+      const _QuickMenuData(icon: Icons.newspaper, label: 'Berita', route: '/berita'),
+      const _QuickMenuData(icon: Icons.workspace_premium, label: 'Poin', route: '/poin', isPush: true),
+    ];
+  }
 
   final _newsList = kBeritaList.take(3).toList();
 

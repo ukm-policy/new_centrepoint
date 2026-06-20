@@ -7,6 +7,7 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../../../core/session/app_session.dart';
 
 class AbsensiScreen extends StatefulWidget {
   const AbsensiScreen({super.key});
@@ -64,6 +65,8 @@ class _AbsensiScreenState extends State<AbsensiScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDemisioner = AppSession.kodeRole == 'demisioner';
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: FloatingAppBar(title: 'Absensi')),
@@ -73,10 +76,54 @@ class _AbsensiScreenState extends State<AbsensiScreen>
             AppSpacing.marginPage, AppSpacing.stackGap,
           ),
           sliver: SliverList(
-            delegate: SliverChildListDelegate([
-
-              // ── Bagian 1: Absen Kegiatan ─────────────────────────────────
-              _SectionLabel(label: '01', title: 'Absen Kegiatan'),
+            delegate: SliverChildListDelegate(
+              isDemisioner
+                  ? [
+                      BrutalistCard(
+                        backgroundColor: AppColors.surfaceContainerLowest,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceContainerHigh,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.blackCharcoal, width: 2),
+                                boxShadow: const [AppColors.hardShadowSm],
+                              ),
+                              child: const Icon(
+                                Icons.no_accounts_outlined,
+                                size: 48,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Status Absensi Tidak Aktif',
+                              textAlign: TextAlign.center,
+                              style: AppTypography.headlineSm.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.blackCharcoal,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Anggota Demisioner tidak memiliki kewajiban absensi kegiatan organisasi.',
+                              textAlign: TextAlign.center,
+                              style: AppTypography.bodyMd.copyWith(
+                                color: AppColors.tertiary,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]
+                  : [
+                      // ── Bagian 1: Absen Kegiatan ─────────────────────────────────
+                      _SectionLabel(label: '01', title: 'Absen Kegiatan'),
               const SizedBox(height: 12),
 
               // Scanner card

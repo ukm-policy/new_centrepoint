@@ -248,80 +248,110 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
               const SizedBox(height: AppSpacing.stackGap),
 
               // Status iuran
-              _SectionCard(
-                title: 'Status Iuran Saya (2026)',
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    childAspectRatio: 1.6,
+              if (AppSession.kodeRole == 'demisioner')
+                _SectionCard(
+                  title: 'Status Iuran Saya',
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryContainer,
+                      borderRadius: BorderRadius.circular(AppSpacing.radius),
+                      border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
+                      boxShadow: const [AppColors.hardShadowSm],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.verified_user, color: AppColors.onSecondaryContainer, size: 28),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Sebagai Anggota Demisioner, Anda dibebaskan dari iuran uang khas organisasi. Terima kasih atas dedikasi Anda di periode sebelumnya!',
+                            style: AppTypography.bodyMd.copyWith(
+                              color: AppColors.onSecondaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  itemCount: 12,
-                  itemBuilder: (context, i) {
-                    final status = _monthStatuses[i];
-                    final isLunas = status == 'Lunas';
-                    final isPending = status == 'Menunggu Verifikasi';
-                    final isDitolak = status == 'Ditolak';
-                    
-                    Color bg = AppColors.surfaceContainerLowest;
-                    Color fg = AppColors.onSurface;
-                    if (isLunas) {
-                      bg = AppColors.success;
-                      fg = Colors.white;
-                    } else if (isPending) {
-                      bg = AppColors.secondaryContainer;
-                      fg = AppColors.onSecondaryContainer;
-                    } else if (isDitolak) {
-                      bg = AppColors.errorContainer;
-                      fg = AppColors.onErrorContainer;
-                    }
+                )
+              else
+                _SectionCard(
+                  title: 'Status Iuran Saya (2026)',
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 1.6,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, i) {
+                      final status = _monthStatuses[i];
+                      final isLunas = status == 'Lunas';
+                      final isPending = status == 'Menunggu Verifikasi';
+                      final isDitolak = status == 'Ditolak';
+                      
+                      Color bg = AppColors.surfaceContainerLowest;
+                      Color fg = AppColors.onSurface;
+                      if (isLunas) {
+                        bg = AppColors.success;
+                        fg = Colors.white;
+                      } else if (isPending) {
+                        bg = AppColors.secondaryContainer;
+                        fg = AppColors.onSecondaryContainer;
+                      } else if (isDitolak) {
+                        bg = AppColors.errorContainer;
+                        fg = AppColors.onErrorContainer;
+                      }
 
-                    return GestureDetector(
-                      onTap: () {
-                        if (status != 'Lunas' && status != 'Menunggu Verifikasi') {
-                          _showUploadReceiptSheet(i);
-                        } else if (status == 'Menunggu Verifikasi') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Pembayaran bulan ${_months[i]} sedang diverifikasi oleh Bendahara.', style: AppTypography.bodyMd),
-                              backgroundColor: AppColors.blackCharcoal,
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Iuran bulan ${_months[i]} sudah lunas.', style: AppTypography.bodyMd),
-                              backgroundColor: AppColors.blackCharcoal,
-                            ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: bg,
-                          borderRadius: BorderRadius.circular(AppSpacing.radius),
-                          border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
+                      return GestureDetector(
+                        onTap: () {
+                          if (status != 'Lunas' && status != 'Menunggu Verifikasi') {
+                            _showUploadReceiptSheet(i);
+                          } else if (status == 'Menunggu Verifikasi') {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Pembayaran bulan ${_months[i]} sedang diverifikasi oleh Bendahara.', style: AppTypography.bodyMd),
+                                backgroundColor: AppColors.blackCharcoal,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Iuran bulan ${_months[i]} sudah lunas.', style: AppTypography.bodyMd),
+                                backgroundColor: AppColors.blackCharcoal,
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: bg,
+                            borderRadius: BorderRadius.circular(AppSpacing.radius),
+                            border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _monthsShort[i],
+                                style: AppTypography.labelBold.copyWith(color: fg),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                status == 'Lunas' ? 'LUNAS' : (status == 'Menunggu Verifikasi' ? 'PROSES' : (status == 'Ditolak' ? 'TOLAK' : 'BELUM')),
+                                style: AppTypography.labelBold.copyWith(color: fg.withValues(alpha: 0.8), fontSize: 8),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _monthsShort[i],
-                              style: AppTypography.labelBold.copyWith(color: fg),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              status == 'Lunas' ? 'LUNAS' : (status == 'Menunggu Verifikasi' ? 'PROSES' : (status == 'Ditolak' ? 'TOLAK' : 'BELUM')),
-                              style: AppTypography.labelBold.copyWith(color: fg.withValues(alpha: 0.8), fontSize: 8),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
                 ),
               ),
               const SizedBox(height: AppSpacing.stackGap),

@@ -97,6 +97,7 @@ Setiap bidang dipimpin 1 **Ketua Bidang (Kabid)** dan memiliki beberapa **Anggot
 | 3 | `ketua_bidang` | Ketua Bidang | Kelola kegiatan, absensi, poin bidangnya |
 | 2 | `anggota_bidang` | Anggota Bidang | Fitur anggota + info internal bidang |
 | 1 | `anggota_umum` | Anggota Umum | Baca, scan absensi, pantau data pribadi |
+| 1 | `demisioner` | Demisioner | Alumni/mantan pengurus, akses arsip read-only, bebas iuran |
 | 0 | `user_public` | — | Profil pribadi saja; menunggu verifikasi pengurus |
 
 > Selengkapnya lihat **Dokumen/Role User & Fiturnya.md**

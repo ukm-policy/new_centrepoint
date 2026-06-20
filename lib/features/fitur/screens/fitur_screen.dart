@@ -62,6 +62,18 @@ const _roles = [
     ],
   ),
   _RoleData(
+    title: 'Demisioner',
+    level: 1,
+    badgeColor: AppColors.primaryContainer,
+    badgeTextColor: Colors.white,
+    items: [
+      _MenuItem(icon: Icons.history, label: 'Riwayat Kegiatan', route: '/kegiatan/riwayat'),
+      _MenuItem(icon: Icons.groups, label: 'Daftar Anggota', route: '/anggota'),
+      _MenuItem(icon: Icons.workspace_premium_outlined, label: 'Arsip Poin Keaktifan', route: '/poin'),
+      _MenuItem(icon: Icons.mail_outline, label: 'Inbox & Pengumuman', route: '/inbox'),
+    ],
+  ),
+  _RoleData(
     title: 'Anggota Bidang',
     level: 2,
     badgeColor: AppColors.secondaryContainer,
@@ -144,14 +156,21 @@ class FiturScreen extends StatelessWidget {
           ),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              if (AppSession.isAdmin) ...[
+              if (AppSession.isAdmin && AppSession.kodeRole != 'demisioner') ...[
                 _AdminAccessBanner(),
                 const SizedBox(height: 28),
               ],
               for (final role in _roles) ...[
-                if (role.level <= AppSession.level) ...[
-                  _RoleSection(role: role),
-                  const SizedBox(height: 24),
+                if (AppSession.kodeRole == 'demisioner') ...[
+                  if (role.title == 'User Public' || role.title == 'Demisioner') ...[
+                    _RoleSection(role: role),
+                    const SizedBox(height: 24),
+                  ],
+                ] else ...[
+                  if (role.title != 'Demisioner' && role.level <= AppSession.level) ...[
+                    _RoleSection(role: role),
+                    const SizedBox(height: 24),
+                  ],
                 ],
               ],
             ]),

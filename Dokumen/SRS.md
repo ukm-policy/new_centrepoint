@@ -102,12 +102,14 @@ Anggota Umum (tidak menjabat di periode berjalan)
 | 3 | `ketua_bidang` | Ketua Bidang | Kelola bidangnya: kegiatan, absensi, poin |
 | 2 | `anggota_bidang` | Anggota Bidang | Fitur anggota + info internal bidang + edit kegiatan |
 | 1 | `anggota_umum` | Anggota Umum | Baca, scan, buat kegiatan, pantau data pribadi |
+| 1 | `demisioner` | Demisioner | Alumni/mantan pengurus, akses arsip read-only, bebas iuran |
 | 0 | `user_public` | — | Profil sendiri saja; menunggu verifikasi |
 
 #### Sistem Periode
 - Hanya satu periode yang `is_aktif = true` pada satu waktu
 - User `status = 'pending'` → `user_public` (level 0)
-- User `status = 'active'` tanpa entri `kepengurusan` di periode aktif → `anggota_umum` (level 1)
+- User dengan status `demisioner` → `demisioner` (level 1 dengan penanganan khusus bebas iuran dan arsip)
+- User `status = 'active'` tanpa entri `kepengurusan` di periode aktif → `anggota_umum` (level 1) otomatis
 - Riwayat jabatan periode lama tetap tersimpan
 
 ### 2.4 Batasan Sistem

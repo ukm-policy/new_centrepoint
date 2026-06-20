@@ -144,6 +144,9 @@ class RapatItem {
 // ── Visibility Filter ─────────────────────────────────────────────────────────
 
 bool isRapatVisible(RapatItem rapat) {
+  if (AppSession.kodeRole == 'demisioner') {
+    return rapat.peserta.contains(AppSession.nama);
+  }
   if (AppSession.isAdmin) return true;
 
   switch (rapat.tipe) {

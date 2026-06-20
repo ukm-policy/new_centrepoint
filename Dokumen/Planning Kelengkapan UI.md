@@ -316,6 +316,7 @@
 **Yang perlu diperbaiki:**
 - [x] Filter section berdasarkan `AppSession.level`: hanya tampilkan section ≤ level user
 - [x] Atau: section di atas level user di-collapse/dim dengan label "Perlu Jabatan Lebih Tinggi"
+- [x] Tambahkan dukungan role khusus "Demisioner" (level 1 dengan check kodeRole) untuk membatasi akses fitur aktif dan menampilkan menu arsip alumni
 
 ---
 

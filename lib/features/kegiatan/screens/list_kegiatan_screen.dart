@@ -37,7 +37,7 @@ class _ListKegiatanScreenState extends State<ListKegiatanScreen>
   }
 
   bool get _isAcaraTab => _tabController.index == 0;
-  bool get _canCreate => AppSession.level > 0;
+  bool get _canCreate => AppSession.level > 0 && AppSession.kodeRole != 'demisioner';
 
   @override
   Widget build(BuildContext context) {

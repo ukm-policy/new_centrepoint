@@ -1,0 +1,403 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/brutalist_button.dart';
+
+class CompleteProfileScreen extends StatefulWidget {
+  const CompleteProfileScreen({super.key});
+
+  @override
+  State<CompleteProfileScreen> createState() => _CompleteProfileScreenState();
+}
+
+class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _namaCtrl = TextEditingController();
+  final _nimCtrl = TextEditingController();
+  final _angkatanCtrl = TextEditingController();
+  final _noHpCtrl = TextEditingController();
+
+  String? _selectedProdi;
+  String? _selectedJenisKelamin;
+  bool _loading = false;
+
+  static const _prodiList = [
+    'Teknik Informatika',
+    'Sistem Informasi',
+    'Manajemen Informatika',
+    'Ilmu Komputer',
+    'Teknik Komputer',
+    'Ilmu Komunikasi',
+    'Administrasi Bisnis',
+    'Lainnya',
+  ];
+
+  @override
+  void dispose() {
+    _namaCtrl.dispose();
+    _nimCtrl.dispose();
+    _angkatanCtrl.dispose();
+    _noHpCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return;
+    setState(() => _loading = false);
+    context.go('/');
+  }
+
+  void _skip() => context.go('/');
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bgGray,
+      body: SafeArea(
+        child: Column(
+          children: [
+
+            // ── Top bar ───────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.marginPage, 16, AppSpacing.marginPage, 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Kosong — tidak ada back (akun sudah dibuat)
+                  const SizedBox(width: 60),
+                  Text(
+                    'Lengkapi Profil',
+                    style: AppTypography.headlineSm,
+                  ),
+                  // Skip
+                  GestureDetector(
+                    onTap: _skip,
+                    child: Text(
+                      'Lewati',
+                      style: AppTypography.labelBold.copyWith(
+                        color: AppColors.tertiary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.tertiary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.marginPage),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+
+                      // ── Avatar placeholder ─────────────────────────────────
+                      Center(
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 88,
+                              height: 88,
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceContainerHigh,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.blackCharcoal,
+                                  width: 2.5,
+                                ),
+                                boxShadow: const [AppColors.hardShadow],
+                              ),
+                              child: const Icon(
+                                Icons.person_outline,
+                                size: 40,
+                                color: AppColors.tertiary,
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryContainer,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.blackCharcoal,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_outlined,
+                                  size: 14,
+                                  color: AppColors.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          'Foto Profil (opsional)',
+                          style: AppTypography.labelBold.copyWith(
+                            color: AppColors.tertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // ── Nama Lengkap ───────────────────────────────────────
+                      const _FieldLabel(label: 'NAMA LENGKAP'),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _namaCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        style: AppTypography.bodyMd,
+                        decoration: const InputDecoration(
+                          hintText: 'Masukkan nama lengkap',
+                          prefixIcon: Icon(Icons.person_outline, size: 20),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Nama tidak boleh kosong';
+                          if (v.trim().length < 3) return 'Nama minimal 3 karakter';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.stackGap),
+
+                      // ── NIM & Angkatan ─────────────────────────────────────
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const _FieldLabel(label: 'NIM'),
+                            const SizedBox(height: 6),
+                            TextFormField(
+                              controller: _nimCtrl,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              style: AppTypography.bodyMd,
+                              decoration: const InputDecoration(
+                                hintText: '2024010001',
+                                prefixIcon: Icon(Icons.badge_outlined, size: 20),
+                              ),
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) return 'NIM wajib diisi';
+                                if (v.length < 8) return 'NIM tidak valid';
+                                return null;
+                              },
+                            ),
+                          ]),
+                        ),
+                        const SizedBox(width: AppSpacing.gutterGrid),
+                        Expanded(
+                          flex: 2,
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const _FieldLabel(label: 'ANGKATAN'),
+                            const SizedBox(height: 6),
+                            TextFormField(
+                              controller: _angkatanCtrl,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(4),
+                              ],
+                              style: AppTypography.bodyMd,
+                              decoration: const InputDecoration(
+                                hintText: '2024',
+                                prefixIcon: Icon(Icons.calendar_today_outlined, size: 18),
+                              ),
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) return 'Wajib';
+                                if (v.length != 4) return 'YYYY';
+                                final y = int.tryParse(v);
+                                if (y == null || y < 2010 || y > 2030) return 'Tidak valid';
+                                return null;
+                              },
+                            ),
+                          ]),
+                        ),
+                      ]),
+                      const SizedBox(height: AppSpacing.stackGap),
+
+                      // ── Program Studi ──────────────────────────────────────
+                      const _FieldLabel(label: 'PROGRAM STUDI'),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedProdi,
+                        onChanged: (v) => setState(() => _selectedProdi = v),
+                        style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+                        decoration: const InputDecoration(
+                          hintText: 'Pilih program studi',
+                          prefixIcon: Icon(Icons.school_outlined, size: 20),
+                        ),
+                        items: _prodiList.map((p) => DropdownMenuItem(
+                          value: p,
+                          child: Text(p),
+                        )).toList(),
+                        validator: (v) => v == null ? 'Program studi wajib dipilih' : null,
+                      ),
+                      const SizedBox(height: AppSpacing.stackGap),
+
+                      // ── Jenis Kelamin ──────────────────────────────────────
+                      const _FieldLabel(label: 'JENIS KELAMIN'),
+                      const SizedBox(height: 6),
+                      Row(children: [
+                        _GenderOption(
+                          label: 'Laki-laki',
+                          icon: Icons.male,
+                          selected: _selectedJenisKelamin == 'L',
+                          onTap: () => setState(() => _selectedJenisKelamin = 'L'),
+                        ),
+                        const SizedBox(width: AppSpacing.gutterGrid),
+                        _GenderOption(
+                          label: 'Perempuan',
+                          icon: Icons.female,
+                          selected: _selectedJenisKelamin == 'P',
+                          onTap: () => setState(() => _selectedJenisKelamin = 'P'),
+                        ),
+                      ]),
+                      const SizedBox(height: AppSpacing.stackGap),
+
+                      // ── No. WhatsApp ───────────────────────────────────────
+                      const _FieldLabel(label: 'NO. WHATSAPP'),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _noHpCtrl,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        style: AppTypography.bodyMd,
+                        decoration: const InputDecoration(
+                          hintText: '08xxxxxxxxxx',
+                          prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'No. WhatsApp wajib diisi';
+                          if (v.length < 10) return 'Nomor tidak valid';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32),
+
+                      // ── Submit ─────────────────────────────────────────────
+                      _loading
+                          ? const Center(child: CircularProgressIndicator())
+                          : BrutalistButton(
+                              label: 'SIMPAN',
+                              icon: Icons.check,
+                              onPressed: _submit,
+                            ),
+                      const SizedBox(height: 14),
+
+                      // ── Skip ───────────────────────────────────────────────
+                      GestureDetector(
+                        onTap: _skip,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Isi nanti saja',
+                                style: AppTypography.labelBold.copyWith(
+                                  color: AppColors.tertiary,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.arrow_forward,
+                                size: 14,
+                                color: AppColors.tertiary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Gender Option ─────────────────────────────────────────────────────────────
+
+class _GenderOption extends StatelessWidget {
+  const _GenderOption({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primaryContainer : AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            border: Border.all(color: AppColors.blackCharcoal, width: 2),
+            boxShadow: [BoxShadow(
+              color: AppColors.blackCharcoal,
+              offset: selected ? const Offset(2, 2) : const Offset(3, 3),
+              blurRadius: 0,
+            )],
+          ),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(icon, size: 18,
+              color: selected ? AppColors.onPrimary : AppColors.tertiary),
+            const SizedBox(width: 6),
+            Text(label, style: AppTypography.labelBold.copyWith(
+              color: selected ? AppColors.onPrimary : AppColors.onSurface,
+            )),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Field Label ───────────────────────────────────────────────────────────────
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    label,
+    style: AppTypography.labelBold.copyWith(
+      color: AppColors.onSurface,
+      letterSpacing: 0.5,
+    ),
+  );
+}

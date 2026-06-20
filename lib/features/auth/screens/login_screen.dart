@@ -30,9 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.marginPage),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.marginPage),
+          child: Center(
             child: Container(
               width: double.infinity,
               constraints: const BoxConstraints(maxWidth: 420),
@@ -161,23 +161,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Footer
                   const MyDivider(color: AppColors.borderSlate),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Belum punya akun? ',
-                        style: AppTypography.bodyMd,
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Text(
-                          'Daftar sekarang',
-                          style: AppTypography.labelBold.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Belum punya akun?',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
+                  ),
+                  const SizedBox(height: 10),
+                  BrutalistButton(
+                    label: 'Daftar Sekarang',
+                    icon: Icons.person_add_outlined,
+                    variant: BrutalistButtonVariant.secondary,
+                    onPressed: () => context.push('/register'),
                   ),
                 ],
               ),

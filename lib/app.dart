@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/register_screen.dart';
+import 'features/auth/screens/complete_profile_screen.dart';
+import 'features/auth/screens/setup_password_screen.dart';
 import 'features/beranda/screens/beranda_screen.dart';
 import 'features/berita/screens/list_berita_screen.dart';
 import 'features/berita/screens/detail_berita_screen.dart';
@@ -34,6 +37,18 @@ final _router = GoRouter(
     GoRoute(
       path: '/login',
       builder: (_, _) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (_, _) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/lengkapi-profil',
+      builder: (_, _) => const CompleteProfileScreen(),
+    ),
+    GoRoute(
+      path: '/setup-password',
+      builder: (_, _) => const SetupPasswordScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => _AppShell(child: child),

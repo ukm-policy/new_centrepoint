@@ -17,6 +17,12 @@ import 'features/menu/screens/menu_setelan_screen.dart';
 import 'features/poin/screens/poin_screen.dart';
 import 'features/fitur/screens/fitur_screen.dart';
 import 'features/inbox/screens/inbox_screen.dart';
+import 'features/or/screens/or_screen.dart';
+import 'features/or/screens/or_form_screen.dart';
+import 'features/or/screens/or_status_screen.dart';
+import 'features/or/screens/or_admin_screen.dart';
+import 'features/or/screens/or_detail_screen.dart';
+import 'features/or/screens/or_kelola_screen.dart';
 import 'features/inbox/screens/detail_pengumuman_screen.dart';
 import 'shared/widgets/bottom_nav_bar.dart';
 import 'shared/widgets/app_drawer.dart';
@@ -102,6 +108,35 @@ final _router = GoRouter(
               path: 'pengumuman/:id',
               builder: (_, state) =>
                   DetailPengumumanScreen(id: state.pathParameters['id']!),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/or',
+          builder: (_, _) => const OrScreen(),
+          routes: [
+            GoRoute(
+              path: 'daftar',
+              builder: (_, _) => const OrFormScreen(),
+            ),
+            GoRoute(
+              path: 'status',
+              builder: (_, _) => const OrStatusScreen(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/admin/or',
+          builder: (_, _) => const OrAdminScreen(),
+          routes: [
+            GoRoute(
+              path: 'kelola',
+              builder: (_, _) => const OrKelolaScreen(),
+            ),
+            GoRoute(
+              path: ':id',
+              builder: (_, state) =>
+                  OrDetailScreen(id: state.pathParameters['id']!),
             ),
           ],
         ),

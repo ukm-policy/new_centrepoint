@@ -38,6 +38,17 @@ class _RoleData {
 
 const _roles = [
   _RoleData(
+    title: 'User Public',
+    level: 0,
+    badgeColor: AppColors.surfaceContainer,
+    badgeTextColor: AppColors.tertiary,
+    items: [
+      _MenuItem(icon: Icons.person_outline, label: 'Edit Profil Sendiri', route: '/profil/edit', implemented: false),
+      _MenuItem(icon: Icons.hourglass_top_outlined, label: 'Status Verifikasi Akun', route: '/pending', implemented: false),
+      _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Open Recruitment', route: '/or'),
+    ],
+  ),
+  _RoleData(
     title: 'Anggota Umum',
     level: 1,
     badgeColor: AppColors.surfaceContainerHighest,
@@ -96,6 +107,8 @@ const _roles = [
       _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Kelola Absensi Semua Anggota', route: '/absensi/riwayat-sekret'),
       _MenuItem(icon: Icons.manage_accounts_outlined, label: 'Kelola Profil Anggota', route: '/admin/anggota', implemented: false),
       _MenuItem(icon: Icons.stars_outlined, label: 'Kelola Poin Semua Anggota', route: '/admin/poin', implemented: false),
+      _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Verifikasi Anggota Baru', route: '/admin/verifikasi', implemented: false),
+      _MenuItem(icon: Icons.assignment_ind_outlined, label: 'Dashboard Open Recruitment', route: '/admin/or'),
     ],
   ),
   _RoleData(
@@ -104,6 +117,7 @@ const _roles = [
     badgeColor: AppColors.primary,
     badgeTextColor: AppColors.onPrimary,
     items: [
+      _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Kelola Periode OR', route: '/admin/or/kelola'),
       _MenuItem(icon: Icons.calendar_month_outlined, label: 'Kelola Periode Kepengurusan', route: '/admin/periode', implemented: false),
       _MenuItem(icon: Icons.badge_outlined, label: 'Assign Jabatan Anggota', route: '/admin/periode/jabatan', implemented: false),
       _MenuItem(icon: Icons.admin_panel_settings_outlined, label: 'Panel Admin Penuh', route: '/admin', implemented: false),

@@ -38,7 +38,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
   String _filterDiv = 'Semua';
 
   final List<String> _statuses = ['Semua', 'Aktif', 'Pending', 'Suspended'];
-  final List<String> _divisions = ['Semua', 'Riset', 'Publikasi', 'Advokasi', 'Kegiatan'];
+  final List<String> _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
   @override
   void initState() {

@@ -17,7 +17,7 @@ class UangKhasAdminScreen extends StatefulWidget {
 class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
   String _search = '';
   String _filterDiv = 'Semua';
-  final List<String> _divisions = ['Semua', 'Riset', 'Publikasi', 'Advokasi', 'Kegiatan'];
+  final List<String> _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
   // Mock iuran: map each member to a 12-month boolean payment list (true = lunas)
   late Map<String, List<bool>> _paymentMap;

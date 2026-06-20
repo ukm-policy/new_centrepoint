@@ -18,7 +18,7 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
   String _search = '';
   String _filterDiv = 'Semua';
 
-  final _divisions = ['Semua', 'Riset', 'Publikasi', 'Advokasi', 'Kegiatan'];
+  final _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
   List<Member> get _filtered => kMemberList.where((m) {
         final matchDiv = _filterDiv == 'Semua' || m.division == _filterDiv;

@@ -11,7 +11,7 @@ import '../rapat_models.dart';
 
 // ── Mock Bidang & Sie data ────────────────────────────────────────────────────
 
-const _kBidangList = ['Humas', 'Litbang', 'Kaderisasi', 'Advokasi', 'Kegiatan'];
+const _kBidangList = ['Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 

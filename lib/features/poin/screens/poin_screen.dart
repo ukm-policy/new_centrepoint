@@ -51,7 +51,7 @@ const _kRiwayat = [
     tipe: _EntryTipe.hadir,
   ),
   _PoinEntry(
-    label: 'Tidak Hadir — Rapat Divisi Riset',
+    label: 'Tidak Hadir — Rapat Bidang Pemrograman',
     tanggal: '28 Mei 2025',
     poin: -20,
     tipe: _EntryTipe.absen,
@@ -71,16 +71,16 @@ const _kRiwayat = [
 ];
 
 const _kLeaderboard = [
-  _LeaderEntry(rank: 1, nama: 'Budi Santoso', divisi: 'Riset & Kebijakan', poin: 1580, tier: 'Gold'),
-  _LeaderEntry(rank: 2, nama: 'Siti Rahayu', divisi: 'Komunikasi', poin: 1420, tier: 'Gold'),
-  _LeaderEntry(rank: 3, nama: 'Ahmad Ridhwan', divisi: 'Analisis Kebijakan', poin: 1250, tier: 'Gold'),
-  _LeaderEntry(rank: 4, nama: 'Dewi Lestari', divisi: 'Riset & Kebijakan', poin: 1100, tier: 'Silver'),
-  _LeaderEntry(rank: 5, nama: 'Rizky Pratama', divisi: 'Komunikasi', poin: 980, tier: 'Silver'),
-  _LeaderEntry(rank: 6, nama: 'Nurul Fadilah', divisi: 'Keuangan', poin: 870, tier: 'Silver'),
-  _LeaderEntry(rank: 7, nama: 'Hendra Wijaya', divisi: 'Analisis Kebijakan', poin: 760, tier: 'Bronze'),
-  _LeaderEntry(rank: 8, nama: 'Maya Putri', divisi: 'Riset & Kebijakan', poin: 650, tier: 'Bronze'),
-  _LeaderEntry(rank: 9, nama: 'Fajar Ramadan', divisi: 'Komunikasi', poin: 540, tier: 'Bronze'),
-  _LeaderEntry(rank: 10, nama: 'Indah Permata', divisi: 'Keuangan', poin: 420, tier: 'Bronze'),
+  _LeaderEntry(rank: 1, nama: 'Budi Santoso', divisi: 'Pengembangan', poin: 1580, tier: 'Gold'),
+  _LeaderEntry(rank: 2, nama: 'Rini Wulandari', divisi: 'Kaderisasi', poin: 1420, tier: 'Gold'),
+  _LeaderEntry(rank: 3, nama: 'Ahmad Ridhwan', divisi: 'Pemrograman', poin: 1250, tier: 'Gold'),
+  _LeaderEntry(rank: 4, nama: 'Siti Nurhaliza', divisi: 'Multimedia', poin: 1100, tier: 'Silver'),
+  _LeaderEntry(rank: 5, nama: 'Rizky Pratama', divisi: 'Jaringan', poin: 980, tier: 'Silver'),
+  _LeaderEntry(rank: 6, nama: 'Faisal Hakim', divisi: 'Humas', poin: 870, tier: 'Silver'),
+  _LeaderEntry(rank: 7, nama: 'Hendra Wijaya', divisi: 'Pemrograman', poin: 760, tier: 'Bronze'),
+  _LeaderEntry(rank: 8, nama: 'Maya Putri', divisi: 'Multimedia', poin: 650, tier: 'Bronze'),
+  _LeaderEntry(rank: 9, nama: 'Dewi Purnama', divisi: 'Jaringan', poin: 540, tier: 'Bronze'),
+  _LeaderEntry(rank: 10, nama: 'Indah Permata', divisi: 'Kaderisasi', poin: 420, tier: 'Bronze'),
 ];
 
 enum _EntryTipe { hadir, absen, panitia, bonus }

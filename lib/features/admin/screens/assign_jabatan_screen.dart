@@ -50,10 +50,12 @@ class _AssignJabatanScreenState extends State<AssignJabatanScreen> {
 
   final List<String> _divisions = [
     'Umum',
-    'Riset',
-    'Publikasi',
-    'Advokasi',
-    'Kegiatan',
+    'Pemrograman',
+    'Jaringan',
+    'Multimedia',
+    'Pengembangan',
+    'Kaderisasi',
+    'Humas',
   ];
 
   @override

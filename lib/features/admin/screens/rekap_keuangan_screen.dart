@@ -42,10 +42,12 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
 
   final List<_RekapRow> _rekapData = const [
     _RekapRow(bidang: 'Kas Umum', target: 2000000, terkumpul: 1800000),
-    _RekapRow(bidang: 'Riset', target: 1000000, terkumpul: 850000),
-    _RekapRow(bidang: 'Publikasi', target: 800000, terkumpul: 700000),
-    _RekapRow(bidang: 'Advokasi', target: 750000, terkumpul: 750000),
-    _RekapRow(bidang: 'Kegiatan', target: 1200000, terkumpul: 900000),
+    _RekapRow(bidang: 'Pemrograman', target: 1000000, terkumpul: 850000),
+    _RekapRow(bidang: 'Jaringan', target: 800000, terkumpul: 700000),
+    _RekapRow(bidang: 'Multimedia', target: 750000, terkumpul: 750000),
+    _RekapRow(bidang: 'Pengembangan', target: 900000, terkumpul: 600000),
+    _RekapRow(bidang: 'Kaderisasi', target: 850000, terkumpul: 800000),
+    _RekapRow(bidang: 'Humas', target: 1200000, terkumpul: 900000),
   ];
 
   int get _totalTarget => _rekapData.fold(0, (sum, r) => sum + r.target);

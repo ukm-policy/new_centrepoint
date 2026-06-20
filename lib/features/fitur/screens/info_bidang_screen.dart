@@ -32,48 +32,70 @@ class _InfoBidangScreenState extends State<InfoBidangScreen> {
   late bool _isGeneral;
 
   final Map<String, _BidangDetail> _details = const {
-    'Riset': _BidangDetail(
-      nama: 'Riset Kebijakan',
-      alias: 'Riset',
-      deskripsi: 'Bidang Riset bertanggung jawab atas penelitian mendalam, analisis data primer/sekunder, dan penyusunan naskah kajian kebijakan publik secara komprehensif.',
-      hadirRate: '94%',
+    'Pemrograman': _BidangDetail(
+      nama: 'Bidang Pemrograman',
+      alias: 'Pemrograman',
+      deskripsi: 'Bidang Pemrograman bertanggung jawab atas pengembangan aplikasi, website, dan sistem informasi internal UKM, serta pelatihan coding bagi anggota.',
+      hadirRate: '95%',
       timeline: [
-        ('Penyusunan Kajian AI Digital', '10 Juli 2026', false),
-        ('Survei Kepuasan Kebijakan Kampus', '22 Juni 2026', true),
-        ('Focus Group Discussion Riset Q2', '5 Juni 2026', true),
+        ('Rilis Fitur Absensi QR v2', '10 Juli 2026', false),
+        ('Workshop Flutter Lanjutan', '5 Juni 2026', true),
+        ('Sprint Review Aplikasi Q2', '22 Mei 2026', true),
       ],
     ),
-    'Publikasi': _BidangDetail(
-      nama: 'Media & Publikasi',
-      alias: 'Publikasi',
-      deskripsi: 'Bidang Publikasi mengelola media sosial, website resmi, dokumentasi kegiatan, serta merancang konten infografis dan policy brief agar menarik bagi publik.',
+    'Jaringan': _BidangDetail(
+      nama: 'Bidang Jaringan',
+      alias: 'Jaringan',
+      deskripsi: 'Bidang Jaringan mengelola infrastruktur jaringan komputer, keamanan siber, dan konektivitas sistem digital yang digunakan oleh UKM.',
+      hadirRate: '91%',
+      timeline: [
+        ('Audit Keamanan Jaringan Internal', '20 Juli 2026', false),
+        ('Workshop Networking Dasar', '15 Juni 2026', true),
+        ('Setup Server Internal UKM', '1 Juni 2026', true),
+      ],
+    ),
+    'Multimedia': _BidangDetail(
+      nama: 'Bidang Multimedia',
+      alias: 'Multimedia',
+      deskripsi: 'Bidang Multimedia mengelola konten visual, video, desain grafis, dan dokumentasi kegiatan untuk media sosial serta kebutuhan publikasi UKM.',
       hadirRate: '89%',
       timeline: [
-        ('Rilis Policy Brief Vol. 4', '15 Juli 2026', false),
-        ('Workshop Desain Infografis', '12 Juni 2026', true),
-        ('Dokumentasi Rapat Koordinasi', '1 Juni 2026', true),
+        ('Produksi Video Profil UKM 2026', '15 Juli 2026', false),
+        ('Workshop Desain Konten', '20 Mei 2026', true),
+        ('Dokumentasi Kegiatan Pelantikan', '2 Juni 2026', true),
       ],
     ),
-    'Advokasi': _BidangDetail(
-      nama: 'Kajian & Advokasi Isu',
-      alias: 'Advokasi',
-      deskripsi: 'Bidang Advokasi mengawal isu-isu regulasi krusial, mengadakan kajian kritis, melakukan lobi/audiensi dengan pihak eksternal, dan menggerakkan advokasi strategis.',
-      hadirRate: '96%',
+    'Pengembangan': _BidangDetail(
+      nama: 'Bidang Pengembangan',
+      alias: 'Pengembangan',
+      deskripsi: 'Bidang Pengembangan berfokus pada riset teknologi terbaru, inovasi organisasi, serta pengembangan kapasitas anggota melalui pelatihan dan studi banding.',
+      hadirRate: '93%',
       timeline: [
-        ('Audiensi Rektorat Isu UKT', '18 Juni 2026', true),
-        ('Kajian Kritis UU Pers Kampus', '28 Mei 2026', true),
-        ('Pelatihan Advokasi Dasar', '10 Mei 2026', true),
+        ('Seminar Inovasi Teknologi Q3', '18 Juli 2026', false),
+        ('Pelatihan Leadership & Inovasi', '5 Juni 2026', true),
+        ('Rapat Perencanaan Program Kerja', '28 Mei 2026', true),
       ],
     ),
-    'Kegiatan': _BidangDetail(
-      nama: 'Manajemen Event & Internal',
-      alias: 'Kegiatan',
-      deskripsi: 'Bidang Kegiatan merancang, mengkoordinasikan, dan menyelenggarakan seluruh event eksternal maupun makrab/outbound internal pengurus.',
-      hadirRate: '98%',
+    'Kaderisasi': _BidangDetail(
+      nama: 'Bidang Kaderisasi',
+      alias: 'Kaderisasi',
+      deskripsi: 'Bidang Kaderisasi bertanggung jawab atas rekrutmen, pembinaan, dan pengembangan anggota baru agar menjadi kader organisasi yang kompeten dan berkarakter.',
+      hadirRate: '97%',
       timeline: [
-        ('Persiapan POLICY Championship 2026', '12 Agustus 2026', false),
-        ('Outbound & Team Building Pengurus', '20 Juni 2026', true),
-        ('Orientasi Pengurus Baru', '2 Juni 2026', true),
+        ('Open Recruitment 2026/2027', '15 Juli 2026', false),
+        ('Pelantikan Anggota Baru', '5 Juni 2026', true),
+        ('Workshop Kaderisasi Internal', '20 Mei 2026', true),
+      ],
+    ),
+    'Humas': _BidangDetail(
+      nama: 'Bidang Humas',
+      alias: 'Humas',
+      deskripsi: 'Bidang Humas mengelola hubungan eksternal, kerjasama dengan institusi lain, media relations, dan membangun citra positif UKM di lingkungan kampus maupun luar.',
+      hadirRate: '90%',
+      timeline: [
+        ('MoU Kerjasama dengan UKM Lain', '25 Juli 2026', false),
+        ('Workshop Public Relations', '20 Mei 2026', true),
+        ('Kunjungan Studi ke Universitas X', '10 Juni 2026', true),
       ],
     ),
   };
@@ -83,12 +105,12 @@ class _InfoBidangScreenState extends State<InfoBidangScreen> {
     super.initState();
     // Check if user is in a general role
     _isGeneral = AppSession.bidang == '-' || AppSession.bidang.isEmpty;
-    _selectedDiv = _isGeneral ? 'Riset' : AppSession.bidang;
+    _selectedDiv = _isGeneral ? 'Pemrograman' : AppSession.bidang;
   }
 
   @override
   Widget build(BuildContext context) {
-    final detail = _details[_selectedDiv] ?? _details['Riset']!;
+    final detail = _details[_selectedDiv] ?? _details['Pemrograman']!;
     
     // Filter members belonging to the active division
     final members = kMemberList.where((m) => m.division == _selectedDiv).toList();
@@ -164,10 +186,12 @@ class _InfoBidangScreenState extends State<InfoBidangScreen> {
                           prefixIcon: Icon(Icons.workspaces_outline, size: 18),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'Riset', child: Text('Riset Kebijakan')),
-                          DropdownMenuItem(value: 'Publikasi', child: Text('Media & Publikasi')),
-                          DropdownMenuItem(value: 'Advokasi', child: Text('Kajian & Advokasi Isu')),
-                          DropdownMenuItem(value: 'Kegiatan', child: Text('Manajemen Event & Internal')),
+                          DropdownMenuItem(value: 'Pemrograman', child: Text('Bidang Pemrograman')),
+                          DropdownMenuItem(value: 'Jaringan', child: Text('Bidang Jaringan')),
+                          DropdownMenuItem(value: 'Multimedia', child: Text('Bidang Multimedia')),
+                          DropdownMenuItem(value: 'Pengembangan', child: Text('Bidang Pengembangan')),
+                          DropdownMenuItem(value: 'Kaderisasi', child: Text('Bidang Kaderisasi')),
+                          DropdownMenuItem(value: 'Humas', child: Text('Bidang Humas')),
                         ],
                       ),
                     ],

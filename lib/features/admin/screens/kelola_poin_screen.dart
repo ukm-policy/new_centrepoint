@@ -32,7 +32,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
   
   String _search = '';
   String _filterDiv = 'Semua';
-  final List<String> _divisions = ['Semua', 'Riset', 'Publikasi', 'Advokasi', 'Kegiatan'];
+  final List<String> _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
   @override
   void initState() {

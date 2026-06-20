@@ -6,6 +6,9 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/complete_profile_screen.dart';
 import 'features/auth/screens/setup_password_screen.dart';
+import 'features/auth/screens/forgot_password_screen.dart';
+import 'features/auth/screens/pending_screen.dart';
+import 'features/auth/screens/edit_profile_screen.dart';
 import 'features/beranda/screens/beranda_screen.dart';
 import 'features/berita/screens/list_berita_screen.dart';
 import 'features/berita/screens/detail_berita_screen.dart';
@@ -21,10 +24,26 @@ import 'features/absensi/screens/absensi_screen.dart';
 import 'features/absensi/screens/riwayat_sekret_screen.dart';
 import 'features/uang_khas/screens/uang_khas_screen.dart';
 import 'features/menu/screens/menu_setelan_screen.dart';
+import 'features/menu/screens/notifikasi_settings_screen.dart';
+import 'features/menu/screens/about_screen.dart';
 import 'features/poin/screens/poin_screen.dart';
 import 'features/fitur/screens/fitur_screen.dart';
 import 'features/inbox/screens/inbox_screen.dart';
 import 'features/admin/screens/admin_screen.dart';
+import 'features/admin/screens/verifikasi_anggota_screen.dart';
+import 'features/admin/screens/kelola_berita_screen.dart';
+import 'features/admin/screens/buat_pengumuman_screen.dart';
+import 'features/admin/screens/qr_generator_screen.dart';
+import 'features/admin/screens/kelola_kegiatan_screen.dart';
+import 'features/admin/screens/uang_khas_admin_screen.dart';
+import 'features/admin/screens/verifikasi_khas_screen.dart';
+import 'features/admin/screens/kelola_akun_screen.dart';
+import 'features/admin/screens/kelola_poin_screen.dart';
+import 'features/admin/screens/assign_jabatan_screen.dart';
+import 'features/admin/screens/rekap_keuangan_screen.dart';
+import 'features/admin/screens/kelola_periode_screen.dart';
+import 'features/admin/screens/audit_log_screen.dart';
+import 'features/fitur/screens/info_bidang_screen.dart';
 import 'features/or/screens/or_screen.dart';
 import 'features/or/screens/or_form_screen.dart';
 import 'features/or/screens/or_status_screen.dart';
@@ -47,6 +66,14 @@ final _router = GoRouter(
       builder: (_, _) => const RegisterScreen(),
     ),
     GoRoute(
+      path: '/forgot-password',
+      builder: (_, _) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/pending',
+      builder: (_, _) => const PendingScreen(),
+    ),
+    GoRoute(
       path: '/lengkapi-profil',
       builder: (_, _) => const CompleteProfileScreen(),
     ),
@@ -57,6 +84,10 @@ final _router = GoRouter(
     ShellRoute(
       builder: (context, state, child) => _AppShell(child: child),
       routes: [
+        GoRoute(
+          path: '/profil/edit',
+          builder: (_, _) => const EditProfileScreen(),
+        ),
         GoRoute(
           path: '/',
           builder: (_, _) => const BerandaScreen(),
@@ -138,10 +169,24 @@ final _router = GoRouter(
         GoRoute(
           path: '/fitur',
           builder: (_, _) => const FiturScreen(),
+          routes: [
+            GoRoute(
+              path: 'bidang',
+              builder: (_, _) => const InfoBidangScreen(),
+            ),
+          ],
         ),
         GoRoute(
           path: '/menu',
           builder: (_, _) => const MenuSetelanScreen(),
+        ),
+        GoRoute(
+          path: '/menu/notifikasi',
+          builder: (_, _) => const NotifikasiSettingsScreen(),
+        ),
+        GoRoute(
+          path: '/menu/tentang',
+          builder: (_, _) => const AboutScreen(),
         ),
         GoRoute(
           path: '/inbox',
@@ -158,6 +203,60 @@ final _router = GoRouter(
           path: '/admin',
           builder: (_, _) => const AdminScreen(),
           routes: [
+            GoRoute(
+              path: 'verifikasi',
+              builder: (_, _) => const VerifikasiAnggotaScreen(),
+            ),
+            GoRoute(
+              path: 'berita',
+              builder: (_, _) => const KelolaBeritaScreen(),
+            ),
+            GoRoute(
+              path: 'pengumuman/buat',
+              builder: (_, _) => const BuatPengumumanScreen(),
+            ),
+            GoRoute(
+              path: 'qr-generator',
+              builder: (_, _) => const QrGeneratorScreen(),
+            ),
+            GoRoute(
+              path: 'kegiatan',
+              builder: (_, _) => const KelolaKegiatanScreen(),
+            ),
+            GoRoute(
+              path: 'uang-khas',
+              builder: (_, _) => const UangKhasAdminScreen(),
+              routes: [
+                GoRoute(
+                  path: 'verifikasi',
+                  builder: (_, _) => const VerifikasiKhasScreen(),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: 'users',
+              builder: (_, _) => const KelolaAkunScreen(),
+            ),
+            GoRoute(
+              path: 'poin',
+              builder: (_, _) => const KelolaPoinScreen(),
+            ),
+            GoRoute(
+              path: 'periode/jabatan',
+              builder: (_, _) => const AssignJabatanScreen(),
+            ),
+            GoRoute(
+              path: 'keuangan',
+              builder: (_, _) => const RekapKeuanganScreen(),
+            ),
+            GoRoute(
+              path: 'periode',
+              builder: (_, _) => const KelolaPeriodeScreen(),
+            ),
+            GoRoute(
+              path: 'log',
+              builder: (_, _) => const AuditLogScreen(),
+            ),
             GoRoute(
               path: 'or',
               builder: (_, _) => const OrAdminScreen(),
@@ -185,7 +284,7 @@ final _router = GoRouter(
             ),
             GoRoute(
               path: 'status',
-              builder: (_, _) => const OrStatusScreen(),
+              builder: (_, state) => OrStatusScreen(nim: state.extra as String?),
             ),
           ],
         ),

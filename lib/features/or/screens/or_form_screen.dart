@@ -45,7 +45,24 @@ class _OrFormScreenState extends State<OrFormScreen> {
     await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     setState(() => _submitting = false);
-    context.pushReplacement('/or/status');
+
+    // Insert new applicant into kApplicants
+    final newApp = ORApplicant(
+      id: 'app-${kApplicants.length + 1}',
+      nama: _namaCtrl.text,
+      nim: _nimCtrl.text,
+      prodi: _prodiCtrl.text,
+      angkatan: _angkatanCtrl.text,
+      noHp: _noHpCtrl.text,
+      bidangMinat: _selectedBidang ?? '',
+      motivasi: _motivasiCtrl.text,
+      pengalamanOrg: _pengalamanCtrl.text,
+      status: ApplicantStatus.pending,
+      tanggalDaftar: DateTime.now(),
+    );
+    kApplicants.insert(0, newApp);
+
+    context.pushReplacement('/or/status', extra: _nimCtrl.text);
   }
 
   @override

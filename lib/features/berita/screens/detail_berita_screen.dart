@@ -3,13 +3,55 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../berita_data.dart';
 
-class DetailBeritaScreen extends StatelessWidget {
+class DetailBeritaScreen extends StatefulWidget {
   const DetailBeritaScreen({super.key, required this.id});
   final String id;
 
   @override
+  State<DetailBeritaScreen> createState() => _DetailBeritaScreenState();
+}
+
+class _DetailBeritaScreenState extends State<DetailBeritaScreen> {
+  bool _isBookmarked = false;
+
+  void _shareBerita(BeritaItem berita) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Tautan berita "${berita.title}" telah disalin ke clipboard!',
+            style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+        backgroundColor: AppColors.blackCharcoal,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(AppSpacing.marginPage),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _toggleBookmark() {
+    setState(() => _isBookmarked = !_isBookmarked);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _isBookmarked ? 'Berita disimpan ke bookmark!' : 'Berita dihapus dari bookmark.',
+          style: AppTypography.bodyMd.copyWith(color: Colors.white),
+        ),
+        backgroundColor: AppColors.blackCharcoal,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(AppSpacing.marginPage),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final berita = kBeritaList.firstWhere(
+      (b) => b.id == widget.id,
+      orElse: () => kBeritaList.first,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: CustomScrollView(
@@ -43,10 +85,10 @@ class DetailBeritaScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      _Badge(label: 'BERITA'),
+                      _Badge(label: berita.category.toUpperCase()),
                       const Spacer(),
                       Text(
-                        '24 Okt 2023',
+                        berita.date,
                         style: AppTypography.labelBold
                             .copyWith(color: AppColors.tertiary),
                       ),
@@ -54,7 +96,7 @@ class DetailBeritaScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Rapat Tinjauan Kebijakan Tahunan Dijadwalkan',
+                    berita.title,
                     style: AppTypography.headlineMd.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -63,18 +105,7 @@ class DetailBeritaScreen extends StatelessWidget {
                   const MyDivider(color: AppColors.borderSlate),
                   const SizedBox(height: 16),
                   Text(
-                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-                    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. '
-                    'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris '
-                    'nisi ut aliquip ex ea commodo consequat.\n\n'
-                    'Duis aute irure dolor in reprehenderit in voluptate velit esse '
-                    'cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat '
-                    'cupidatat non proident, sunt in culpa qui officia deserunt mollit '
-                    'anim id est laborum.\n\n'
-                    'Sed ut perspiciatis unde omnis iste natus error sit voluptatem '
-                    'accusantium doloremque laudantium, totam rem aperiam, eaque ipsa '
-                    'quae ab illo inventore veritatis et quasi architecto beatae vitae '
-                    'dicta sunt explicabo.',
+                    berita.content,
                     style: AppTypography.bodyLg.copyWith(
                       color: AppColors.onSurface,
                       height: 1.7,
@@ -88,13 +119,13 @@ class DetailBeritaScreen extends StatelessWidget {
                       _ActionChip(
                         icon: Icons.share,
                         label: 'Bagikan',
-                        onTap: () {},
+                        onTap: () => _shareBerita(berita),
                       ),
                       const SizedBox(width: 12),
                       _ActionChip(
-                        icon: Icons.bookmark_border,
-                        label: 'Simpan',
-                        onTap: () {},
+                        icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                        label: _isBookmarked ? 'Tersimpan' : 'Simpan',
+                        onTap: _toggleBookmark,
                       ),
                     ],
                   ),

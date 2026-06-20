@@ -6,24 +6,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-
-const _kBeritaList = [
-  _BeritaItem(id: '1', date: '24 Okt 2023', title: 'Rapat Tinjauan Kebijakan Tahunan Dijadwalkan', category: 'Berita'),
-  _BeritaItem(id: '2', date: '20 Okt 2023', title: 'Alokasi Anggaran untuk Tahun Fiskal Berikutnya', category: 'Pengumuman'),
-  _BeritaItem(id: '3', date: '15 Okt 2023', title: 'Update Peraturan Keanggotaan 2023', category: 'Berita'),
-  _BeritaItem(id: '4', date: '10 Okt 2023', title: 'Hasil Musyawarah Anggota Periode Q3', category: 'Pengumuman'),
-  _BeritaItem(id: '5', date: '5 Okt 2023', title: 'Pembentukan Divisi Riset & Kebijakan Baru', category: 'Berita'),
-];
-
-class _BeritaItem {
-  const _BeritaItem({
-    required this.id,
-    required this.date,
-    required this.title,
-    required this.category,
-  });
-  final String id, date, title, category;
-}
+import '../berita_data.dart';
 
 class ListBeritaScreen extends StatefulWidget {
   const ListBeritaScreen({super.key});
@@ -36,7 +19,7 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
   String _filter = 'Semua';
   String _search = '';
 
-  List<_BeritaItem> get _filtered => _kBeritaList.where((b) {
+  List<BeritaItem> get _filtered => kBeritaList.where((b) {
         final matchCat = _filter == 'Semua' || b.category == _filter;
         final matchSearch = _search.isEmpty ||
             b.title.toLowerCase().contains(_search.toLowerCase());

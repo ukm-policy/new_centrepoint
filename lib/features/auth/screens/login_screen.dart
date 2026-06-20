@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const _FieldLabel(label: 'PASSWORD'),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () => context.push('/forgot-password'),
                         child: Text(
                           'Lupa?',
                           style: AppTypography.labelBold.copyWith(

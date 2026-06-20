@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../anggota_data.dart';
 
 class DetailMemberScreen extends StatelessWidget {
   const DetailMemberScreen({super.key, required this.id});
@@ -10,6 +11,11 @@ class DetailMemberScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final member = kMemberList.firstWhere(
+      (m) => m.id == id,
+      orElse: () => kMemberList.first,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       appBar: AppBar(
@@ -48,26 +54,26 @@ class DetailMemberScreen extends StatelessWidget {
               child: const Icon(Icons.person, size: 52, color: AppColors.tertiary),
             ),
             const SizedBox(height: 12),
-            Text('Ahmad Ridhwan',
+            Text(member.name,
               style: AppTypography.headlineMd.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
-            Text('Senior Policy Analyst',
+            Text(member.role,
               style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
             const SizedBox(height: 12),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _TierBadge(tier: 'Gold'),
+              _TierBadge(tier: member.tier),
               const SizedBox(width: 8),
-              _DivisionBadge(division: 'Riset'),
+              _DivisionBadge(division: member.division),
             ]),
             const SizedBox(height: 16),
             const MyDivider(color: AppColors.borderSlate),
             const SizedBox(height: 16),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              _StatColumn(value: '1250', label: 'Poin'),
+              _StatColumn(value: member.poin, label: 'Poin'),
               _VerticalDivider(),
-              _StatColumn(value: '42', label: 'Kegiatan'),
+              _StatColumn(value: member.kegiatanCount, label: 'Kegiatan'),
               _VerticalDivider(),
-              _StatColumn(value: '95%', label: 'Kehadiran'),
+              _StatColumn(value: member.kehadiranRate, label: 'Kehadiran'),
             ]),
           ])),
           const SizedBox(height: AppSpacing.stackGap),
@@ -78,13 +84,13 @@ class DetailMemberScreen extends StatelessWidget {
             const SizedBox(height: 12),
             const MyDivider(color: AppColors.borderSlate, height: 12),
             const SizedBox(height: 12),
-            _ContactRow(icon: Icons.badge_outlined, label: 'NIM', value: '20210001'),
+            _ContactRow(icon: Icons.badge_outlined, label: 'NIM', value: member.nim),
             const SizedBox(height: 10),
-            _ContactRow(icon: Icons.email_outlined, label: 'Email', value: 'ahmad.ridhwan@email.com'),
+            _ContactRow(icon: Icons.email_outlined, label: 'Email', value: member.email),
             const SizedBox(height: 10),
-            _ContactRow(icon: Icons.phone_outlined, label: 'No. HP', value: '+62 812 3456 7890'),
+            _ContactRow(icon: Icons.phone_outlined, label: 'No. HP', value: member.phone),
             const SizedBox(height: 10),
-            _ContactRow(icon: Icons.school_outlined, label: 'Angkatan', value: '2021'),
+            _ContactRow(icon: Icons.school_outlined, label: 'Angkatan', value: member.angkatan),
           ])),
           const SizedBox(height: AppSpacing.stackGap),
 
@@ -94,11 +100,7 @@ class DetailMemberScreen extends StatelessWidget {
             const SizedBox(height: 12),
             const MyDivider(color: AppColors.borderSlate, height: 12),
             const SizedBox(height: 12),
-            ...[
-              ('Pelatihan Advokasi', '5 Okt 2023', true),
-              ('Musyawarah Q3', '10 Okt 2023', true),
-              ('Workshop Penulisan', '20 Agu 2023', false),
-            ].map((r) => Padding(
+            ...member.recentActivities.map((r) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(children: [
                 Container(

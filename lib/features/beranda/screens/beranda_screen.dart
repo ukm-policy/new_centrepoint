@@ -5,6 +5,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
+import '../../../core/session/app_session.dart';
+import '../../anggota/anggota_data.dart';
+import '../../berita/berita_data.dart';
 
 class BerandaScreen extends StatefulWidget {
   const BerandaScreen({super.key});
@@ -17,16 +20,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
   final _pageCtrl = PageController();
   int _bannerIndex = 0;
 
-  final _banners = const [
-    _BannerData(
-      tag: 'PENGUMUMAN',
-      title: 'Panduan Kebijakan Baru Dirilis untuk Q3',
-    ),
-    _BannerData(
-      tag: 'KEGIATAN',
-      title: 'Rapat Tinjauan Kebijakan Tahunan Dijadwalkan',
-    ),
-  ];
+  final _banners = kBeritaList.take(2).toList();
 
   final _quickMenu = const [
     _QuickMenuData(icon: Icons.groups, label: 'All Members', route: '/anggota', isPush: true),
@@ -37,23 +31,7 @@ class _BerandaScreenState extends State<BerandaScreen> {
     _QuickMenuData(icon: Icons.workspace_premium, label: 'Poin', route: '/poin', isPush: true),
   ];
 
-  final _newsList = const [
-    _NewsData(
-      date: '24 Okt 2023',
-      title: 'Rapat Tinjauan Kebijakan Tahunan Dijadwalkan',
-      id: '1',
-    ),
-    _NewsData(
-      date: '20 Okt 2023',
-      title: 'Alokasi Anggaran untuk Tahun Fiskal Berikutnya',
-      id: '2',
-    ),
-    _NewsData(
-      date: '15 Okt 2023',
-      title: 'Update Peraturan Keanggotaan 2023',
-      id: '3',
-    ),
-  ];
+  final _newsList = kBeritaList.take(3).toList();
 
   @override
   void dispose() {
@@ -112,12 +90,6 @@ class _BerandaScreenState extends State<BerandaScreen> {
 
 // ── Banner Carousel ──────────────────────────────────────────────────────────
 
-class _BannerData {
-  const _BannerData({required this.tag, required this.title});
-  final String tag;
-  final String title;
-}
-
 class _BannerCarousel extends StatelessWidget {
   const _BannerCarousel({
     required this.banners,
@@ -126,7 +98,7 @@ class _BannerCarousel extends StatelessWidget {
     required this.onPageChanged,
   });
 
-  final List<_BannerData> banners;
+  final List<BeritaItem> banners;
   final PageController controller;
   final int currentIndex;
   final ValueChanged<int> onPageChanged;
@@ -175,7 +147,7 @@ class _BannerCarousel extends StatelessWidget {
 
 class _BannerItem extends StatelessWidget {
   const _BannerItem({required this.data});
-  final _BannerData data;
+  final BeritaItem data;
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +182,7 @@ class _BannerItem extends StatelessWidget {
                     border: Border.all(color: AppColors.blackCharcoal, width: 1),
                   ),
                   child: Text(
-                    data.tag,
+                    data.category.toUpperCase(),
                     style: AppTypography.labelBold.copyWith(color: AppColors.onPrimaryContainer),
                   ),
                 ),
@@ -237,6 +209,11 @@ class _UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentMember = kMemberList.firstWhere(
+      (m) => m.name == AppSession.nama,
+      orElse: () => kMemberList.first,
+    );
+
     return BrutalistCard(
       onTap: () => context.push('/poin'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -262,7 +239,7 @@ class _UserCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Ahmad Ridhwan',
+                  AppSession.nama,
                   style: AppTypography.headlineSm.copyWith(
                     color: AppColors.blackCharcoal,
                     fontWeight: FontWeight.w800,
@@ -272,7 +249,7 @@ class _UserCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Senior Policy Analyst',
+                  AppSession.jabatan,
                   style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -307,7 +284,7 @@ class _UserCard extends StatelessWidget {
                       const Icon(Icons.star, size: 12, color: AppColors.onSecondaryContainer),
                       const SizedBox(width: 4),
                       Text(
-                        'Gold',
+                        currentMember.tier,
                         style: AppTypography.labelBold.copyWith(
                           color: AppColors.onSecondaryContainer,
                         ),
@@ -322,7 +299,7 @@ class _UserCard extends StatelessWidget {
                     const Icon(Icons.monetization_on, size: 14, color: AppColors.primary),
                     const SizedBox(width: 4),
                     Text(
-                      '1250 Pts',
+                      '${currentMember.poin} Pts',
                       style: AppTypography.bodyLg.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
@@ -412,13 +389,6 @@ class _QuickMenuCell extends StatelessWidget {
 
 // ── News List ────────────────────────────────────────────────────────────────
 
-class _NewsData {
-  const _NewsData({required this.date, required this.title, required this.id});
-  final String date;
-  final String title;
-  final String id;
-}
-
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, this.onViewAll});
   final String title;
@@ -455,7 +425,7 @@ class _SectionHeader extends StatelessWidget {
 
 class _HorizontalNewsList extends StatelessWidget {
   const _HorizontalNewsList({required this.news});
-  final List<_NewsData> news;
+  final List<BeritaItem> news;
 
   @override
   Widget build(BuildContext context) {
@@ -474,7 +444,7 @@ class _HorizontalNewsList extends StatelessWidget {
 
 class _NewsCard extends StatelessWidget {
   const _NewsCard({required this.data});
-  final _NewsData data;
+  final BeritaItem data;
 
   @override
   Widget build(BuildContext context) {

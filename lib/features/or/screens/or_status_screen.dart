@@ -3,20 +3,101 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/brutalist_card.dart';
+import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../or_data.dart';
 
 class OrStatusScreen extends StatelessWidget {
-  const OrStatusScreen({super.key});
-
-  // Mock: ambil data pelamar milik user yang sedang login (pakai app-1 sebagai contoh)
-  static final _myApp = kApplicants.first;
+  const OrStatusScreen({super.key, this.nim});
+  final String? nim;
 
   @override
   Widget build(BuildContext context) {
-    final app = _myApp;
+    // Look up applicant by nim (if passed) or AppSession.nim (if present)
+    ORApplicant? app;
+    final lookupNim = nim ?? AppSession.nim;
+    final index = kApplicants.indexWhere((a) => a.nim == lookupNim);
+    if (index != -1) {
+      app = kApplicants[index];
+    }
+
+    if (app == null) {
+      return Scaffold(
+        backgroundColor: AppColors.bgGray,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.marginPage,
+                vertical: 8,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(AppSpacing.radius),
+                        border: Border.all(color: AppColors.blackCharcoal, width: 2),
+                        boxShadow: const [AppColors.hardShadowSm],
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
+                        const SizedBox(width: 6),
+                        Text('Kembali', style: AppTypography.labelBold),
+                      ]),
+                    ),
+                  ),
+                  Text(
+                    'Status Pendaftaran',
+                    style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.marginPage),
+            child: BrutalistCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.assignment_late_outlined, size: 64, color: AppColors.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum Ada Pendaftaran',
+                    style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Kamu belum terdaftar dalam seleksi Open Recruitment UKM POLICY periode ini.',
+                    style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  BrutalistButton(
+                    label: 'DAFTAR SEKARANG',
+                    icon: Icons.assignment_ind_outlined,
+                    onPressed: () => context.pushReplacement('/or/daftar'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final (bg, fg, icon, label) = _statusStyle(app.status);
 
     return CustomScrollView(

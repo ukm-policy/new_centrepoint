@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 
@@ -43,9 +44,9 @@ class MenuSetelanScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Ahmad Ridhwan',
+                    Text(AppSession.nama,
                       style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
-                    Text('Senior Policy Analyst',
+                    Text(AppSession.jabatan,
                       style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
                   ])),
                   Container(
@@ -55,7 +56,7 @@ class MenuSetelanScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
                       border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
                     ),
-                    child: Text('Gold',
+                    child: Text('Lv. ${AppSession.level}',
                       style: AppTypography.labelBold.copyWith(
                           color: AppColors.onSecondaryContainer)),
                   ),
@@ -68,7 +69,7 @@ class MenuSetelanScreen extends StatelessWidget {
                 _MenuItem(
                   icon: Icons.person_outline,
                   label: 'Edit Profil',
-                  onTap: () => context.push('/anggota/me'),
+                  onTap: () => context.push('/profil/edit'),
                 ),
                 _MenuItem(
                   icon: Icons.workspace_premium_outlined,
@@ -87,7 +88,7 @@ class MenuSetelanScreen extends StatelessWidget {
                 _MenuItem(
                   icon: Icons.notifications_outlined,
                   label: 'Notifikasi',
-                  onTap: () {},
+                  onTap: () => context.push('/menu/notifikasi'),
                   trailing: _NotifBadge(count: 3),
                 ),
                 _MenuItem(
@@ -103,7 +104,7 @@ class MenuSetelanScreen extends StatelessWidget {
                 _MenuItem(
                   icon: Icons.info_outline,
                   label: 'Tentang Aplikasi',
-                  onTap: () {},
+                  onTap: () => context.push('/menu/tentang'),
                   trailingText: 'v1.0.0',
                 ),
                 _MenuItem(

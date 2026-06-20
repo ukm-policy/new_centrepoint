@@ -5,23 +5,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
-
-const _kMembers = [
-  _Member(id: '1', name: 'Ahmad Ridhwan', role: 'Senior Policy Analyst', division: 'Riset', tier: 'Gold'),
-  _Member(id: '2', name: 'Siti Nurhaliza', role: 'Policy Writer', division: 'Publikasi', tier: 'Silver'),
-  _Member(id: '3', name: 'Budi Santoso', role: 'Advocacy Lead', division: 'Advokasi', tier: 'Gold'),
-  _Member(id: '4', name: 'Dewi Purnama', role: 'Research Associate', division: 'Riset', tier: 'Bronze'),
-  _Member(id: '5', name: 'Faisal Hakim', role: 'Communications', division: 'Publikasi', tier: 'Silver'),
-  _Member(id: '6', name: 'Rini Wulandari', role: 'Project Manager', division: 'Kegiatan', tier: 'Gold'),
-];
-
-class _Member {
-  const _Member({
-    required this.id, required this.name, required this.role,
-    required this.division, required this.tier,
-  });
-  final String id, name, role, division, tier;
-}
+import '../anggota_data.dart';
 
 class ListMembersScreen extends StatefulWidget {
   const ListMembersScreen({super.key});
@@ -36,10 +20,11 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
 
   final _divisions = ['Semua', 'Riset', 'Publikasi', 'Advokasi', 'Kegiatan'];
 
-  List<_Member> get _filtered => _kMembers.where((m) {
+  List<Member> get _filtered => kMemberList.where((m) {
         final matchDiv = _filterDiv == 'Semua' || m.division == _filterDiv;
         final matchSearch = _search.isEmpty ||
-            m.name.toLowerCase().contains(_search.toLowerCase());
+            m.name.toLowerCase().contains(_search.toLowerCase()) ||
+            m.nim.contains(_search);
         return matchDiv && matchSearch;
       }).toList();
 
@@ -141,7 +126,7 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
 
 class _MemberCard extends StatelessWidget {
   const _MemberCard({required this.member});
-  final _Member member;
+  final Member member;
 
   Color get _tierColor {
     return switch (member.tier) {

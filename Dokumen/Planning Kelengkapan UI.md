@@ -226,10 +226,10 @@
 **Masalah:** Semua data hardcoded — user card, banner, berita terbaru bukan dari source yang sama dengan `/berita`.
 
 **Yang perlu diperbaiki:**
-- [ ] User card: ganti hardcoded dengan `AppSession.nama`, jabatan, poin, level badge
-- [ ] Berita terbaru: load dari `kBeritaList` (sama dengan list_berita_screen)
-- [ ] Quick access: sesuaikan ikon/navigasi agar konsisten dengan bottom nav & fitur yang ada
-- [ ] Periksa navigasi 6 quick access item sudah mengarah ke route yang benar
+- [x] User card: ganti hardcoded dengan `AppSession.nama`, jabatan, poin, level badge
+- [x] Berita terbaru: load dari `kBeritaList` (sama dengan list_berita_screen)
+- [x] Quick access: sesuaikan ikon/navigasi agar konsisten dengan bottom nav & fitur yang ada
+- [x] Periksa navigasi 6 quick access item sudah mengarah ke route yang benar
 
 ---
 
@@ -237,10 +237,10 @@
 **Masalah:** 6 anggota hardcoded inline; `detail_member_screen` tidak melakukan ID lookup sama sekali — selalu menampilkan satu user yang sama.
 
 **Yang perlu diperbaiki:**
-- [ ] Pindahkan mock data anggota ke satu file `anggota_data.dart` dengan `kMemberList`
-- [ ] `detail_member_screen.dart`: `kMemberList.firstWhere((m) => m.id == id)`
-- [ ] Filter bidang di list_members harus benar-benar filter `kMemberList`, bukan dekoratif
-- [ ] Search bar: filter nama/NIM dari `kMemberList`
+- [x] Pindahkan mock data anggota ke satu file `anggota_data.dart` dengan `kMemberList`
+- [x] `detail_member_screen.dart`: `kMemberList.firstWhere((m) => m.id == id)`
+- [x] Filter bidang di list_members harus benar-benar filter `kMemberList`, bukan dekoratif
+- [x] Search bar: filter nama/NIM dari `kMemberList`
 
 ---
 
@@ -248,10 +248,10 @@
 **Masalah:** Konten 100% Lorem ipsum hardcoded; share & save button hanya SnackBar.
 
 **Yang perlu diperbaiki:**
-- [ ] Lookup konten berdasarkan `:id` dari `kBeritaList` yang dibagi dengan list_berita_screen
-- [ ] Tampilkan judul, tanggal, kategori, konten sesuai data berita
-- [ ] Tombol Share → `Share.share(...)` (atau SnackBar informatif)
-- [ ] Tombol Simpan → toggle state bookmark lokal
+- [x] Lookup konten berdasarkan `:id` dari `kBeritaList` yang dibagi dengan list_berita_screen
+- [x] Tampilkan judul, tanggal, kategori, konten sesuai data berita
+- [x] Tombol Share → `Share.share(...)` (atau SnackBar informatif)
+- [x] Tombol Simpan → toggle state bookmark lokal
 
 ---
 
@@ -270,11 +270,11 @@
 **Masalah:** Data 100% hardcoded; tidak ada pembagian tampilan user biasa vs Bendahara Umum.
 
 **Yang perlu diperbaiki:**
-- [ ] Kondisikan dengan `AppSession.level`:
+- [x] Kondisikan dengan `AppSession.level`:
   - Level 1–3: hanya data milik sendiri
   - Level 4 (bendahara) / Level 5: tambah akses ke `/admin/uang-khas`
-- [ ] Status bulan: load dari mock `kUangKhasList` difilter per user
-- [ ] Tombol "Upload Bukti Bayar" untuk bulan yang belum lunas
+- [x] Status bulan: load dari mock status dan allow stateful updates per user
+- [x] Tombol "Upload Bukti Bayar" untuk bulan yang belum lunas
 
 ---
 
@@ -282,9 +282,9 @@
 **Masalah:** Banyak item menampilkan SnackBar "Segera hadir"; notifikasi count hardcoded angka 3.
 
 **Yang perlu diperbaiki:**
-- [ ] "Edit Profil" → `context.push('/profil/edit')`
-- [ ] "Notifikasi" → `context.push('/menu/notifikasi')`
-- [ ] "Tentang Aplikasi" → dialog atau screen `/menu/tentang`
+- [x] "Edit Profil" → `context.push('/profil/edit')`
+- [x] "Notifikasi" → `context.push('/menu/notifikasi')`
+- [x] "Tentang Aplikasi" → dialog atau screen `/menu/tentang`
 - [ ] Item "Kelola Periode" & "Panel Admin" → kondisikan dengan `AppSession.level >= 4`
 - [ ] Notifikasi count: ambil dari jumlah inbox yang belum dibaca
 
@@ -294,9 +294,9 @@
 **Masalah:** Hardcoded ke `kApplicants[0]`; bukan ID-based lookup.
 
 **Yang perlu diperbaiki:**
-- [ ] Simpan ID/NIM pelamar saat submit form `/or/daftar`
-- [ ] `or_status_screen.dart`: lookup dari `kApplicants.firstWhere((a) => a.nim == savedNim)`
-- [ ] Tampilkan state jika belum pernah daftar
+- [x] Simpan ID/NIM pelamar saat submit form `/or/daftar`
+- [x] `or_status_screen.dart`: lookup dari `kApplicants.firstWhere((a) => a.nim == savedNim)`
+- [x] Tampilkan state jika belum pernah daftar
 
 ---
 
@@ -304,9 +304,9 @@
 **Masalah:** 5 item hardcoded; tidak ada filter; data tidak terhubung ke `kKegiatanList`.
 
 **Yang perlu diperbaiki:**
-- [ ] Load kegiatan yang `AppSession.nama` tercantum sebagai peserta/panitia dari `kKegiatanList`
-- [ ] Filter chip: Semua / Tahun Ini / Tahun Lalu
-- [ ] Summary stats: total kegiatan, hadir, tidak hadir
+- [x] Load kegiatan yang `AppSession.nama` tercantum sebagai peserta/panitia dari `kKegiatanList`
+- [x] Filter chip: Semua / Tahun Ini / Tahun Lalu
+- [x] Summary stats: total kegiatan, hadir, tidak hadir
 
 ---
 
@@ -314,8 +314,8 @@
 **Masalah:** Menampilkan semua section role tanpa filter level — user biasa melihat semua menu termasuk yang admin.
 
 **Yang perlu diperbaiki:**
-- [ ] Filter section berdasarkan `AppSession.level`: hanya tampilkan section ≤ level user
-- [ ] Atau: section di atas level user di-collapse/dim dengan label "Perlu Jabatan Lebih Tinggi"
+- [x] Filter section berdasarkan `AppSession.level`: hanya tampilkan section ≤ level user
+- [x] Atau: section di atas level user di-collapse/dim dengan label "Perlu Jabatan Lebih Tinggi"
 
 ---
 

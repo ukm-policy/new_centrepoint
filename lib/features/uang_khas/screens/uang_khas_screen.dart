@@ -1,37 +1,195 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/brutalist_card.dart';
+import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 
-const _kTransaksi = [
-  _Transaksi(label: 'Iuran Bulanan — Ahmad Ridhwan', date: '1 Okt 2023', amount: 50000, isIncome: true),
-  _Transaksi(label: 'Konsumsi Seminar Q3', date: '3 Okt 2023', amount: 150000, isIncome: false),
-  _Transaksi(label: 'Iuran Bulanan — Siti Nurhaliza', date: '5 Okt 2023', amount: 50000, isIncome: true),
-  _Transaksi(label: 'Percetakan Materi', date: '8 Okt 2023', amount: 75000, isIncome: false),
-  _Transaksi(label: 'Iuran Bulanan — Budi Santoso', date: '10 Okt 2023', amount: 50000, isIncome: true),
-  _Transaksi(label: 'Sewa Ruangan Workshop', date: '12 Okt 2023', amount: 200000, isIncome: false),
-];
-
 class _Transaksi {
   const _Transaksi({
-    required this.label, required this.date,
-    required this.amount, required this.isIncome,
+    required this.label,
+    required this.date,
+    required this.amount,
+    required this.isIncome,
+    this.isPending = false,
   });
   final String label, date;
   final int amount;
   final bool isIncome;
+  final bool isPending;
 }
 
-class UangKhasScreen extends StatelessWidget {
+class UangKhasScreen extends StatefulWidget {
   const UangKhasScreen({super.key});
 
   @override
+  State<UangKhasScreen> createState() => _UangKhasScreenState();
+}
+
+class _UangKhasScreenState extends State<UangKhasScreen> {
+  late List<_Transaksi> _transactions;
+  late List<String> _monthStatuses;
+
+  final List<String> _months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  final List<String> _monthsShort = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Default: Jan - Jun lunas (dikonfirmasi), Jul - Des belum bayar
+    _monthStatuses = List.generate(12, (index) => index < 6 ? 'Lunas' : 'Belum Bayar');
+    _transactions = [
+      const _Transaksi(label: 'Iuran Bulanan — Ahmad Ridhwan', date: '1 Okt 2023', amount: 50000, isIncome: true),
+      const _Transaksi(label: 'Konsumsi Seminar Q3', date: '3 Okt 2023', amount: 150000, isIncome: false),
+      const _Transaksi(label: 'Iuran Bulanan — Siti Nurhaliza', date: '5 Okt 2023', amount: 50000, isIncome: true),
+      const _Transaksi(label: 'Percetakan Materi', date: '8 Okt 2023', amount: 75000, isIncome: false),
+      const _Transaksi(label: 'Iuran Bulanan — Budi Santoso', date: '10 Okt 2023', amount: 50000, isIncome: true),
+      const _Transaksi(label: 'Sewa Ruangan Workshop', date: '12 Okt 2023', amount: 200000, isIncome: false),
+    ];
+  }
+
+  void _showUploadReceiptSheet(int monthIdx) {
+    bool isUploaded = false;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppSpacing.radiusLg),
+                  topRight: Radius.circular(AppSpacing.radiusLg),
+                ),
+                border: Border(
+                  top: BorderSide(color: AppColors.blackCharcoal, width: 2.5),
+                  left: BorderSide(color: AppColors.blackCharcoal, width: 2.5),
+                  right: BorderSide(color: AppColors.blackCharcoal, width: 2.5),
+                ),
+              ),
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Bayar Iuran Bulan ${_months[monthIdx]}',
+                    style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Nominal Iuran: Rp 20.000',
+                    style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
+                  ),
+                  const SizedBox(height: 12),
+                  const MyDivider(color: AppColors.borderSlate),
+                  const SizedBox(height: 16),
+                  
+                  // Receipt Upload Area
+                  GestureDetector(
+                    onTap: () {
+                      setModalState(() {
+                        isUploaded = true;
+                      });
+                    },
+                    child: Container(
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: isUploaded ? AppColors.success.withValues(alpha: 0.1) : AppColors.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        border: Border.all(color: AppColors.blackCharcoal, width: 2),
+                        boxShadow: const [AppColors.hardShadowSm],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: isUploaded
+                            ? [
+                                const Icon(Icons.check_circle, size: 48, color: AppColors.success),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'bukti_bayar_${_monthsShort[monthIdx].toLowerCase()}.jpg',
+                                  style: AppTypography.labelBold,
+                                ),
+                                Text(
+                                  'Ketuk untuk mengganti file',
+                                  style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 12),
+                                ),
+                              ]
+                            : [
+                                const Icon(Icons.cloud_upload_outlined, size: 48, color: AppColors.tertiary),
+                                const SizedBox(height: 8),
+                                Text('Upload Bukti Transfer', style: AppTypography.headlineSm.copyWith(fontSize: 16)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Format JPG/PNG, maks. 2MB',
+                                  style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 12),
+                                ),
+                              ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Submit Button
+                  BrutalistButton(
+                    label: 'KIRIM BUKTI PEMBAYARAN',
+                    onPressed: isUploaded
+                        ? () {
+                            Navigator.pop(context);
+                            setState(() {
+                              _monthStatuses[monthIdx] = 'Menunggu Verifikasi';
+                              _transactions.insert(
+                                0,
+                                _Transaksi(
+                                  label: 'Iuran Bulanan (${_monthsShort[monthIdx]}) — ${AppSession.nama}',
+                                  date: 'Hari Ini',
+                                  amount: 20000,
+                                  isIncome: true,
+                                  isPending: true,
+                                ),
+                              );
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Bukti transfer untuk bulan ${_months[monthIdx]} berhasil dikirim. Menunggu verifikasi Bendahara.',
+                                  style: AppTypography.bodyMd.copyWith(color: Colors.white),
+                                ),
+                                backgroundColor: AppColors.blackCharcoal,
+                                behavior: SnackBarBehavior.floating,
+                                margin: const EdgeInsets.all(AppSpacing.marginPage),
+                              ),
+                            );
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final total = _kTransaksi.fold<int>(
-      0, (sum, t) => sum + (t.isIncome ? t.amount : -t.amount));
+    final total = _transactions.fold<int>(
+      0, (sum, t) => sum + (t.isIncome && !t.isPending ? t.amount : -t.amount));
 
     return CustomScrollView(
       slivers: [
@@ -43,12 +201,22 @@ class UangKhasScreen extends StatelessWidget {
           ),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              // Admin Panel link (Conditional)
+              if (AppSession.level >= 4) ...[
+                BrutalistButton(
+                  label: 'PANEL KELOLA UANG KHAS',
+                  icon: Icons.admin_panel_settings,
+                  onPressed: () => context.push('/admin/uang-khas'),
+                ),
+                const SizedBox(height: AppSpacing.stackGap),
+              ],
+
               // Balance card
               BrutalistCard(
                 backgroundColor: AppColors.blackCharcoal,
                 padding: const EdgeInsets.all(24),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Saldo Kas',
+                  Text('Saldo Kas Aktif',
                     style: AppTypography.labelBold.copyWith(color: Colors.white70)),
                   const SizedBox(height: 8),
                   Text(
@@ -59,8 +227,8 @@ class UangKhasScreen extends StatelessWidget {
                   Row(children: [
                     _BalanceStat(
                       label: 'Pemasukan',
-                      value: _formatRupiah(_kTransaksi
-                        .where((t) => t.isIncome)
+                      value: _formatRupiah(_transactions
+                        .where((t) => t.isIncome && !t.isPending)
                         .fold(0, (s, t) => s + t.amount)),
                       color: AppColors.secondaryContainer,
                       textColor: AppColors.onSecondaryContainer,
@@ -68,7 +236,7 @@ class UangKhasScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     _BalanceStat(
                       label: 'Pengeluaran',
-                      value: _formatRupiah(_kTransaksi
+                      value: _formatRupiah(_transactions
                         .where((t) => !t.isIncome)
                         .fold(0, (s, t) => s + t.amount)),
                       color: AppColors.errorContainer,
@@ -81,46 +249,89 @@ class UangKhasScreen extends StatelessWidget {
 
               // Status iuran
               _SectionCard(
-                title: 'Status Iuran Saya',
-                child: Row(children: [
-                  Container(
-                    width: 48, height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryContainer,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                    ),
-                    child: const Icon(Icons.check_circle, color: AppColors.success),
+                title: 'Status Iuran Saya (2026)',
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1.6,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Oktober 2023',
-                      style: AppTypography.headlineSm),
-                    Text('Iuran sudah dibayar',
-                      style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
-                  ])),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryContainer,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Text('LUNAS',
-                      style: AppTypography.labelBold.copyWith(
-                          color: AppColors.onSecondaryContainer)),
-                  ),
-                ]),
+                  itemCount: 12,
+                  itemBuilder: (context, i) {
+                    final status = _monthStatuses[i];
+                    final isLunas = status == 'Lunas';
+                    final isPending = status == 'Menunggu Verifikasi';
+                    final isDitolak = status == 'Ditolak';
+                    
+                    Color bg = AppColors.surfaceContainerLowest;
+                    Color fg = AppColors.onSurface;
+                    if (isLunas) {
+                      bg = AppColors.success;
+                      fg = Colors.white;
+                    } else if (isPending) {
+                      bg = AppColors.secondaryContainer;
+                      fg = AppColors.onSecondaryContainer;
+                    } else if (isDitolak) {
+                      bg = AppColors.errorContainer;
+                      fg = AppColors.onErrorContainer;
+                    }
+
+                    return GestureDetector(
+                      onTap: () {
+                        if (status != 'Lunas' && status != 'Menunggu Verifikasi') {
+                          _showUploadReceiptSheet(i);
+                        } else if (status == 'Menunggu Verifikasi') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Pembayaran bulan ${_months[i]} sedang diverifikasi oleh Bendahara.', style: AppTypography.bodyMd),
+                              backgroundColor: AppColors.blackCharcoal,
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Iuran bulan ${_months[i]} sudah lunas.', style: AppTypography.bodyMd),
+                              backgroundColor: AppColors.blackCharcoal,
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: BorderRadius.circular(AppSpacing.radius),
+                          border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _monthsShort[i],
+                              style: AppTypography.labelBold.copyWith(color: fg),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              status == 'Lunas' ? 'LUNAS' : (status == 'Menunggu Verifikasi' ? 'PROSES' : (status == 'Ditolak' ? 'TOLAK' : 'BELUM')),
+                              style: AppTypography.labelBold.copyWith(color: fg.withValues(alpha: 0.8), fontSize: 8),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: AppSpacing.stackGap),
 
               // Riwayat transaksi
               _SectionCard(
                 title: 'Riwayat Transaksi',
-                child: Column(children: _kTransaksi.map((t) => Column(children: [
+                child: Column(children: _transactions.map((t) => Column(children: [
                   _TransaksiRow(item: t),
-                  if (t != _kTransaksi.last) ...[
+                  if (t != _transactions.last) ...[
                     const SizedBox(height: 8),
                     const MyDivider(color: AppColors.borderSlate, height: 8),
                     const SizedBox(height: 8),
@@ -222,12 +433,33 @@ class _TransaksiRow extends StatelessWidget {
       const SizedBox(width: 12),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(item.label, style: AppTypography.bodyMd, overflow: TextOverflow.ellipsis),
-        Text(item.date, style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+        Row(
+          children: [
+            Text(item.date, style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+            if (item.isPending) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.blackCharcoal, width: 1),
+                ),
+                child: Text(
+                  'PROSES',
+                  style: AppTypography.labelBold.copyWith(fontSize: 8, color: AppColors.onSecondaryContainer),
+                ),
+              ),
+            ],
+          ],
+        ),
       ])),
       Text(
         '${item.isIncome ? '+' : '-'} Rp ${_fmt(item.amount)}',
         style: AppTypography.bodyMd.copyWith(
-          color: item.isIncome ? AppColors.success : AppColors.error,
+          color: item.isPending
+              ? AppColors.tertiary
+              : (item.isIncome ? AppColors.success : AppColors.error),
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -241,3 +473,4 @@ class _TransaksiRow extends StatelessWidget {
     );
   }
 }
+

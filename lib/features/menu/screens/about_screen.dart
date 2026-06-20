@@ -67,20 +67,22 @@ class AboutScreen extends StatelessWidget {
                       width: 96,
                       height: 96,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                         border: Border.all(color: AppColors.blackCharcoal, width: 2.5),
                         boxShadow: const [AppColors.hardShadow],
                       ),
-                      child: const Icon(
-                        Icons.policy_outlined,
-                        size: 48,
-                        color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Image.asset(
+                          'assets/logo_ukmpolicy.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'POLICY CENTREPOINT',
+                      'CENTREPOINT',
                       style: AppTypography.displayLgMobile.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,

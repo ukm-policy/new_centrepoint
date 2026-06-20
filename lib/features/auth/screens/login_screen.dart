@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Column(
                     children: [
                       Text(
-                        'POLICY CENTREPOINT',
+                        'CENTREPOINT',
                         textAlign: TextAlign.center,
                         style: AppTypography.displayLgMobile.copyWith(
                           color: AppColors.primary,

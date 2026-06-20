@@ -7,7 +7,7 @@ import '../../core/theme/app_spacing.dart';
 class FloatingAppBar extends StatelessWidget {
   const FloatingAppBar({
     super.key,
-    this.title = 'POLICY CENTREPOINT',
+    this.title = 'CENTREPOINT',
     this.showBack = false,
     this.trailing,
     this.inboxCount = 0,

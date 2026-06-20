@@ -299,7 +299,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Policy Centrepoint',
+      title: 'Centrepoint',
       theme: AppTheme.light,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,

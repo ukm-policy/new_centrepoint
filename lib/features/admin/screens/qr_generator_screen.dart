@@ -132,7 +132,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
                         Text('PILIH KEGIATAN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: _selectedKegiatanId,
+                          initialValue: _selectedKegiatanId,
                           onChanged: (v) => setState(() => _selectedKegiatanId = v),
                           style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                           decoration: const InputDecoration(

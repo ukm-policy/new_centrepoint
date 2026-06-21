@@ -270,7 +270,7 @@ class _AssignJabatanScreenState extends State<AssignJabatanScreen> {
                                     Text('JABATAN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 9)),
                                     const SizedBox(height: 4),
                                     DropdownButtonFormField<String>(
-                                      value: assign.role,
+                                      initialValue: assign.role,
                                       onChanged: (v) {
                                         setState(() {
                                           assign.role = v ?? assign.role;
@@ -298,7 +298,7 @@ class _AssignJabatanScreenState extends State<AssignJabatanScreen> {
                                     Text('BIDANG / DIVISI', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 9)),
                                     const SizedBox(height: 4),
                                     DropdownButtonFormField<String>(
-                                      value: assign.division,
+                                      initialValue: assign.division,
                                       onChanged: (v) {
                                         setState(() {
                                           assign.division = v ?? assign.division;

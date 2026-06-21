@@ -71,7 +71,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   Text('STATUS AKUN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
-                    value: tempStatus,
+                    initialValue: tempStatus,
                     onChanged: (v) => setModalState(() => tempStatus = v ?? 'Aktif'),
                     style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                     decoration: const InputDecoration(
@@ -89,7 +89,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   Text('LEVEL AKSES', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<int>(
-                    value: tempLevel,
+                    initialValue: tempLevel,
                     onChanged: (v) => setModalState(() => tempLevel = v ?? 2),
                     style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                     decoration: const InputDecoration(

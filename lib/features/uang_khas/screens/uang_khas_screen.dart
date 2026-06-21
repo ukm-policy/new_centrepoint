@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -8,20 +11,8 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
-
-class _Transaksi {
-  const _Transaksi({
-    required this.label,
-    required this.date,
-    required this.amount,
-    required this.isIncome,
-    this.isPending = false,
-  });
-  final String label, date;
-  final int amount;
-  final bool isIncome;
-  final bool isPending;
-}
+import '../../../data/repositories/uang_khas_repository.dart';
+import '../../../data/models/uang_khas_model.dart';
 
 class UangKhasScreen extends StatefulWidget {
   const UangKhasScreen({super.key});
@@ -31,9 +22,6 @@ class UangKhasScreen extends StatefulWidget {
 }
 
 class _UangKhasScreenState extends State<UangKhasScreen> {
-  late List<_Transaksi> _transactions;
-  late List<String> _monthStatuses;
-
   final List<String> _months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
@@ -44,23 +32,75 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
     'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    // Default: Jan - Jun lunas (dikonfirmasi), Jul - Des belum bayar
-    _monthStatuses = List.generate(12, (index) => index < 6 ? 'Lunas' : 'Belum Bayar');
-    _transactions = [
-      const _Transaksi(label: 'Iuran Bulanan — Ahmad Ridhwan', date: '1 Okt 2023', amount: 50000, isIncome: true),
-      const _Transaksi(label: 'Konsumsi Seminar Q3', date: '3 Okt 2023', amount: 150000, isIncome: false),
-      const _Transaksi(label: 'Iuran Bulanan — Siti Nurhaliza', date: '5 Okt 2023', amount: 50000, isIncome: true),
-      const _Transaksi(label: 'Percetakan Materi', date: '8 Okt 2023', amount: 75000, isIncome: false),
-      const _Transaksi(label: 'Iuran Bulanan — Budi Santoso', date: '10 Okt 2023', amount: 50000, isIncome: true),
-      const _Transaksi(label: 'Sewa Ruangan Workshop', date: '12 Okt 2023', amount: 200000, isIncome: false),
-    ];
+  XFile? _receiptImage;
+  bool _isUploading = false;
+  final _picker = ImagePicker();
+
+  Future<void> _pickReceipt(StateSetter setModalState) async {
+    final file = await _picker.pickImage(source: ImageSource.gallery);
+    if (file != null) {
+      setModalState(() {
+        _receiptImage = file;
+      });
+    }
+  }
+
+  Future<void> _submitReceipt(int monthIdx) async {
+    if (_receiptImage == null) return;
+    setState(() => _isUploading = true);
+    
+    try {
+      final uid = AppSession.currentUser.id;
+      if (uid.isEmpty) throw Exception("User not authenticated");
+      
+      final bytes = await _receiptImage!.readAsBytes();
+      final fileExt = _receiptImage!.name.split('.').last;
+      final filePath = '$uid/${_months[monthIdx]}_2026.$fileExt';
+      
+      await Supabase.instance.client.storage.from('bukti-bayar').uploadBinary(
+        filePath,
+        bytes,
+        fileOptions: FileOptions(contentType: 'image/$fileExt', upsert: true),
+      );
+      
+      final publicUrl = Supabase.instance.client.storage.from('bukti-bayar').getPublicUrl(filePath);
+      
+      if (!mounted) return;
+      context.read<UangKhasRepository>().payUangKhas(
+        uid,
+        _months[monthIdx],
+        2026,
+        20000, // Rp 20.000 nominal
+        publicUrl,
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Bukti transfer untuk bulan ${_months[monthIdx]} berhasil dikirim. Menunggu verifikasi Bendahara.',
+            style: AppTypography.bodyMd.copyWith(color: Colors.white),
+          ),
+          backgroundColor: AppColors.blackCharcoal,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengirim bukti: $e'), backgroundColor: AppColors.error),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _receiptImage = null;
+        });
+      }
+    }
   }
 
   void _showUploadReceiptSheet(int monthIdx) {
-    bool isUploaded = false;
+    _receiptImage = null;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -101,27 +141,23 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                   
                   // Receipt Upload Area
                   GestureDetector(
-                    onTap: () {
-                      setModalState(() {
-                        isUploaded = true;
-                      });
-                    },
+                    onTap: () => _pickReceipt(setModalState),
                     child: Container(
                       height: 160,
                       decoration: BoxDecoration(
-                        color: isUploaded ? AppColors.success.withValues(alpha: 0.1) : AppColors.surfaceContainerLowest,
+                        color: _receiptImage != null ? AppColors.success.withValues(alpha: 0.1) : AppColors.surfaceContainerLowest,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                         border: Border.all(color: AppColors.blackCharcoal, width: 2),
                         boxShadow: const [AppColors.hardShadowSm],
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: isUploaded
+                        children: _receiptImage != null
                             ? [
                                 const Icon(Icons.check_circle, size: 48, color: AppColors.success),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'bukti_bayar_${_monthsShort[monthIdx].toLowerCase()}.jpg',
+                                  _receiptImage!.name,
                                   style: AppTypography.labelBold,
                                 ),
                                 Text(
@@ -145,38 +181,17 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                   const SizedBox(height: 24),
                   
                   // Submit Button
-                  BrutalistButton(
-                    label: 'KIRIM BUKTI PEMBAYARAN',
-                    onPressed: isUploaded
-                        ? () {
-                            Navigator.pop(context);
-                            setState(() {
-                              _monthStatuses[monthIdx] = 'Menunggu Verifikasi';
-                              _transactions.insert(
-                                0,
-                                _Transaksi(
-                                  label: 'Iuran Bulanan (${_monthsShort[monthIdx]}) — ${AppSession.nama}',
-                                  date: 'Hari Ini',
-                                  amount: 20000,
-                                  isIncome: true,
-                                  isPending: true,
-                                ),
-                              );
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Bukti transfer untuk bulan ${_months[monthIdx]} berhasil dikirim. Menunggu verifikasi Bendahara.',
-                                  style: AppTypography.bodyMd.copyWith(color: Colors.white),
-                                ),
-                                backgroundColor: AppColors.blackCharcoal,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.all(AppSpacing.marginPage),
-                              ),
-                            );
-                          }
-                        : null,
-                  ),
+                  _isUploading
+                      ? const Center(child: CircularProgressIndicator())
+                      : BrutalistButton(
+                          label: 'KIRIM BUKTI PEMBAYARAN',
+                          onPressed: _receiptImage != null
+                              ? () async {
+                                  Navigator.pop(context);
+                                  await _submitReceipt(monthIdx);
+                                }
+                              : null,
+                        ),
                 ],
               ),
             );
@@ -188,8 +203,29 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final total = _transactions.fold<int>(
-      0, (sum, t) => sum + (t.isIncome && !t.isPending ? t.amount : -t.amount));
+    final repo = context.watch<UangKhasRepository>();
+    final uid = AppSession.currentUser.id;
+    final myKhas = repo.khasBulan.where((k) => k.memberId == uid && k.tahun == 2026).toList();
+    final transactions = repo.transaksi;
+
+    final total = transactions.where((t) => !t.isPending).fold<int>(
+      0, (sum, t) => sum + (t.isPemasukan ? t.jumlah : -t.jumlah));
+
+    // Map month indices to statuses
+    final monthStatuses = List.generate(12, (index) {
+      final name = _months[index];
+      final record = myKhas.where((k) => k.bulan == name).firstOrNull;
+      if (record == null) return 'Belum Bayar';
+      
+      switch (record.status) {
+        case StatusBayar.lunas:
+          return 'Lunas';
+        case StatusBayar.pending:
+          return 'Menunggu Verifikasi';
+        case StatusBayar.belumBayar:
+          return 'Belum Bayar';
+      }
+    });
 
     return CustomScrollView(
       slivers: [
@@ -227,18 +263,18 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                   Row(children: [
                     _BalanceStat(
                       label: 'Pemasukan',
-                      value: _formatRupiah(_transactions
-                        .where((t) => t.isIncome && !t.isPending)
-                        .fold(0, (s, t) => s + t.amount)),
+                      value: _formatRupiah(transactions
+                        .where((t) => t.isPemasukan && !t.isPending)
+                        .fold(0, (s, t) => s + t.jumlah)),
                       color: AppColors.secondaryContainer,
                       textColor: AppColors.onSecondaryContainer,
                     ),
                     const SizedBox(width: 12),
                     _BalanceStat(
                       label: 'Pengeluaran',
-                      value: _formatRupiah(_transactions
-                        .where((t) => !t.isIncome)
-                        .fold(0, (s, t) => s + t.amount)),
+                      value: _formatRupiah(transactions
+                        .where((t) => !t.isPemasukan)
+                        .fold(0, (s, t) => s + t.jumlah)),
                       color: AppColors.errorContainer,
                       textColor: AppColors.onErrorContainer,
                     ),
@@ -291,7 +327,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                     ),
                     itemCount: 12,
                     itemBuilder: (context, i) {
-                      final status = _monthStatuses[i];
+                      final status = monthStatuses[i];
                       final isLunas = status == 'Lunas';
                       final isPending = status == 'Menunggu Verifikasi';
                       final isDitolak = status == 'Ditolak';
@@ -352,21 +388,28 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                         ),
                       );
                     },
+                  ),
                 ),
-              ),
               const SizedBox(height: AppSpacing.stackGap),
 
               // Riwayat transaksi
               _SectionCard(
                 title: 'Riwayat Transaksi',
-                child: Column(children: _transactions.map((t) => Column(children: [
-                  _TransaksiRow(item: t),
-                  if (t != _transactions.last) ...[
-                    const SizedBox(height: 8),
-                    const MyDivider(color: AppColors.borderSlate, height: 8),
-                    const SizedBox(height: 8),
-                  ],
-                ])).toList()),
+                child: transactions.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Text('Belum ada transaksi kas.', style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary)),
+                        ),
+                      )
+                    : Column(children: transactions.map((t) => Column(children: [
+                        _TransaksiRow(item: t),
+                        if (t != transactions.last) ...[
+                          const SizedBox(height: 8),
+                          const MyDivider(color: AppColors.borderSlate, height: 8),
+                          const SizedBox(height: 8),
+                        ],
+                      ])).toList()),
               ),
             ]),
           ),
@@ -442,22 +485,27 @@ class _SectionCard extends StatelessWidget {
 
 class _TransaksiRow extends StatelessWidget {
   const _TransaksiRow({required this.item});
-  final _Transaksi item;
+  final TransaksiKhasModel item;
 
   @override
   Widget build(BuildContext context) {
+    final List<String> monthsShort = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    final formattedDate = "${item.tanggal.day} ${monthsShort[item.tanggal.month - 1]} ${item.tanggal.year}";
     return Row(children: [
       Container(
         width: 36, height: 36,
         decoration: BoxDecoration(
-          color: item.isIncome ? AppColors.secondaryContainer : AppColors.errorContainer,
+          color: item.isPemasukan ? AppColors.secondaryContainer : AppColors.errorContainer,
           borderRadius: BorderRadius.circular(AppSpacing.radius),
           border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
         ),
         child: Icon(
-          item.isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+          item.isPemasukan ? Icons.arrow_downward : Icons.arrow_upward,
           size: 18,
-          color: item.isIncome ? AppColors.onSecondaryContainer : AppColors.onErrorContainer,
+          color: item.isPemasukan ? AppColors.onSecondaryContainer : AppColors.onErrorContainer,
         ),
       ),
       const SizedBox(width: 12),
@@ -465,7 +513,7 @@ class _TransaksiRow extends StatelessWidget {
         Text(item.label, style: AppTypography.bodyMd, overflow: TextOverflow.ellipsis),
         Row(
           children: [
-            Text(item.date, style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+            Text(formattedDate, style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
             if (item.isPending) ...[
               const SizedBox(width: 8),
               Container(
@@ -485,11 +533,11 @@ class _TransaksiRow extends StatelessWidget {
         ),
       ])),
       Text(
-        '${item.isIncome ? '+' : '-'} Rp ${_fmt(item.amount)}',
+        '${item.isPemasukan ? '+' : '-'} Rp ${_fmt(item.jumlah)}',
         style: AppTypography.bodyMd.copyWith(
           color: item.isPending
               ? AppColors.tertiary
-              : (item.isIncome ? AppColors.success : AppColors.error),
+              : (item.isPemasukan ? AppColors.success : AppColors.error),
           fontWeight: FontWeight.w700,
         ),
       ),

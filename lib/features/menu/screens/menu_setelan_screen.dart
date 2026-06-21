@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -122,7 +123,26 @@ class MenuSetelanScreen extends StatelessWidget {
 
               // Logout
               GestureDetector(
-                onTap: () => context.go('/login'),
+                onTap: () async {
+                  try {
+                    await Supabase.instance.client.auth.signOut();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Gagal keluar: $e',
+                              style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+                          backgroundColor: AppColors.error,
+                          margin: const EdgeInsets.all(AppSpacing.marginPage),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
                 child: Container(
                   padding: const EdgeInsets.all(AppSpacing.innerPadding + 4),
                   decoration: BoxDecoration(

@@ -8,6 +8,9 @@ import '../../../shared/widgets/my_divider.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/member_model.dart';
 import '../../../data/repositories/member_repository.dart';
+import '../../../data/models/uang_khas_model.dart';
+import '../../../data/repositories/uang_khas_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UangKhasAdminScreen extends StatefulWidget {
   const UangKhasAdminScreen({super.key});
@@ -21,60 +24,113 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
   String _filterDiv = 'Semua';
   final List<String> _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
 
-  // Mock iuran: map each member to a 12-month boolean payment list (true = lunas)
-  late Map<String, List<bool>> _paymentMap;
-  bool _initialized = false;
+  final List<String> _months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  final List<String> _monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-  void _initPaymentMap(List<MemberModel> members) {
-    if (_initialized) return;
-    _paymentMap = {
-      for (final m in members)
-        m.id: List.generate(12, (index) => index < 6), // 6 months paid by default
-    };
-    _initialized = true;
+  Future<void> _adminVerify(String id, String memberNama) async {
+    context.read<UangKhasRepository>().verifyPayment(id, memberNama);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Pembayaran $memberNama berhasil diverifikasi!'), backgroundColor: AppColors.success),
+    );
   }
 
-  void _toggleMonthPayment(String memberId, int monthIdx) {
-    setState(() {
-      final list = _paymentMap[memberId];
-      if (list != null) {
-        list[monthIdx] = !list[monthIdx];
-      }
-    });
+  Future<void> _adminReject(String id, String memberNama) async {
+    context.read<UangKhasRepository>().rejectPayment(id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Pembayaran $memberNama ditolak.'), backgroundColor: AppColors.error),
+    );
   }
 
-  int get _totalPaidMonths {
-    int total = 0;
-    if (!_initialized) return 0;
-    for (final list in _paymentMap.values) {
-      total += list.where((paid) => paid).length;
+  Future<void> _adminMarkLunas(String memberId, String bulan) async {
+    try {
+      final adminUid = Supabase.instance.client.auth.currentUser?.id;
+      await Supabase.instance.client.from('uang_khas_bulan').upsert({
+        'member_id': memberId,
+        'bulan': bulan,
+        'tahun': 2026,
+        'nominal': 20000,
+        'status': 'lunas',
+        'is_verified': true,
+        'verified_by': adminUid,
+      }, onConflict: 'member_id, bulan, tahun');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengubah status: $e'), backgroundColor: AppColors.error),
+      );
     }
-    return total;
   }
 
-  int get _totalUnpaidMonths {
-    int total = 0;
-    if (!_initialized) return 0;
-    for (final list in _paymentMap.values) {
-      total += list.where((paid) => !paid).length;
+  Future<void> _adminMarkBelumBayar(String memberId, String bulan) async {
+    try {
+      await Supabase.instance.client.from('uang_khas_bulan').delete().match({
+        'member_id': memberId,
+        'bulan': bulan,
+        'tahun': 2026,
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengubah status: $e'), backgroundColor: AppColors.error),
+      );
     }
-    return total;
   }
 
-  int get _totalFundsCollected => _totalPaidMonths * 20000; // Rp 20.000 per month iuran
-  int get _totalPendingFunds => _totalUnpaidMonths * 20000;
-
-  List<MemberModel> _getFiltered(List<MemberModel> members) {
-    return members.where((m) {
-      final matchDiv = _filterDiv == 'Semua' || m.bidang == _filterDiv;
-      final matchSearch = _search.isEmpty ||
-          m.nama.toLowerCase().contains(_search.toLowerCase()) ||
-          m.nim.contains(_search);
-      return matchDiv && matchSearch;
-    }).toList();
+  void _showPendingOptions(UangKhasBulanModel record, String memberNama) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Verifikasi Pembayaran', style: AppTypography.headlineSm),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Member: $memberNama', style: AppTypography.bodyMd),
+              Text('Bulan: ${record.bulan} 2026', style: AppTypography.bodyMd),
+              const SizedBox(height: 12),
+              if (record.buktiUrl != null) ...[
+                Text('Bukti Transfer:', style: AppTypography.labelBold),
+                const SizedBox(height: 6),
+                Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
+                    borderRadius: BorderRadius.circular(AppSpacing.radius),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSpacing.radius - 1.5),
+                    child: Image.network(
+                      record.buktiUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, o, s) => const Center(child: Text('Gagal memuat gambar')),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _adminReject(record.id, memberNama);
+              },
+              child: Text('TOLAK', style: AppTypography.labelBold.copyWith(color: AppColors.error)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _adminVerify(record.id, memberNama);
+              },
+              child: const Text('SETUJUI'),
+            ),
+          ],
+        );
+      },
+    );
   }
-
-  final List<String> _months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
   void _showPaymentUpdateSheet(MemberModel member) {
     showModalBottomSheet(
@@ -84,7 +140,9 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final monthsList = _paymentMap[member.id]!;
+            final khasRepo = context.watch<UangKhasRepository>();
+            final currentKhas = khasRepo.khasBulan.where((k) => k.memberId == member.id && k.tahun == 2026).toList();
+
             return Container(
               decoration: const BoxDecoration(
                 color: AppColors.surface,
@@ -121,24 +179,43 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                     ),
                     itemCount: 12,
                     itemBuilder: (context, i) {
-                      final isLunas = monthsList[i];
+                      final monthName = _months[i];
+                      final record = currentKhas.where((k) => k.bulan == monthName).firstOrNull;
+                      
+                      final isLunas = record?.status == StatusBayar.lunas;
+                      final isPending = record?.status == StatusBayar.pending;
+
+                      Color bg = AppColors.surfaceContainerLowest;
+                      Color fg = AppColors.onSurface;
+                      if (isLunas) {
+                        bg = AppColors.success;
+                        fg = Colors.white;
+                      } else if (isPending) {
+                        bg = AppColors.secondaryContainer;
+                        fg = AppColors.onSecondaryContainer;
+                      }
+
                       return GestureDetector(
                         onTap: () {
-                          _toggleMonthPayment(member.id, i);
-                          setModalState(() {});
-                          setState(() {});
+                          if (isPending && record != null) {
+                            _showPendingOptions(record, member.nama);
+                          } else if (isLunas) {
+                            _adminMarkBelumBayar(member.id, monthName);
+                          } else {
+                            _adminMarkLunas(member.id, monthName);
+                          }
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isLunas ? AppColors.success : AppColors.surfaceContainerLowest,
+                            color: bg,
                             borderRadius: BorderRadius.circular(AppSpacing.radius),
                             border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
                           ),
                           child: Center(
                             child: Text(
-                              _months[i],
+                              _monthsShort[i],
                               style: AppTypography.labelBold.copyWith(
-                                color: isLunas ? Colors.white : AppColors.onSurface,
+                                color: fg,
                               ),
                             ),
                           ),
@@ -156,10 +233,29 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
     );
   }
 
+  List<MemberModel> _getFiltered(List<MemberModel> members) {
+    return members.where((m) {
+      final matchDiv = _filterDiv == 'Semua' || m.bidang == _filterDiv;
+      final matchSearch = _search.isEmpty ||
+          m.nama.toLowerCase().contains(_search.toLowerCase()) ||
+          m.nim.contains(_search);
+      return matchDiv && matchSearch;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final members = context.watch<MemberRepository>().members;
-    _initPaymentMap(members);
+    final khasRepo = context.watch<UangKhasRepository>();
+    final members = context.watch<MemberRepository>().members.where((m) => m.isActive).toList();
+    
+    final totalFundsCollected = khasRepo.khasBulan
+        .where((k) => k.status == StatusBayar.lunas && k.tahun == 2026)
+        .fold(0, (s, k) => s + k.nominal);
+        
+    final totalPendingFunds = khasRepo.khasBulan
+        .where((k) => k.status == StatusBayar.pending && k.tahun == 2026)
+        .fold(0, (s, k) => s + k.nominal);
+
     final filteredList = _getFiltered(members);
 
     return Scaffold(
@@ -218,7 +314,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                         children: [
                           Text('TERKUMPUL', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                           const SizedBox(height: 2),
-                          Text('Rp ${_totalFundsCollected.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                          Text('Rp ${totalFundsCollected.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
                               style: AppTypography.headlineSm.copyWith(color: AppColors.success, fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -229,10 +325,10 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('BELUM BAYAR', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+                          Text('PENDING VERIF', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                           const SizedBox(height: 2),
-                          Text('Rp ${_totalPendingFunds.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-                              style: AppTypography.headlineSm.copyWith(color: AppColors.error, fontWeight: FontWeight.bold)),
+                          Text('Rp ${totalPendingFunds.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                              style: AppTypography.headlineSm.copyWith(color: AppColors.secondary, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -302,8 +398,8 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                 itemCount: filteredList.length,
                 itemBuilder: (context, i) {
                   final member = filteredList[i];
-                  final monthsList = _paymentMap[member.id]!;
-                  final paidCount = monthsList.where((paid) => paid).length;
+                  final currentKhas = khasRepo.khasBulan.where((k) => k.memberId == member.id && k.tahun == 2026).toList();
+                  final paidCount = currentKhas.where((k) => k.status == StatusBayar.lunas).length;
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
@@ -348,21 +444,32 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: List.generate(12, (index) {
-                              final isLunas = monthsList[index];
+                              final record = currentKhas.where((k) => k.bulan == _months[index]).firstOrNull;
+                              
+                              final isLunas = record?.status == StatusBayar.lunas;
+                              final isPending = record?.status == StatusBayar.pending;
+
+                              Color dotColor = AppColors.errorContainer; // default unpaid
+                              if (isLunas) {
+                                dotColor = AppColors.success;
+                              } else if (isPending) {
+                                dotColor = AppColors.secondary;
+                              }
+
                               return Column(
                                 children: [
                                   Container(
                                     width: 10,
                                     height: 10,
                                     decoration: BoxDecoration(
-                                      color: isLunas ? AppColors.success : AppColors.errorContainer,
+                                      color: dotColor,
                                       shape: BoxShape.circle,
                                       border: Border.all(color: AppColors.blackCharcoal, width: 1),
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    _months[index].substring(0, 1),
+                                    _monthsShort[index].substring(0, 1),
                                     style: AppTypography.labelBold.copyWith(fontSize: 8, color: AppColors.tertiary),
                                   ),
                                 ],

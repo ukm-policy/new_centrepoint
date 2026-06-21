@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -23,6 +26,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String? _selectedProdi;
   String? _selectedJenisKelamin;
   bool _loading = false;
+  XFile? _imageFile;
+  final _picker = ImagePicker();
 
   static const _prodiList = [
     'Teknik Informatika',
@@ -44,13 +49,72 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _imageFile = pickedFile);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() => _loading = false);
-    context.go('/');
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        throw Exception('User tidak terautentikasi');
+      }
+
+      String? avatarUrl;
+      if (_imageFile != null) {
+        final bytes = await _imageFile!.readAsBytes();
+        final fileExt = _imageFile!.name.split('.').last;
+        final fileName = 'avatar.$fileExt';
+        final filePath = '${user.id}/$fileName';
+
+        await Supabase.instance.client.storage.from('avatars').uploadBinary(
+          filePath,
+          bytes,
+          fileOptions: FileOptions(contentType: 'image/$fileExt', upsert: true),
+        );
+        avatarUrl = Supabase.instance.client.storage.from('avatars').getPublicUrl(filePath);
+      }
+
+      // Update profiles table
+      await Supabase.instance.client.from('profiles').update({
+        'nama': _namaCtrl.text.trim(),
+        'nim': _nimCtrl.text.trim(),
+        'no_hp': _noHpCtrl.text.trim(),
+        'prodi': _selectedProdi,
+        'angkatan': _angkatanCtrl.text.trim(),
+        'avatar_url': ?avatarUrl,
+      }).eq('id', user.id);
+
+      // Synchronize auth metadata
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(
+          data: {
+            'nama': _namaCtrl.text.trim(),
+            'nim': _nimCtrl.text.trim(),
+            'no_hp': _noHpCtrl.text.trim(),
+            'prodi': _selectedProdi,
+            'angkatan': _angkatanCtrl.text.trim(),
+            'avatar_url': ?avatarUrl,
+          },
+        ),
+      );
+
+      if (!mounted) return;
+      context.go('/');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan profil: $e'), backgroundColor: AppColors.error),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   void _skip() => context.go('/');
@@ -104,48 +168,58 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
                       // ── Avatar placeholder ─────────────────────────────────
                       Center(
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 88,
-                              height: 88,
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceContainerHigh,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.blackCharcoal,
-                                  width: 2.5,
-                                ),
-                                boxShadow: const [AppColors.hardShadow],
-                              ),
-                              child: const Icon(
-                                Icons.person_outline,
-                                size: 40,
-                                color: AppColors.tertiary,
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 28,
-                                height: 28,
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 88,
+                                height: 88,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryContainer,
+                                  color: AppColors.surfaceContainerHigh,
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     color: AppColors.blackCharcoal,
-                                    width: 2,
+                                    width: 2.5,
+                                  ),
+                                  boxShadow: const [AppColors.hardShadow],
+                                ),
+                                child: _imageFile != null
+                                    ? ClipOval(
+                                        child: Image.file(
+                                          File(_imageFile!.path),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.person_outline,
+                                        size: 40,
+                                        color: AppColors.tertiary,
+                                      ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryContainer,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppColors.blackCharcoal,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 14,
+                                    color: AppColors.onPrimary,
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.camera_alt_outlined,
-                                  size: 14,
-                                  color: AppColors.onPrimary,
-                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),

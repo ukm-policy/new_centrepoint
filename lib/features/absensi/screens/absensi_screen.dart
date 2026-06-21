@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -8,6 +10,8 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../core/session/app_session.dart';
+import '../../../data/repositories/absensi_repository.dart';
+import '../../../data/models/absensi_model.dart';
 
 class AbsensiScreen extends StatefulWidget {
   const AbsensiScreen({super.key});
@@ -23,6 +27,8 @@ class _AbsensiScreenState extends State<AbsensiScreen>
   // Foto bukti sekret (simulasi: null = belum ambil foto)
   bool _hasFoto = false;
   bool _sekretSubmitted = false;
+
+  bool _isProcessingScan = false;
 
   @override
   void initState() {
@@ -40,7 +46,6 @@ class _AbsensiScreenState extends State<AbsensiScreen>
   }
 
   void _ambilFoto() {
-    // Simulasi ambil foto — di implementasi nyata pakai image_picker
     setState(() => _hasFoto = true);
   }
 
@@ -63,9 +68,40 @@ class _AbsensiScreenState extends State<AbsensiScreen>
     );
   }
 
+  void _handleScan(String qrContent) async {
+    if (_isProcessingScan) return;
+    _isProcessingScan = true;
+
+    try {
+      final uid = AppSession.currentUser.id;
+      final name = AppSession.nama;
+      
+      context.read<AbsensiRepository>().scanQr(qrContent, uid, name);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Mengirim data absensi...', style: AppTypography.bodyMd),
+          backgroundColor: AppColors.blackCharcoal,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error scan: $e'), backgroundColor: AppColors.error),
+      );
+    } finally {
+      await Future.delayed(const Duration(seconds: 2));
+      _isProcessingScan = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDemisioner = AppSession.kodeRole == 'demisioner';
+    final uid = AppSession.currentUser.id;
+
+    final absensiRepo = context.watch<AbsensiRepository>();
+    final myAbsensi = absensiRepo.absensi.where((a) => a.memberId == uid).toList();
 
     return CustomScrollView(
       slivers: [
@@ -124,142 +160,149 @@ class _AbsensiScreenState extends State<AbsensiScreen>
                   : [
                       // ── Bagian 1: Absen Kegiatan ─────────────────────────────────
                       _SectionLabel(label: '01', title: 'Absen Kegiatan'),
-              const SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
-              // Scanner card
-              BrutalistCard(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.innerPadding + 4),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      const Icon(Icons.qr_code_scanner, color: AppColors.primary, size: 22),
-                      const SizedBox(width: 8),
-                      Text('Scan QR', style: AppTypography.headlineSm),
-                      const Spacer(),
-                      _ActiveBadge(),
-                    ]),
-                    const SizedBox(height: 16),
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.blackCharcoal,
-                          borderRadius: BorderRadius.circular(AppSpacing.radius),
-                          border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                        ),
-                        child: Stack(
-                          children: [
-                            AnimatedBuilder(
-                              animation: _scanAnim,
-                              builder: (context, child) => Positioned(
-                                top: _scanAnim.value *
-                                    (MediaQuery.of(context).size.width -
-                                        AppSpacing.marginPage * 2 -
-                                        (AppSpacing.innerPadding + 4) * 2),
-                                left: 0, right: 0,
-                                child: Container(
-                                  height: 2,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.primary.withValues(alpha: 0.6),
-                                        blurRadius: 8,
+                      // Scanner card
+                      BrutalistCard(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.innerPadding + 4),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Row(children: [
+                              const Icon(Icons.qr_code_scanner, color: AppColors.primary, size: 22),
+                              const SizedBox(width: 8),
+                              Text('Scan QR', style: AppTypography.headlineSm),
+                              const Spacer(),
+                              _ActiveBadge(),
+                            ]),
+                            const SizedBox(height: 16),
+                            AspectRatio(
+                              aspectRatio: 1,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.blackCharcoal,
+                                  borderRadius: BorderRadius.circular(AppSpacing.radius),
+                                  border: Border.all(color: AppColors.blackCharcoal, width: 2),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radius - 2),
+                                  child: Stack(
+                                    children: [
+                                      MobileScanner(
+                                        onDetect: (capture) {
+                                          final List<Barcode> barcodes = capture.barcodes;
+                                          if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
+                                            _handleScan(barcodes.first.rawValue!);
+                                          }
+                                        },
+                                      ),
+                                      AnimatedBuilder(
+                                        animation: _scanAnim,
+                                        builder: (context, child) => Positioned(
+                                          top: _scanAnim.value *
+                                              (MediaQuery.of(context).size.width -
+                                                  AppSpacing.marginPage * 2 -
+                                                  (AppSpacing.innerPadding + 4) * 2),
+                                          left: 0, right: 0,
+                                          child: Container(
+                                            height: 2,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: AppColors.primary.withValues(alpha: 0.6),
+                                                  blurRadius: 8,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      ..._cornerMarkers(),
+                                      Positioned(
+                                        bottom: 16, left: 0, right: 0,
+                                        child: Center(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.blackCharcoal.withValues(alpha: 0.8),
+                                              borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
+                                              border: Border.all(color: AppColors.tertiary, width: 1),
+                                            ),
+                                            child: Text(
+                                              'Arahkan kamera ke QR Code Acara',
+                                              style: AppTypography.labelBold.copyWith(color: Colors.white),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
                             ),
-                            ..._cornerMarkers(),
-                            Positioned(
-                              bottom: 16, left: 0, right: 0,
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.blackCharcoal.withValues(alpha: 0.8),
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
-                                    border: Border.all(color: AppColors.tertiary, width: 1),
-                                  ),
-                                  child: Text(
-                                    'Arahkan kamera ke QR Code Acara',
-                                    style: AppTypography.labelBold.copyWith(color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ]),
                         ),
                       ),
-                    ),
-                  ]),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.stackGap),
+                      const SizedBox(height: AppSpacing.stackGap),
 
-              // Absen cepat
-              BrutalistCard(
-                onTap: () {},
-                padding: const EdgeInsets.all(20),
-                backgroundColor: AppColors.primaryContainer,
-                child: Column(children: [
-                  const Icon(Icons.fingerprint, size: 48, color: AppColors.onPrimaryContainer),
-                  const SizedBox(height: 8),
-                  Text('ABSEN CEPAT',
-                    style: AppTypography.headlineSm.copyWith(color: AppColors.onPrimaryContainer)),
-                  const SizedBox(height: 4),
-                  Text('Tap jika scanner tidak tersedia',
-                    style: AppTypography.bodyMd.copyWith(
-                      color: AppColors.onPrimaryContainer.withValues(alpha: 0.8))),
-                ]),
-              ),
-              const SizedBox(height: AppSpacing.stackGap),
+                      // Status hari ini
+                      _InfoCard(
+                        title: 'Status Hari Ini',
+                        child: myAbsensi.isEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: Text(
+                                    'Belum ada absensi terdaftar.',
+                                    style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
+                                  ),
+                                ),
+                              )
+                            : Column(
+                                children: myAbsensi.map((a) {
+                                  final formattedTime = a.waktuScan != null
+                                      ? "${a.waktuScan!.hour.toString().padLeft(2, '0')}.${a.waktuScan!.minute.toString().padLeft(2, '0')} WIB"
+                                      : "Belum Absen";
+                                  return Column(
+                                    children: [
+                                      _StatusRow(
+                                        icon: a.tipeKegiatan == 'rapat' ? Icons.event : Icons.event_available,
+                                        title: a.kegiatanJudul,
+                                        subtitle: "${a.tipeKegiatan.toUpperCase()} • $formattedTime",
+                                        status: a.status == StatusAbsensi.hadir ? 'Hadir' : (a.status == StatusAbsensi.belumAbsen ? 'Belum' : a.status.toString().split('.').last.toUpperCase()),
+                                        isGood: a.status == StatusAbsensi.hadir,
+                                      ),
+                                      if (a != myAbsensi.last) ...[
+                                        const SizedBox(height: 8),
+                                        const MyDivider(color: AppColors.borderSlate, height: 8),
+                                        const SizedBox(height: 8),
+                                      ],
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                      ),
 
-              // Status hari ini
-              _InfoCard(
-                title: 'Status Hari Ini',
-                child: Column(children: [
-                  _StatusRow(
-                    icon: Icons.event_available,
-                    title: 'Seminar Kebijakan Publik 2023',
-                    subtitle: '09.00 WIB • Aula Utama',
-                    status: 'Hadir',
-                    isGood: true,
-                  ),
-                  const SizedBox(height: 8),
-                  const MyDivider(color: AppColors.borderSlate, height: 8),
-                  const SizedBox(height: 8),
-                  _StatusRow(
-                    icon: Icons.event,
-                    title: 'Rapat Koordinasi Divisi',
-                    subtitle: '14.00 WIB • Ruang Rapat',
-                    status: 'Belum',
-                    isGood: false,
-                  ),
-                ]),
-              ),
+                      // ── Bagian 2: Absen Masuk Sekret ─────────────────────────────
+                      const SizedBox(height: AppSpacing.stackGap),
+                      const MyDivider(color: AppColors.blackCharcoal),
+                      const SizedBox(height: AppSpacing.stackGap),
 
-              // ── Bagian 2: Absen Masuk Sekret ─────────────────────────────
-              const SizedBox(height: AppSpacing.stackGap),
-              const MyDivider(color: AppColors.blackCharcoal),
-              const SizedBox(height: AppSpacing.stackGap),
+                      _SectionLabel(label: '02', title: 'Absen Masuk Sekret'),
+                      const SizedBox(height: 12),
 
-              _SectionLabel(label: '02', title: 'Absen Masuk Sekret'),
-              const SizedBox(height: 12),
-
-              _SekretCard(
-                hasFoto: _hasFoto,
-                submitted: _sekretSubmitted,
-                onAmbilFoto: _ambilFoto,
-                onUlangFoto: () => setState(() {
-                  _hasFoto = false;
-                  _sekretSubmitted = false;
-                }),
-                onSubmit: _submitSekret,
-                onLihatRiwayat: () => context.push('/absensi/riwayat-sekret'),
-              ),
-            ]),
+                      _SekretCard(
+                        hasFoto: _hasFoto,
+                        submitted: _sekretSubmitted,
+                        onAmbilFoto: _ambilFoto,
+                        onUlangFoto: () => setState(() {
+                          _hasFoto = false;
+                          _sekretSubmitted = false;
+                        }),
+                        onSubmit: _submitSekret,
+                        onLihatRiwayat: () => context.push('/absensi/riwayat-sekret'),
+                      ),
+                    ]),
           ),
         ),
       ],
@@ -332,7 +375,7 @@ class _SekretCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // Instruksi
+        // Profil
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(

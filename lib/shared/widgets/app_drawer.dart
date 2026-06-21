@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
@@ -346,9 +347,26 @@ class _DrawerLogout extends StatelessWidget {
         AppSpacing.marginPage, 0,
       ),
       child: GestureDetector(
-        onTap: () {
+        onTap: () async {
           Navigator.of(context).pop();
-          context.go('/login');
+          try {
+            await Supabase.instance.client.auth.signOut();
+            if (context.mounted) {
+              context.go('/login');
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Gagal keluar: $e',
+                      style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.all(AppSpacing.marginPage),
+                ),
+              );
+            }
+          }
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 13),

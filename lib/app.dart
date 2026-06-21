@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/session/app_session.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -56,6 +58,30 @@ import 'shared/widgets/app_drawer.dart';
 
 final _router = GoRouter(
   initialLocation: '/login',
+  redirect: (context, state) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final path = state.uri.path;
+
+    if (path == '/login' || path == '/register' || path == '/forgot-password') {
+      if (user != null) {
+        if (AppSession.status == 'pending') {
+          return '/pending';
+        }
+        return '/';
+      }
+      return null;
+    }
+
+    if (user == null) {
+      return '/login';
+    }
+
+    if (AppSession.status == 'pending' && path != '/pending' && path != '/lengkapi-profil') {
+      return '/pending';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/login',

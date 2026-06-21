@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'app.dart';
+import 'core/env/env.dart';
+import 'core/supabase/supabase_client.dart';
 import 'data/repositories/user_repository.dart';
 import 'data/repositories/member_repository.dart';
 import 'data/repositories/berita_repository.dart';
@@ -14,11 +16,22 @@ import 'data/repositories/uang_khas_repository.dart';
 import 'data/repositories/inbox_repository.dart';
 import 'data/repositories/or_repository.dart';
 import 'data/repositories/periode_repository.dart';
-
-const bool useApiBackend = false;
+import 'data/repositories/supabase/supabase_user_repository.dart';
+import 'data/repositories/supabase/supabase_member_repository.dart';
+import 'data/repositories/supabase/supabase_berita_repository.dart';
+import 'data/repositories/supabase/supabase_kegiatan_repository.dart';
+import 'data/repositories/supabase/supabase_rapat_repository.dart';
+import 'data/repositories/supabase/supabase_absensi_repository.dart';
+import 'data/repositories/supabase/supabase_poin_repository.dart';
+import 'data/repositories/supabase/supabase_uang_khas_repository.dart';
+import 'data/repositories/supabase/supabase_inbox_repository.dart';
+import 'data/repositories/supabase/supabase_or_repository.dart';
+import 'data/repositories/supabase/supabase_periode_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Env.init();
+  await SupabaseClientHelper.init();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -26,37 +39,37 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<UserRepository>(
-          create: (_) => useApiBackend ? ApiUserRepository() : DummyUserRepository(),
+          create: (_) => SupabaseUserRepository(),
         ),
         ChangeNotifierProvider<MemberRepository>(
-          create: (_) => useApiBackend ? ApiMemberRepository() : DummyMemberRepository(),
+          create: (_) => SupabaseMemberRepository(),
         ),
         ChangeNotifierProvider<BeritaRepository>(
-          create: (_) => useApiBackend ? ApiBeritaRepository() : DummyBeritaRepository(),
+          create: (_) => SupabaseBeritaRepository(),
         ),
         ChangeNotifierProvider<KegiatanRepository>(
-          create: (_) => useApiBackend ? ApiKegiatanRepository() : DummyKegiatanRepository(),
+          create: (_) => SupabaseKegiatanRepository(),
         ),
         ChangeNotifierProvider<RapatRepository>(
-          create: (_) => useApiBackend ? ApiRapatRepository() : DummyRapatRepository(),
+          create: (_) => SupabaseRapatRepository(),
         ),
         ChangeNotifierProvider<AbsensiRepository>(
-          create: (_) => useApiBackend ? ApiAbsensiRepository() : DummyAbsensiRepository(),
+          create: (_) => SupabaseAbsensiRepository(),
         ),
         ChangeNotifierProvider<PoinRepository>(
-          create: (_) => useApiBackend ? ApiPoinRepository() : DummyPoinRepository(),
+          create: (_) => SupabasePoinRepository(),
         ),
         ChangeNotifierProvider<UangKhasRepository>(
-          create: (_) => useApiBackend ? ApiUangKhasRepository() : DummyUangKhasRepository(),
+          create: (_) => SupabaseUangKhasRepository(),
         ),
         ChangeNotifierProvider<InboxRepository>(
-          create: (_) => useApiBackend ? ApiInboxRepository() : DummyInboxRepository(),
+          create: (_) => SupabaseInboxRepository(),
         ),
         ChangeNotifierProvider<ORRepository>(
-          create: (_) => useApiBackend ? ApiORRepository() : DummyORRepository(),
+          create: (_) => SupabaseORRepository(),
         ),
         ChangeNotifierProvider<PeriodeRepository>(
-          create: (_) => useApiBackend ? ApiPeriodeRepository() : DummyPeriodeRepository(),
+          create: (_) => SupabasePeriodeRepository(),
         ),
       ],
       child: const App(),

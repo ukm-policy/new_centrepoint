@@ -34,16 +34,16 @@ Tidak ada perubahan pada layer screen — hanya swap implementasi repository.
 
 ## Fase Pengerjaan
 
-### Fase A — Setup Project & Schema (via MCP)
-### Fase B — Auth & Session
-### Fase C — Repository Swap per Domain
-### Fase D — Storage & Upload
-### Fase E — Realtime
-### Fase F — RLS & Security Hardening
+- [x] **Fase A** — Setup Project & Schema (via MCP)
+- [x] **Fase B** — Auth & Session
+- [x] **Fase C** — Repository Swap per Domain
+- [x] **Fase D** — Storage & Upload
+- [x] **Fase E** — Realtime
+- [x] **Fase F** — RLS & Security Hardening
 
 ---
 
-## Fase A — Setup Database Schema (via Supabase MCP)
+## [x] Fase A — Setup Database Schema (via Supabase MCP)
 
 Jalankan DDL berikut via MCP satu per satu, mulai dari tabel master hingga tabel transaksi.
 
@@ -393,7 +393,7 @@ insert into jabatan (nama, bidang_id, level_akses, kode_role) values
 
 ---
 
-## Fase B — Auth & Session
+## [x] Fase B — Auth & Session
 
 ### B.1 Trigger: Buat profil saat signup
 
@@ -482,7 +482,7 @@ redirect: (context, state) {
 
 ---
 
-## Fase C — Repository Swap per Domain
+## [x] Fase C — Repository Swap per Domain
 
 ### Pola Dasar SupabaseRepository
 
@@ -541,7 +541,7 @@ MultiProvider(providers: [
 
 ---
 
-## Fase D — Storage
+## [x] Fase D — Storage
 
 Setup bucket via MCP atau Dashboard:
 
@@ -572,7 +572,7 @@ final url = supabase.storage.from('avatars').getPublicUrl(path);
 
 ---
 
-## Fase E — Realtime
+## [x] Fase E — Realtime
 
 | Fitur | Channel | Event |
 |-------|---------|-------|
@@ -600,7 +600,7 @@ supabase
 
 ---
 
-## Fase F — RLS (Row Level Security)
+## [x] Fase F — RLS (Row Level Security)
 
 ### Helper Functions
 
@@ -746,19 +746,19 @@ lib/
 
 ## Roadmap Prioritas Domain
 
-| # | Domain | Prioritas | Alasan |
-|---|--------|-----------|--------|
-| 1 | Auth & Profile | Tinggi | Gerbang utama semua fitur |
-| 2 | Member | Tinggi | Dipakai picker semua form |
-| 3 | Kegiatan | Tinggi | Fitur utama aplikasi |
-| 4 | Absensi | Tinggi | Butuh Realtime + QR |
-| 5 | Poin | Menengah | Tergantung Kegiatan & Absensi |
-| 6 | Uang Khas | Menengah | Tergantung Storage (bukti) |
-| 7 | Berita & Pengumuman | Menengah | Tergantung Storage (thumbnail) |
-| 8 | Rapat | Menengah | RLS paling kompleks |
-| 9 | Notifikasi (Inbox) | Rendah | Tergantung Realtime |
-| 10 | OR (Rekrutmen) | Rendah | Fitur terisolasi |
-| 11 | Periode | Rendah | Admin only |
+| # | Domain | Prioritas | Status | Alasan |
+|---|--------|-----------|--------|--------|
+| 1 | Auth & Profile | Tinggi | [x] Selesai | Gerbang utama semua fitur |
+| 2 | Member | Tinggi | [x] Selesai | Dipakai picker semua form |
+| 3 | Kegiatan | Tinggi | [x] Selesai | Fitur utama aplikasi |
+| 4 | Absensi | Tinggi | [x] Selesai | Butuh Realtime + QR |
+| 5 | Poin | Menengah | [x] Selesai | Tergantung Kegiatan & Absensi |
+| 6 | Uang Khas | Menengah | [x] Selesai | Tergantung Storage (bukti) |
+| 7 | Berita & Pengumuman | Menengah | [x] Selesai | Tergantung Storage (thumbnail) |
+| 8 | Rapat | Menengah | [x] Selesai | RLS paling kompleks |
+| 9 | Notifikasi (Inbox) | Rendah | [x] Selesai | Tergantung Realtime |
+| 10 | OR (Rekrutmen) | Rendah | [x] Selesai | Fitur terisolasi |
+| 11 | Periode | Rendah | [x] Selesai | Admin only |
 
 ---
 

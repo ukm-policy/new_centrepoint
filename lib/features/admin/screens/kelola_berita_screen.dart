@@ -80,7 +80,7 @@ class _KelolaBeritaScreenState extends State<KelolaBeritaScreen> {
                   Text('KATEGORI', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
-                    value: selectedCat,
+                    initialValue: selectedCat,
                     onChanged: (v) => selectedCat = v ?? 'Berita',
                     style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
                     decoration: const InputDecoration(

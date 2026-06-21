@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -20,19 +21,52 @@ class _PendingScreenState extends State<PendingScreen> {
 
   Future<void> _refreshStatus() async {
     setState(() => _checking = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _checking = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Akun Anda masih dalam proses verifikasi pengurus.',
-            style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.blackCharcoal,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    try {
+      await Supabase.instance.client.auth.refreshSession();
+      if (!mounted) return;
+      
+      final status = AppSession.status;
+      if (status == 'active') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Akun Anda telah terverifikasi! Mengalihkan...',
+                style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSpacing.marginPage),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        context.go('/');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Akun Anda masih dalam proses verifikasi pengurus.',
+                style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+            backgroundColor: AppColors.blackCharcoal,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSpacing.marginPage),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memperbarui status: $e',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(AppSpacing.marginPage),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _checking = false);
+      }
+    }
   }
 
   @override
@@ -144,7 +178,26 @@ class _PendingScreenState extends State<PendingScreen> {
                     label: 'LOGOUT / KELUAR',
                     variant: BrutalistButtonVariant.secondary,
                     icon: Icons.logout_outlined,
-                    onPressed: () => context.go('/login'),
+                    onPressed: () async {
+                      try {
+                        await Supabase.instance.client.auth.signOut();
+                        if (mounted) {
+                          context.go('/login');
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Gagal keluar: $e',
+                                  style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+                              backgroundColor: AppColors.error,
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.all(AppSpacing.marginPage),
+                            ),
+                          );
+                        }
+                      }
+                    },
                   ),
                 ],
               ),

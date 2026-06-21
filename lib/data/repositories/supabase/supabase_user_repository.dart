@@ -41,6 +41,7 @@ class SupabaseUserRepository extends UserRepository {
         final status = json['status'] as String? ?? 'pending';
         final isVerified = status == 'active';
         final createdAt = DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now();
+        final isAdmin = json['is_admin'] as bool? ?? false;
 
         String role = 'anggota';
         String? bidang;
@@ -81,6 +82,7 @@ class SupabaseUserRepository extends UserRepository {
           avatarUrl: avatarUrl,
           isVerified: isVerified,
           createdAt: createdAt,
+          isAdmin: isAdmin,
         );
       }).toList();
       notifyListeners();
@@ -108,6 +110,7 @@ class SupabaseUserRepository extends UserRepository {
         'angkatan': user.angkatan,
         'avatar_url': user.avatarUrl,
         'status': user.isVerified ? 'active' : 'pending',
+        'is_admin': user.isAdmin,
       }).eq('id', user.id);
 
       // If updating self, also update auth metadata to keep session in sync
@@ -122,6 +125,7 @@ class SupabaseUserRepository extends UserRepository {
               'angkatan': user.angkatan,
               'status': user.isVerified ? 'active' : 'pending',
               'avatar_url': user.avatarUrl,
+              'is_admin': user.isAdmin,
             },
           ),
         );

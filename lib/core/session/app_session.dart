@@ -66,7 +66,10 @@ class AppSession {
     }
   }
 
-  static bool get isAdmin => level >= 4;
+  static bool get isAdmin =>
+      (_claims['is_admin'] as bool?) ??
+      (supabaseUser?.userMetadata?['is_admin'] as bool?) ??
+      false;
 
   static UserModel get currentUser {
     return UserModel(
@@ -83,6 +86,7 @@ class AppSession {
       avatarUrl: supabaseUser?.userMetadata?['avatar_url'] as String?,
       isVerified: status == 'active',
       createdAt: DateTime.tryParse(supabaseUser?.createdAt ?? '') ?? DateTime.now(),
+      isAdmin: isAdmin,
     );
   }
 }

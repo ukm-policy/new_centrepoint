@@ -62,6 +62,7 @@ class SupabaseMemberRepository extends MemberRepository {
         final angkatan = json['angkatan'] as String? ?? '';
         final avatarUrl = json['avatar_url'] as String?;
         final status = json['status'] as String? ?? 'pending';
+        final isAdmin = json['is_admin'] as bool? ?? false;
         
         final totalPoin = userPoints[id] ?? 0;
         final kCount = totalEvents[id] ?? 0;
@@ -123,6 +124,7 @@ class SupabaseMemberRepository extends MemberRepository {
           avatarUrl: avatarUrl,
           status: status == 'active' ? 'Aktif' : (status == 'suspended' ? 'Suspended' : 'Pending'),
           level: level,
+          isAdmin: isAdmin,
         );
       }).toList();
 
@@ -151,6 +153,7 @@ class SupabaseMemberRepository extends MemberRepository {
         'angkatan': member.angkatan,
         'avatar_url': member.avatarUrl,
         'status': member.status == 'Aktif' ? 'active' : (member.status == 'Suspended' ? 'suspended' : 'pending'),
+        'is_admin': member.isAdmin,
       }).eq('id', member.id);
       _loadMembers();
     } catch (e) {
@@ -215,12 +218,16 @@ class SupabaseMemberRepository extends MemberRepository {
   }
 
   @override
-  void updateStatusAndLevel(String id, {required String status, required int level}) async {
+  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) async {
     try {
       final dbStatus = status == 'Aktif' ? 'active' : (status == 'Suspended' ? 'suspended' : 'pending');
-      await _db.from('profiles').update({
+      final Map<String, dynamic> updates = {
         'status': dbStatus,
-      }).eq('id', id);
+      };
+      if (isAdmin != null) {
+        updates['is_admin'] = isAdmin;
+      }
+      await _db.from('profiles').update(updates).eq('id', id);
 
       // Find a jabatan matching the level
       final jabData = await _db.from('jabatan').select().eq('level_akses', level).limit(1).maybeSingle();

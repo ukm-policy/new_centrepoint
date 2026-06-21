@@ -28,6 +28,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
   void _showEditSheet(BuildContext context, MemberModel member) {
     String tempStatus = member.status;
     int tempLevel = member.level;
+    bool tempIsAdmin = member.isAdmin;
 
     showModalBottomSheet(
       context: context,
@@ -103,6 +104,32 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                       DropdownMenuItem(value: 5, child: Text('Level 5 - BPH / Ketua Umum')),
                     ],
                   ),
+                  const SizedBox(height: AppSpacing.stackGap),
+
+                  // Admin Switch
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('HAK AKSES ADMIN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Aktifkan untuk memberikan akses Administrator penuh',
+                              style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: tempIsAdmin,
+                        onChanged: (v) => setModalState(() => tempIsAdmin = v),
+                        activeColor: AppColors.primaryContainer,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 28),
 
                   // Save Button
@@ -113,6 +140,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                         member.id,
                         status: tempStatus,
                         level: tempLevel,
+                        isAdmin: tempIsAdmin,
                       );
                       Navigator.pop(modalContext);
                       ScaffoldMessenger.of(context).showSnackBar(

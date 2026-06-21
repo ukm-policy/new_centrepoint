@@ -12,6 +12,7 @@ class UserModel {
   final String? avatarUrl;
   final bool isVerified;
   final DateTime createdAt;
+  final bool isAdmin;
 
   const UserModel({
     required this.id,
@@ -27,6 +28,7 @@ class UserModel {
     this.avatarUrl,
     required this.isVerified,
     required this.createdAt,
+    this.isAdmin = false,
   });
 
   UserModel copyWith({
@@ -43,6 +45,7 @@ class UserModel {
     String? avatarUrl,
     bool? isVerified,
     DateTime? createdAt,
+    bool? isAdmin,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -58,6 +61,7 @@ class UserModel {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 
@@ -76,6 +80,7 @@ class UserModel {
       avatarUrl: json['avatarUrl'] as String?,
       isVerified: json['isVerified'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      isAdmin: json['isAdmin'] as bool? ?? false,
     );
   }
 
@@ -94,6 +99,7 @@ class UserModel {
       'avatarUrl': avatarUrl,
       'isVerified': isVerified,
       'createdAt': createdAt.toIso8601String(),
+      'isAdmin': isAdmin,
     };
   }
 }

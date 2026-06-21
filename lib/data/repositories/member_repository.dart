@@ -9,7 +9,7 @@ abstract class MemberRepository extends ChangeNotifier {
   void updatePoin(String id, int poinChange);
   void assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan});
   void verifyMember(String id);
-  void updateStatusAndLevel(String id, {required String status, required int level});
+  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin});
 }
 
 class DummyMemberRepository extends MemberRepository {
@@ -77,10 +77,14 @@ class DummyMemberRepository extends MemberRepository {
   }
 
   @override
-  void updateStatusAndLevel(String id, {required String status, required int level}) {
+  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) {
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
-      _members[idx] = _members[idx].copyWith(status: status, level: level);
+      _members[idx] = _members[idx].copyWith(
+        status: status,
+        level: level,
+        isAdmin: isAdmin ?? _members[idx].isAdmin,
+      );
       notifyListeners();
     }
   }
@@ -151,11 +155,15 @@ class ApiMemberRepository extends MemberRepository {
   }
 
   @override
-  void updateStatusAndLevel(String id, {required String status, required int level}) {
+  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) {
     // POST /api/members/$id/status
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
-      _members[idx] = _members[idx].copyWith(status: status, level: level);
+      _members[idx] = _members[idx].copyWith(
+        status: status,
+        level: level,
+        isAdmin: isAdmin ?? _members[idx].isAdmin,
+      );
       notifyListeners();
     }
   }

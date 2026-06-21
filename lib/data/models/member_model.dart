@@ -17,6 +17,7 @@ class MemberModel {
   final String? avatarUrl;
   final String status;         // 'Aktif' | 'Pending' | 'Suspended'
   final int level;             // 1 | 2 | 3 | 4 | 5
+  final bool isAdmin;
 
   const MemberModel({
     required this.id,
@@ -37,6 +38,7 @@ class MemberModel {
     this.avatarUrl,
     this.status = 'Aktif',
     this.level = 2,
+    this.isAdmin = false,
   });
 
   MemberModel copyWith({
@@ -58,6 +60,7 @@ class MemberModel {
     String? avatarUrl,
     String? status,
     int? level,
+    bool? isAdmin,
   }) {
     return MemberModel(
       id: id ?? this.id,
@@ -78,6 +81,7 @@ class MemberModel {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       status: status ?? this.status,
       level: level ?? this.level,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 
@@ -101,6 +105,7 @@ class MemberModel {
       avatarUrl: json['avatarUrl'] as String?,
       status: json['status'] as String? ?? 'Aktif',
       level: json['level'] as int? ?? 2,
+      isAdmin: json['isAdmin'] as bool? ?? false,
     );
   }
 
@@ -124,6 +129,7 @@ class MemberModel {
       'avatarUrl': avatarUrl,
       'status': status,
       'level': level,
+      'isAdmin': isAdmin,
     };
   }
 }

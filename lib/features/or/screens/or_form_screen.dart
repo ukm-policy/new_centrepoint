@@ -141,7 +141,7 @@ class _OrFormScreenState extends State<OrFormScreen> {
                 _Field(
                   controller: _prodiCtrl,
                   label: 'Program Studi',
-                  hint: 'Teknik Informatika',
+                  hint: 'D4 Sarjana Terapan Teknik Informatika',
                   validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
                 ),
                 const SizedBox(height: 12),

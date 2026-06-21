@@ -30,14 +30,36 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _picker = ImagePicker();
 
   static const _prodiList = [
-    'Teknik Informatika',
-    'Sistem Informasi',
-    'Manajemen Informatika',
-    'Ilmu Komputer',
-    'Teknik Komputer',
-    'Ilmu Komunikasi',
-    'Administrasi Bisnis',
-    'Lainnya',
+    // 1. Jurusan Teknik Sipil
+    'D3 Teknologi Konstruksi Bangunan Air',
+    'D3 Teknologi Konstruksi Jalan dan Jembatan',
+    'D4 Sarjana Terapan Teknologi Konstruksi Bangunan Gedung',
+    'D4 Sarjana Terapan Teknologi Rekayasa Konstruksi Jalan dan Jembatan',
+    // 2. Jurusan Teknik Mesin
+    'D3 Teknologi Industri',
+    'D3 Teknologi Mesin',
+    'D4 Sarjana Terapan Teknologi Rekayasa Manufaktur',
+    'D4 Sarjana Terapan Teknologi Rekayasa Pengelasan dan Fabrikasi',
+    // 3. Jurusan Teknik Kimia
+    'D3 Teknologi Kimia',
+    'D3 Teknologi Pengolahan Minyak dan Gas',
+    'D4 Sarjana Terapan Teknologi Rekayasa Kimia Industri',
+    // 4. Jurusan Teknik Elektro
+    'D3 Teknologi Listrik',
+    'D3 Teknologi Telekomunikasi',
+    'D3 Teknologi Elektronika',
+    'D4 Sarjana Terapan Teknologi Rekayasa Pembangkit Energi',
+    'D4 Sarjana Terapan Teknologi Rekayasa Jaringan Telekomunikasi',
+    'D4 Sarjana Terapan Teknologi Rekayasa Instrumentasi dan Kontrol',
+    // 5. Jurusan Bisnis / Tata Niaga
+    'D3 Akuntansi',
+    'D3 Administrasi Bisnis',
+    'D4 Sarjana Terapan Manajemen Keuangan Sektor Publik',
+    'D4 Sarjana Terapan Akuntansi Lembaga Keuangan Syariah',
+    // 6. Jurusan Teknologi Informasi dan Komputer (TIK)
+    'D4 Sarjana Terapan Teknologi Rekayasa Multimedia',
+    'D4 Sarjana Terapan Teknologi Rekayasa Komputer Jaringan',
+    'D4 Sarjana Terapan Teknik Informatika',
   ];
 
   @override
@@ -315,13 +337,17 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         initialValue: _selectedProdi,
                         onChanged: (v) => setState(() => _selectedProdi = v),
                         style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+                        isExpanded: true,
                         decoration: const InputDecoration(
                           hintText: 'Pilih program studi',
                           prefixIcon: Icon(Icons.school_outlined, size: 20),
                         ),
                         items: _prodiList.map((p) => DropdownMenuItem(
                           value: p,
-                          child: Text(p),
+                          child: Text(
+                            p,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )).toList(),
                         validator: (v) => v == null ? 'Program studi wajib dipilih' : null,
                       ),

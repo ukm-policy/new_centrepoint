@@ -1,11 +1,18 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../core/session/app_session.dart';
+import '../../../data/repositories/user_repository.dart';
+import '../../../data/models/user_model.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -26,6 +33,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _selectedJenisKelamin = 'L';
   bool _loading = false;
 
+  XFile? _imageFile;
+  final _picker = ImagePicker();
+  String? _avatarUrl;
+
   static const _prodiList = [
     'Teknik Informatika',
     'Sistem Informasi',
@@ -42,9 +53,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     _namaCtrl = TextEditingController(text: AppSession.nama);
     _nimCtrl = TextEditingController(text: AppSession.nim);
-    _angkatanCtrl = TextEditingController(text: '2021');
-    _noHpCtrl = TextEditingController(text: '081234567890');
+    _angkatanCtrl = TextEditingController(text: AppSession.angkatan.isEmpty ? '2021' : AppSession.angkatan);
+    _noHpCtrl = TextEditingController(text: AppSession.noHp.isEmpty ? '081234567890' : AppSession.noHp);
     _bioCtrl = TextEditingController(text: 'Aktif, kritis, dan berintegritas tinggi.');
+    _avatarUrl = AppSession.currentUser.avatarUrl;
+    
+    if (AppSession.prodi.isNotEmpty && _prodiList.contains(AppSession.prodi)) {
+      _selectedProdi = AppSession.prodi;
+    } else {
+      _selectedProdi = 'Teknik Informatika';
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 400,
+        maxHeight: 400,
+        imageQuality: 80,
+      );
+      if (pickedFile != null) {
+        setState(() => _imageFile = pickedFile);
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
   }
 
   @override
@@ -60,20 +94,67 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _loading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Profil berhasil disimpan!',
-            style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-    context.pop();
+    try {
+      final userRepo = Provider.of<UserRepository>(context, listen: false);
+      
+      String? avatarUrl = _avatarUrl;
+      if (_imageFile != null) {
+        final bytes = await _imageFile!.readAsBytes();
+        final fileExt = _imageFile!.name.split('.').last;
+        final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+        final filePath = '${AppSession.id}/$fileName';
+
+        await Supabase.instance.client.storage.from('avatars').uploadBinary(
+          filePath,
+          bytes,
+          fileOptions: FileOptions(contentType: 'image/$fileExt', upsert: true),
+        );
+        avatarUrl = Supabase.instance.client.storage.from('avatars').getPublicUrl(filePath);
+      }
+
+      final updatedUser = AppSession.currentUser.copyWith(
+        nama: _namaCtrl.text.trim(),
+        nim: _nimCtrl.text.trim(),
+        noHp: _noHpCtrl.text.trim(),
+        prodi: _selectedProdi,
+        angkatan: _angkatanCtrl.text.trim(),
+        avatarUrl: avatarUrl,
+      );
+      
+      userRepo.updateUser(updatedUser);
+      
+      // Delay slightly for the update to reflect
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Profil berhasil disimpan!',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(AppSpacing.marginPage),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menyimpan profil: $e',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(AppSpacing.marginPage),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
   }
 
   @override
@@ -129,48 +210,73 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 // Avatar picker placeholder
                 Center(
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerHigh,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.blackCharcoal,
-                            width: 2.5,
-                          ),
-                          boxShadow: const [AppColors.hardShadow],
-                        ),
-                        child: const Icon(
-                          Icons.person_outline,
-                          size: 44,
-                          color: AppColors.tertiary,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 32,
-                          height: 32,
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 96,
+                          height: 96,
                           decoration: BoxDecoration(
-                            color: AppColors.primaryContainer,
+                            color: AppColors.surfaceContainerHigh,
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: AppColors.blackCharcoal,
-                              width: 2,
+                              width: 2.5,
+                            ),
+                            boxShadow: const [AppColors.hardShadow],
+                          ),
+                          child: _imageFile != null
+                              ? ClipOval(
+                                  child: Image.file(
+                                    File(_imageFile!.path),
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : (_avatarUrl != null && _avatarUrl!.isNotEmpty
+                                  ? ClipOval(
+                                      child: CachedNetworkImage(
+                                        imageUrl: _avatarUrl!,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                        errorWidget: (context, url, error) => const Icon(
+                                          Icons.person_outline,
+                                          size: 44,
+                                          color: AppColors.tertiary,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person_outline,
+                                      size: 44,
+                                      color: AppColors.tertiary,
+                                    )),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryContainer,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.blackCharcoal,
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_outlined,
+                              size: 16,
+                              color: AppColors.onPrimary,
                             ),
                           ),
-                          child: const Icon(
-                            Icons.camera_alt_outlined,
-                            size: 16,
-                            color: AppColors.onPrimary,
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

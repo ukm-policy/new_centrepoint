@@ -109,6 +109,24 @@ class SupabaseUserRepository extends UserRepository {
         'avatar_url': user.avatarUrl,
         'status': user.isVerified ? 'active' : 'pending',
       }).eq('id', user.id);
+
+      // If updating self, also update auth metadata to keep session in sync
+      if (user.id == _db.auth.currentUser?.id) {
+        await _db.auth.updateUser(
+          UserAttributes(
+            data: {
+              'nama': user.nama,
+              'nim': user.nim,
+              'no_hp': user.noHp,
+              'prodi': user.prodi,
+              'angkatan': user.angkatan,
+              'status': user.isVerified ? 'active' : 'pending',
+              'avatar_url': user.avatarUrl,
+            },
+          ),
+        );
+      }
+
       _loadUsers();
     } catch (e) {
       debugPrint('Error updating user: $e');

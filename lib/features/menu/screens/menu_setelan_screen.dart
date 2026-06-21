@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -41,7 +42,23 @@ class MenuSetelanScreen extends StatelessWidget {
                       border: Border.all(color: AppColors.blackCharcoal, width: 2),
                       boxShadow: const [AppColors.hardShadowSm],
                     ),
-                    child: const Icon(Icons.person, size: 30, color: AppColors.tertiary),
+                    child: AppSession.currentUser.avatarUrl != null &&
+                            AppSession.currentUser.avatarUrl!.isNotEmpty
+                        ? ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: AppSession.currentUser.avatarUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              errorWidget: (context, url, error) => const Icon(
+                                Icons.person,
+                                size: 30,
+                                color: AppColors.tertiary,
+                              ),
+                            ),
+                          )
+                        : const Icon(Icons.person, size: 30, color: AppColors.tertiary),
                   ),
                   const SizedBox(width: 16),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

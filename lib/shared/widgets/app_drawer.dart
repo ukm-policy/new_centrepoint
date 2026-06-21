@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/session/app_session.dart';
+import '../../data/repositories/member_repository.dart';
 import 'my_divider.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -138,6 +142,17 @@ class AppDrawer extends StatelessWidget {
 class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final members = context.watch<MemberRepository>().members;
+    final currentMember = members.isNotEmpty
+        ? members.firstWhere(
+            (m) => m.nama == AppSession.nama,
+            orElse: () => members.first,
+          )
+        : null;
+
+    final tier = currentMember?.tier ?? 'General';
+    final poin = currentMember?.totalPoin ?? 0;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.marginPage, AppSpacing.marginPage,
@@ -188,19 +203,35 @@ class _DrawerHeader extends StatelessWidget {
               border: Border.all(color: AppColors.blackCharcoal, width: 2.5),
               boxShadow: const [AppColors.hardShadowSm],
             ),
-            child: const Icon(Icons.person, size: 30, color: AppColors.tertiary),
+            child: AppSession.currentUser.avatarUrl != null &&
+                    AppSession.currentUser.avatarUrl!.isNotEmpty
+                ? ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: AppSession.currentUser.avatarUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.person,
+                        size: 30,
+                        color: AppColors.tertiary,
+                      ),
+                    ),
+                  )
+                : const Icon(Icons.person, size: 30, color: AppColors.tertiary),
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(
-              'Ahmad Ridhwan',
+              AppSession.nama,
               style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 2),
             Text(
-              'Senior Policy Analyst',
+              AppSession.jabatan,
               style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -213,14 +244,14 @@ class _DrawerHeader extends StatelessWidget {
         Row(children: [
           _Badge(
             icon: Icons.star,
-            label: 'Gold',
+            label: tier,
             color: AppColors.secondaryContainer,
             textColor: AppColors.onSecondaryContainer,
           ),
           const SizedBox(width: 8),
           _Badge(
             icon: Icons.monetization_on,
-            label: '1250 Pts',
+            label: '$poin Pts',
             color: AppColors.errorContainer,
             textColor: AppColors.error,
           ),

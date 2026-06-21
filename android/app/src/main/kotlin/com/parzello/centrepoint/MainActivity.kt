@@ -1,4 +1,4 @@
-package com.example.centrepoint
+package com.parzello.centrepoint
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -5,7 +5,7 @@ import '../dummy/dummy_poin.dart';
 abstract class PoinRepository extends ChangeNotifier {
   List<PoinEntryModel> get poinEntries;
   List<LeaderboardEntryModel> get leaderboard;
-  void addPoinEntry(PoinEntryModel entry);
+  Future<void> addPoinEntry(PoinEntryModel entry);
 }
 
 class DummyPoinRepository extends PoinRepository {
@@ -19,7 +19,7 @@ class DummyPoinRepository extends PoinRepository {
   List<LeaderboardEntryModel> get leaderboard => List.unmodifiable(_leaderboard);
 
   @override
-  void addPoinEntry(PoinEntryModel entry) {
+  Future<void> addPoinEntry(PoinEntryModel entry) async {
     _poinEntries.insert(0, entry);
     _recalculateLeaderboard(entry.memberId, entry.memberNama, entry.poin);
     notifyListeners();
@@ -81,7 +81,7 @@ class ApiPoinRepository extends PoinRepository {
   List<LeaderboardEntryModel> get leaderboard => List.unmodifiable(_leaderboard);
 
   @override
-  void addPoinEntry(PoinEntryModel entry) {
+  Future<void> addPoinEntry(PoinEntryModel entry) async {
     // POST /api/poin
     _poinEntries.insert(0, entry);
     _recalculateLeaderboard(entry.memberId, entry.memberNama, entry.poin);

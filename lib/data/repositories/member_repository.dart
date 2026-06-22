@@ -4,12 +4,12 @@ import '../dummy/dummy_members.dart';
 
 abstract class MemberRepository extends ChangeNotifier {
   List<MemberModel> get members;
-  void addMember(MemberModel member);
-  void updateMember(MemberModel member);
-  void updatePoin(String id, int poinChange);
-  void assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan});
-  void verifyMember(String id);
-  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin});
+  Future<void> addMember(MemberModel member);
+  Future<void> updateMember(MemberModel member);
+  Future<void> updatePoin(String id, int poinChange);
+  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan});
+  Future<void> verifyMember(String id);
+  Future<void> updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin});
 }
 
 class DummyMemberRepository extends MemberRepository {
@@ -19,13 +19,13 @@ class DummyMemberRepository extends MemberRepository {
   List<MemberModel> get members => List.unmodifiable(_members);
 
   @override
-  void addMember(MemberModel member) {
+  Future<void> addMember(MemberModel member) async {
     _members.add(member);
     notifyListeners();
   }
 
   @override
-  void updateMember(MemberModel member) {
+  Future<void> updateMember(MemberModel member) async {
     final idx = _members.indexWhere((m) => m.id == member.id);
     if (idx != -1) {
       _members[idx] = member;
@@ -34,7 +34,7 @@ class DummyMemberRepository extends MemberRepository {
   }
 
   @override
-  void updatePoin(String id, int poinChange) {
+  Future<void> updatePoin(String id, int poinChange) async {
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
       final currentPoin = _members[idx].totalPoin + poinChange;
@@ -55,7 +55,7 @@ class DummyMemberRepository extends MemberRepository {
   }
 
   @override
-  void assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) {
+  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) async {
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
       _members[idx] = _members[idx].copyWith(
@@ -68,7 +68,7 @@ class DummyMemberRepository extends MemberRepository {
   }
 
   @override
-  void verifyMember(String id) {
+  Future<void> verifyMember(String id) async {
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
       _members[idx] = _members[idx].copyWith(isActive: true, status: 'Aktif');
@@ -77,7 +77,7 @@ class DummyMemberRepository extends MemberRepository {
   }
 
   @override
-  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) {
+  Future<void> updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) async {
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
       _members[idx] = _members[idx].copyWith(
@@ -107,14 +107,14 @@ class ApiMemberRepository extends MemberRepository {
   List<MemberModel> get members => List.unmodifiable(_members);
 
   @override
-  void addMember(MemberModel member) {
+  Future<void> addMember(MemberModel member) async {
     // POST /api/members
     _members.add(member);
     notifyListeners();
   }
 
   @override
-  void updateMember(MemberModel member) {
+  Future<void> updateMember(MemberModel member) async {
     // PUT /api/members/${member.id}
     final idx = _members.indexWhere((m) => m.id == member.id);
     if (idx != -1) {
@@ -124,7 +124,7 @@ class ApiMemberRepository extends MemberRepository {
   }
 
   @override
-  void updatePoin(String id, int poinChange) {
+  Future<void> updatePoin(String id, int poinChange) async {
     // POST /api/members/$id/poin
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
@@ -135,7 +135,7 @@ class ApiMemberRepository extends MemberRepository {
   }
 
   @override
-  void assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) {
+  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) async {
     // POST /api/members/$id/role
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
@@ -145,7 +145,7 @@ class ApiMemberRepository extends MemberRepository {
   }
 
   @override
-  void verifyMember(String id) {
+  Future<void> verifyMember(String id) async {
     // POST /api/members/$id/verify
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {
@@ -155,7 +155,7 @@ class ApiMemberRepository extends MemberRepository {
   }
 
   @override
-  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) {
+  Future<void> updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) async {
     // POST /api/members/$id/status
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx != -1) {

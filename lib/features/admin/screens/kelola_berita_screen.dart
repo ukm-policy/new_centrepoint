@@ -9,6 +9,7 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/berita_model.dart';
 import '../../../data/repositories/berita_repository.dart';
+import '../../../core/session/app_session.dart';
 
 class KelolaBeritaScreen extends StatefulWidget {
   const KelolaBeritaScreen({super.key});
@@ -128,8 +129,8 @@ class _KelolaBeritaScreenState extends State<KelolaBeritaScreen> {
                           judul: titleCtrl.text,
                           kategori: selectedCat,
                           konten: contentCtrl.text,
-                          penulisId: '1',
-                          penulisNama: 'Ahmad Ridhwan',
+                          penulisId: AppSession.id,
+                          penulisNama: AppSession.nama,
                           tanggalPublish: DateTime.now(),
                           isDraft: false,
                         );

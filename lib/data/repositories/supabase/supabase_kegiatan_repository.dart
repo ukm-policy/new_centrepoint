@@ -123,7 +123,7 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
   List<KegiatanModel> get kegiatan => List.unmodifiable(_kegiatan);
 
   @override
-  void addKegiatan(KegiatanModel item) async {
+  Future<void> addKegiatan(KegiatanModel item) async {
     try {
       final user = _db.auth.currentUser;
       // 1. Insert kegiatan
@@ -206,7 +206,7 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
   }
 
   @override
-  void updateKegiatan(KegiatanModel item) async {
+  Future<void> updateKegiatan(KegiatanModel item) async {
     try {
       // 1. Update kegiatan core fields
       await _db.from('kegiatan').update({
@@ -279,7 +279,7 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
         }
       }
 
-      _loadKegiatan();
+      await _loadKegiatan();
     } catch (e) {
       debugPrint('Error updating kegiatan: $e');
     }
@@ -314,10 +314,10 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
   }
 
   @override
-  void deleteKegiatan(String id) async {
+  Future<void> deleteKegiatan(String id) async {
     try {
       await _db.from('kegiatan').delete().eq('id', id);
-      _loadKegiatan();
+      await _loadKegiatan();
     } catch (e) {
       debugPrint('Error deleting kegiatan: $e');
     }

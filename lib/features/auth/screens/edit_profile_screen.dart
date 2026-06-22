@@ -12,7 +12,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../core/session/app_session.dart';
 import '../../../data/repositories/user_repository.dart';
-import '../../../data/models/user_model.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});

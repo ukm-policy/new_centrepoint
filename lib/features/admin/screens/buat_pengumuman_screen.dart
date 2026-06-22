@@ -1,10 +1,15 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/brutalist_card.dart';
+import '../../../data/repositories/inbox_repository.dart';
+import '../../../data/repositories/audit_log_repository.dart';
+import '../../../data/models/inbox_model.dart';
 
 class BuatPengumumanScreen extends StatefulWidget {
   const BuatPengumumanScreen({super.key});
@@ -44,19 +49,51 @@ class _BuatPengumumanScreenState extends State<BuatPengumumanScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _sending = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() => _sending = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Pengumuman berhasil disebarkan!',
-            style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
-    );
-    context.pop();
+    try {
+      final repo = context.read<InboxRepository>();
+      final now = DateTime.now();
+      final konten = _contentCtrl.text.trim();
+      repo.addPengumuman(PengumumanModel(
+        id: '',
+        kategori: _selectedCat,
+        judul: _titleCtrl.text.trim(),
+        ringkasan: konten.substring(0, min(100, konten.length)),
+        konten: [konten],
+        tanggal: now,
+        isNew: true,
+        actionLabel: _showActionCard ? _actionLabelCtrl.text.trim() : null,
+        actionRoute: _showActionCard ? _actionRouteCtrl.text.trim() : null,
+      ));
+      if (!mounted) return;
+      context.read<AuditLogRepository>().logAction(
+        aksi: 'Menyebarkan pengumuman: ${_titleCtrl.text.trim()}',
+        tipe: 'Sistem',
+        entityType: 'pengumuman',
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pengumuman berhasil disebarkan!',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(AppSpacing.marginPage),
+        ),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim pengumuman: $e',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(AppSpacing.marginPage),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   @override

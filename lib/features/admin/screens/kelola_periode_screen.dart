@@ -1,56 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../../../data/repositories/periode_repository.dart';
+import '../../../data/repositories/audit_log_repository.dart';
+import '../../../data/models/periode_model.dart';
 
-class _LocalPeriod {
-  _LocalPeriod({
-    required this.id,
-    required this.nama,
-    required this.tahun,
-    required this.aktif,
-  });
-  final String id;
-  final String nama;
-  final String tahun;
-  bool aktif;
-}
-
-class KelolaPeriodeScreen extends StatefulWidget {
+class KelolaPeriodeScreen extends StatelessWidget {
   const KelolaPeriodeScreen({super.key});
 
-  @override
-  State<KelolaPeriodeScreen> createState() => _KelolaPeriodeScreenState();
-}
-
-class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
-  late List<_LocalPeriod> _periods;
-
-  @override
-  void initState() {
-    super.initState();
-    _periods = [
-      _LocalPeriod(id: '1', nama: 'Periode 2024 / 2025', tahun: '2024', aktif: false),
-      _LocalPeriod(id: '2', nama: 'Periode 2025 / 2026', tahun: '2025', aktif: true),
-      _LocalPeriod(id: '3', nama: 'Periode 2026 / 2027', tahun: '2026', aktif: false),
-    ];
-  }
-
-  void _setActive(String id) {
-    setState(() {
-      for (final p in _periods) {
-        p.aktif = (p.id == id);
-      }
-    });
-    final activePeriod = _periods.firstWhere((p) => p.id == id);
+  void _setActive(BuildContext context, String id, String namaPeriode) {
+    context.read<PeriodeRepository>().setActivePeriode(id);
+    context.read<AuditLogRepository>().logAction(
+      aksi: 'Mengaktifkan periode: $namaPeriode',
+      tipe: 'Sistem',
+      entityId: id,
+      entityType: 'periode',
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '${activePeriod.nama} kini diset sebagai Periode Aktif!',
+          '$namaPeriode kini diset sebagai Periode Aktif!',
           style: AppTypography.bodyMd.copyWith(color: Colors.white),
         ),
         backgroundColor: AppColors.success,
@@ -60,14 +35,14 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
     );
   }
 
-  void _showCreateDialog() {
+  void _showCreateDialog(BuildContext context) {
     final nameCtrl = TextEditingController();
     final yearCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -79,7 +54,7 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
             children: [
               Text('Buat Periode Baru', style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => Navigator.pop(dialogContext),
                 child: const Icon(Icons.close, color: AppColors.tertiary),
               ),
             ],
@@ -91,8 +66,7 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const MyDivider(color: AppColors.borderSlate, height: 16),
-                
-                // Nama
+
                 Text('NAMA PERIODE', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                 const SizedBox(height: 6),
                 TextFormField(
@@ -103,7 +77,6 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
                 ),
                 const SizedBox(height: AppSpacing.stackGap),
 
-                // Tahun
                 Text('TAHUN MULAI', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                 const SizedBox(height: 6),
                 TextFormField(
@@ -111,7 +84,11 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
                   keyboardType: TextInputType.number,
                   style: AppTypography.bodyMd,
                   decoration: const InputDecoration(hintText: 'Contoh: 2027'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Tahun wajib diisi' : null,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Tahun wajib diisi';
+                    if (int.tryParse(v) == null) return 'Tahun harus berupa angka';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
 
@@ -120,15 +97,20 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
                   icon: Icons.check,
                   onPressed: () {
                     if (!formKey.currentState!.validate()) return;
-                    setState(() {
-                      _periods.add(_LocalPeriod(
-                        id: '${_periods.length + 1}',
-                        nama: nameCtrl.text,
-                        tahun: yearCtrl.text,
-                        aktif: false,
-                      ));
-                    });
-                    Navigator.pop(context);
+                    final year = int.parse(yearCtrl.text.trim());
+                    context.read<PeriodeRepository>().addPeriode(PeriodeModel(
+                      id: '',
+                      nama: nameCtrl.text.trim(),
+                      tanggalMulai: DateTime(year, 1, 1),
+                      tanggalSelesai: DateTime(year + 1, 12, 31),
+                      isActive: false,
+                    ));
+                    context.read<AuditLogRepository>().logAction(
+                      aksi: 'Membuat periode baru: ${nameCtrl.text.trim()}',
+                      tipe: 'Sistem',
+                      entityType: 'periode',
+                    );
+                    Navigator.pop(dialogContext);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Periode baru berhasil dibuat!', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
@@ -189,7 +171,7 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateDialog,
+        onPressed: () => _showCreateDialog(context),
         backgroundColor: AppColors.primaryContainer,
         foregroundColor: AppColors.onPrimaryContainer,
         shape: RoundedRectangleBorder(
@@ -200,61 +182,72 @@ class _KelolaPeriodeScreenState extends State<KelolaPeriodeScreen> {
         label: Text('Tambah Periode', style: AppTypography.labelBold.copyWith(fontSize: 12)),
       ),
       body: SafeArea(
-        child: ListView.builder(
-          padding: const EdgeInsets.all(AppSpacing.marginPage),
-          itemCount: _periods.length,
-          itemBuilder: (context, i) {
-            final p = _periods[i];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
-              child: BrutalistCard(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            p.nama,
-                            style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Tahun Mulai: ${p.tahun}',
-                            style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 12),
-                          ),
-                          const SizedBox(height: 8),
-                          // Status Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: p.aktif ? AppColors.success : AppColors.surfaceContainerHigh,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                              border: Border.all(color: AppColors.blackCharcoal, width: 1.2),
-                            ),
-                            child: Text(
-                              p.aktif ? 'AKTIF' : 'TIDAK AKTIF',
-                              style: AppTypography.labelBold.copyWith(
-                                color: p.aktif ? Colors.white : AppColors.tertiary,
-                                fontSize: 8,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Toggle Switch (only if not already active)
-                    if (!p.aktif)
-                      BrutalistButton(
-                        label: 'AKTIFKAN',
-                        fullWidth: false,
-                        onPressed: () => _setActive(p.id),
-                      ),
-                  ],
+        child: Consumer<PeriodeRepository>(
+          builder: (context, repo, _) {
+            final periods = repo.periodes;
+            if (periods.isEmpty) {
+              return Center(
+                child: Text(
+                  'Belum ada periode kepengurusan.',
+                  style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
                 ),
-              ),
+              );
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(AppSpacing.marginPage),
+              itemCount: periods.length,
+              itemBuilder: (context, i) {
+                final p = periods[i];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
+                  child: BrutalistCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                p.nama,
+                                style: AppTypography.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Tahun Mulai: ${p.tanggalMulai.year}',
+                                style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 12),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: p.isActive ? AppColors.success : AppColors.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  border: Border.all(color: AppColors.blackCharcoal, width: 1.2),
+                                ),
+                                child: Text(
+                                  p.isActive ? 'AKTIF' : 'TIDAK AKTIF',
+                                  style: AppTypography.labelBold.copyWith(
+                                    color: p.isActive ? Colors.white : AppColors.tertiary,
+                                    fontSize: 8,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        if (!p.isActive)
+                          BrutalistButton(
+                            label: 'AKTIFKAN',
+                            fullWidth: false,
+                            onPressed: () => _setActive(context, p.id, p.nama),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),

@@ -5,8 +5,8 @@ import '../dummy/dummy_periode.dart';
 abstract class PeriodeRepository extends ChangeNotifier {
   List<PeriodeModel> get periodes;
   PeriodeModel get activePeriode;
-  void addPeriode(PeriodeModel item);
-  void setActivePeriode(String id);
+  Future<void> addPeriode(PeriodeModel item);
+  Future<void> setActivePeriode(String id);
 }
 
 class DummyPeriodeRepository extends PeriodeRepository {
@@ -22,13 +22,13 @@ class DummyPeriodeRepository extends PeriodeRepository {
       );
 
   @override
-  void addPeriode(PeriodeModel item) {
+  Future<void> addPeriode(PeriodeModel item) async {
     _periodes.insert(0, item);
     notifyListeners();
   }
 
   @override
-  void setActivePeriode(String id) {
+  Future<void> setActivePeriode(String id) async {
     for (int i = 0; i < _periodes.length; i++) {
       if (_periodes[i].id == id) {
         _periodes[i] = _periodes[i].copyWith(isActive: true);
@@ -71,14 +71,14 @@ class ApiPeriodeRepository extends PeriodeRepository {
         );
 
   @override
-  void addPeriode(PeriodeModel item) {
+  Future<void> addPeriode(PeriodeModel item) async {
     // POST /api/periodes
     _periodes.insert(0, item);
     notifyListeners();
   }
 
   @override
-  void setActivePeriode(String id) {
+  Future<void> setActivePeriode(String id) async {
     // POST /api/periodes/$id/activate
     for (int i = 0; i < _periodes.length; i++) {
       if (_periodes[i].id == id) {

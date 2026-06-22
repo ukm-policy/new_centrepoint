@@ -1,14 +1,16 @@
 import 'package:flutter/foundation.dart';
 import '../models/uang_khas_model.dart';
+import '../models/rekap_model.dart';
 import '../dummy/dummy_uang_khas.dart';
 
 abstract class UangKhasRepository extends ChangeNotifier {
   List<UangKhasBulanModel> get khasBulan;
   List<TransaksiKhasModel> get transaksi;
-  void payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl);
-  void addTransaksi(TransaksiKhasModel tx);
-  void verifyPayment(String id, String memberNama);
-  void rejectPayment(String id);
+  Future<void> payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl);
+  Future<void> addTransaksi(TransaksiKhasModel tx);
+  Future<void> verifyPayment(String id, String memberNama);
+  Future<void> rejectPayment(String id);
+  Future<List<RekapBidangModel>> getRekapKeuangan(int tahun, int semester);
 }
 
 class DummyUangKhasRepository extends UangKhasRepository {
@@ -22,7 +24,7 @@ class DummyUangKhasRepository extends UangKhasRepository {
   List<TransaksiKhasModel> get transaksi => List.unmodifiable(_transaksi);
 
   @override
-  void payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl) {
+  Future<void> payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl) async {
     final newRecord = UangKhasBulanModel(
       id: 'k-${DateTime.now().millisecondsSinceEpoch}',
       memberId: memberId,
@@ -49,13 +51,13 @@ class DummyUangKhasRepository extends UangKhasRepository {
   }
 
   @override
-  void addTransaksi(TransaksiKhasModel tx) {
+  Future<void> addTransaksi(TransaksiKhasModel tx) async {
     _transaksi.insert(0, tx);
     notifyListeners();
   }
 
   @override
-  void verifyPayment(String id, String memberNama) {
+  Future<void> verifyPayment(String id, String memberNama) async {
     final idx = _khasBulan.indexWhere((k) => k.id == id);
     if (idx != -1) {
       final oldRecord = _khasBulan[idx];
@@ -76,7 +78,7 @@ class DummyUangKhasRepository extends UangKhasRepository {
   }
 
   @override
-  void rejectPayment(String id) {
+  Future<void> rejectPayment(String id) async {
     final idx = _khasBulan.indexWhere((k) => k.id == id);
     if (idx != -1) {
       _khasBulan[idx] = _khasBulan[idx].copyWith(
@@ -86,6 +88,13 @@ class DummyUangKhasRepository extends UangKhasRepository {
       _transaksi.removeWhere((t) => t.isPending && t.jumlah == _khasBulan[idx].nominal);
       notifyListeners();
     }
+  }
+
+  @override
+  Future<List<RekapBidangModel>> getRekapKeuangan(int tahun, int semester) async {
+    return [
+      RekapBidangModel(bidang: 'Umum', jumlahAnggota: 5, target: 500000, terkumpul: 450000),
+    ];
   }
 }
 
@@ -111,7 +120,7 @@ class ApiUangKhasRepository extends UangKhasRepository {
   List<TransaksiKhasModel> get transaksi => List.unmodifiable(_transaksi);
 
   @override
-  void payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl) {
+  Future<void> payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl) async {
     // POST /api/khas/pay
     final newRecord = UangKhasBulanModel(
       id: 'k-${DateTime.now().millisecondsSinceEpoch}',
@@ -139,14 +148,14 @@ class ApiUangKhasRepository extends UangKhasRepository {
   }
 
   @override
-  void addTransaksi(TransaksiKhasModel tx) {
+  Future<void> addTransaksi(TransaksiKhasModel tx) async {
     // POST /api/khas/transaksi
     _transaksi.insert(0, tx);
     notifyListeners();
   }
 
   @override
-  void verifyPayment(String id, String memberNama) {
+  Future<void> verifyPayment(String id, String memberNama) async {
     // POST /api/khas/verify/$id
     final idx = _khasBulan.indexWhere((k) => k.id == id);
     if (idx != -1) {
@@ -168,7 +177,7 @@ class ApiUangKhasRepository extends UangKhasRepository {
   }
 
   @override
-  void rejectPayment(String id) {
+  Future<void> rejectPayment(String id) async {
     // POST /api/khas/reject/$id
     final idx = _khasBulan.indexWhere((k) => k.id == id);
     if (idx != -1) {
@@ -179,6 +188,13 @@ class ApiUangKhasRepository extends UangKhasRepository {
       _transaksi.removeWhere((t) => t.isPending && t.jumlah == _khasBulan[idx].nominal);
       notifyListeners();
     }
+  }
+
+  @override
+  Future<List<RekapBidangModel>> getRekapKeuangan(int tahun, int semester) async {
+    return [
+      RekapBidangModel(bidang: 'Umum', jumlahAnggota: 5, target: 500000, terkumpul: 450000),
+    ];
   }
 }
 

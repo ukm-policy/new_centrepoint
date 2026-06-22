@@ -5,10 +5,10 @@ import '../dummy/dummy_berita.dart';
 abstract class BeritaRepository extends ChangeNotifier {
   List<BeritaModel> get berita;
   List<BeritaModel> get publishedBerita;
-  void addBerita(BeritaModel item);
-  void updateBerita(BeritaModel item);
-  void deleteBerita(String id);
-  void publishBerita(String id);
+  Future<void> addBerita(BeritaModel item);
+  Future<void> updateBerita(BeritaModel item);
+  Future<void> deleteBerita(String id);
+  Future<void> publishBerita(String id);
 }
 
 class DummyBeritaRepository extends BeritaRepository {
@@ -22,13 +22,13 @@ class DummyBeritaRepository extends BeritaRepository {
       _berita.where((b) => !b.isDraft).toList();
 
   @override
-  void addBerita(BeritaModel item) {
+  Future<void> addBerita(BeritaModel item) async {
     _berita.insert(0, item);
     notifyListeners();
   }
 
   @override
-  void updateBerita(BeritaModel item) {
+  Future<void> updateBerita(BeritaModel item) async {
     final idx = _berita.indexWhere((b) => b.id == item.id);
     if (idx != -1) {
       _berita[idx] = item;
@@ -37,13 +37,13 @@ class DummyBeritaRepository extends BeritaRepository {
   }
 
   @override
-  void deleteBerita(String id) {
+  Future<void> deleteBerita(String id) async {
     _berita.removeWhere((b) => b.id == id);
     notifyListeners();
   }
 
   @override
-  void publishBerita(String id) {
+  Future<void> publishBerita(String id) async {
     final idx = _berita.indexWhere((b) => b.id == id);
     if (idx != -1) {
       _berita[idx] = _berita[idx].copyWith(isDraft: false, tanggalPublish: DateTime.now());
@@ -73,14 +73,14 @@ class ApiBeritaRepository extends BeritaRepository {
       _berita.where((b) => !b.isDraft).toList();
 
   @override
-  void addBerita(BeritaModel item) {
+  Future<void> addBerita(BeritaModel item) async {
     // POST /api/berita
     _berita.insert(0, item);
     notifyListeners();
   }
 
   @override
-  void updateBerita(BeritaModel item) {
+  Future<void> updateBerita(BeritaModel item) async {
     // PUT /api/berita/${item.id}
     final idx = _berita.indexWhere((b) => b.id == item.id);
     if (idx != -1) {
@@ -90,14 +90,14 @@ class ApiBeritaRepository extends BeritaRepository {
   }
 
   @override
-  void deleteBerita(String id) {
+  Future<void> deleteBerita(String id) async {
     // DELETE /api/berita/$id
     _berita.removeWhere((b) => b.id == id);
     notifyListeners();
   }
 
   @override
-  void publishBerita(String id) {
+  Future<void> publishBerita(String id) async {
     // POST /api/berita/$id/publish
     final idx = _berita.indexWhere((b) => b.id == id);
     if (idx != -1) {

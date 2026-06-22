@@ -27,6 +27,10 @@ import 'data/repositories/supabase/supabase_uang_khas_repository.dart';
 import 'data/repositories/supabase/supabase_inbox_repository.dart';
 import 'data/repositories/supabase/supabase_or_repository.dart';
 import 'data/repositories/supabase/supabase_periode_repository.dart';
+import 'data/repositories/qr_session_repository.dart';
+import 'data/repositories/audit_log_repository.dart';
+import 'data/repositories/supabase/supabase_qr_session_repository.dart';
+import 'data/repositories/supabase/supabase_audit_log_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +74,12 @@ void main() async {
         ),
         ChangeNotifierProvider<PeriodeRepository>(
           create: (_) => SupabasePeriodeRepository(),
+        ),
+        ChangeNotifierProvider<QrSessionRepository>(
+          create: (_) => SupabaseQrSessionRepository(),
+        ),
+        ChangeNotifierProvider<AuditLogRepository>(
+          create: (_) => SupabaseAuditLogRepository(),
         ),
       ],
       child: const App(),

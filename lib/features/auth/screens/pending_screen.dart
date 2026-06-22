@@ -20,6 +20,8 @@ class _PendingScreenState extends State<PendingScreen> {
   bool _checking = false;
 
   Future<void> _refreshStatus() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
     setState(() => _checking = true);
     try {
       await Supabase.instance.client.auth.refreshSession();
@@ -27,7 +29,7 @@ class _PendingScreenState extends State<PendingScreen> {
       
       final status = AppSession.status;
       if (status == 'active') {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('Akun Anda telah terverifikasi! Mengalihkan...',
                 style: AppTypography.bodyMd.copyWith(color: Colors.white)),
@@ -37,9 +39,9 @@ class _PendingScreenState extends State<PendingScreen> {
             duration: const Duration(seconds: 2),
           ),
         );
-        context.go('/');
+        router.go('/');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('Akun Anda masih dalam proses verifikasi pengurus.',
                 style: AppTypography.bodyMd.copyWith(color: Colors.white)),
@@ -52,7 +54,7 @@ class _PendingScreenState extends State<PendingScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text('Gagal memperbarui status: $e',
               style: AppTypography.bodyMd.copyWith(color: Colors.white)),
@@ -179,14 +181,16 @@ class _PendingScreenState extends State<PendingScreen> {
                     variant: BrutalistButtonVariant.secondary,
                     icon: Icons.logout_outlined,
                     onPressed: () async {
+                      final router = GoRouter.of(context);
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
                       try {
                         await Supabase.instance.client.auth.signOut();
                         if (mounted) {
-                          context.go('/login');
+                          router.go('/login');
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          scaffoldMessenger.showSnackBar(
                             SnackBar(
                               content: Text('Gagal keluar: $e',
                                   style: AppTypography.bodyMd.copyWith(color: Colors.white)),

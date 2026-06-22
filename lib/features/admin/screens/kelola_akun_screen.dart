@@ -126,7 +126,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                       Switch(
                         value: tempIsAdmin,
                         onChanged: (v) => setModalState(() => tempIsAdmin = v),
-                        activeColor: AppColors.primaryContainer,
+                        activeThumbColor: AppColors.primaryContainer,
                       ),
                     ],
                   ),

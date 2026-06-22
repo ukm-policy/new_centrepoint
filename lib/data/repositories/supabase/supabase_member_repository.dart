@@ -138,12 +138,12 @@ class SupabaseMemberRepository extends MemberRepository {
   List<MemberModel> get members => List.unmodifiable(_members);
 
   @override
-  void addMember(MemberModel member) {
+  Future<void> addMember(MemberModel member) async {
     // Handled by Auth SignUp
   }
 
   @override
-  void updateMember(MemberModel member) async {
+  Future<void> updateMember(MemberModel member) async {
     try {
       await _db.from('profiles').update({
         'nama': member.nama,
@@ -155,14 +155,14 @@ class SupabaseMemberRepository extends MemberRepository {
         'status': member.status == 'Aktif' ? 'active' : (member.status == 'Suspended' ? 'suspended' : 'pending'),
         'is_admin': member.isAdmin,
       }).eq('id', member.id);
-      _loadMembers();
+      await _loadMembers();
     } catch (e) {
       debugPrint('Error updating member: $e');
     }
   }
 
   @override
-  void updatePoin(String id, int poinChange) async {
+  Future<void> updatePoin(String id, int poinChange) async {
     try {
       final user = _members.firstWhere((m) => m.id == id);
       await _db.from('poin_entry').insert({
@@ -173,14 +173,14 @@ class SupabaseMemberRepository extends MemberRepository {
         'poin': poinChange,
         'tanggal': DateTime.now().toIso8601String().substring(0, 10),
       });
-      _loadMembers();
+      await _loadMembers();
     } catch (e) {
       debugPrint('Error updating points: $e');
     }
   }
 
   @override
-  void assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) async {
+  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) async {
     try {
       // 1. Get jabatan details from DB matching the inputs
       final jabData = await _db.from('jabatan').select().eq('kode_role', role).maybeSingle();
@@ -199,26 +199,26 @@ class SupabaseMemberRepository extends MemberRepository {
         'periode_id': pid,
       }, onConflict: 'user_id, jabatan_id, periode_id');
       
-      _loadMembers();
+      await _loadMembers();
     } catch (e) {
       debugPrint('Error assigning role: $e');
     }
   }
 
   @override
-  void verifyMember(String id) async {
+  Future<void> verifyMember(String id) async {
     try {
       await _db.from('profiles').update({
         'status': 'active',
       }).eq('id', id);
-      _loadMembers();
+      await _loadMembers();
     } catch (e) {
       debugPrint('Error verifying member: $e');
     }
   }
 
   @override
-  void updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) async {
+  Future<void> updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin}) async {
     try {
       final dbStatus = status == 'Aktif' ? 'active' : (status == 'Suspended' ? 'suspended' : 'pending');
       final Map<String, dynamic> updates = {
@@ -244,7 +244,7 @@ class SupabaseMemberRepository extends MemberRepository {
           }, onConflict: 'user_id, jabatan_id, periode_id');
         }
       }
-      _loadMembers();
+      await _loadMembers();
     } catch (e) {
       debugPrint('Error updating status and level: $e');
     }

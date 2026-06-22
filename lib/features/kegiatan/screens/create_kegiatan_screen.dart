@@ -11,6 +11,7 @@ import '../../../data/models/kegiatan_model.dart';
 import '../../../data/models/member_model.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
 import '../../../data/repositories/member_repository.dart';
+import '../../../data/repositories/periode_repository.dart';
 
 // ── Sie Form Entry ─────────────────────────────────────────────────────────────
 
@@ -107,45 +108,64 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
       );
       return;
     }
+
+    // Ambil periode aktif — wajib ada sebelum bisa buat kegiatan
+    final periodeRepo = context.read<PeriodeRepository>();
+    final aktivePeriode = periodeRepo.periodes.where((p) => p.isActive).firstOrNull;
+    if (aktivePeriode == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tidak ada periode aktif. Aktifkan periode terlebih dahulu.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
+    try {
+      PanitiaModel toPanitia(MemberModel m) =>
+          PanitiaModel(memberId: m.id, nama: m.nama, nim: m.nim);
 
-    final kegiatanRepo = context.read<KegiatanRepository>();
-    final newId = (kegiatanRepo.kegiatan.length + 1).toString();
+      final sieListMapped = _sieList.map((s) => SieModel(
+        namaSie: s.namaCtrl.text.trim(),
+        ketua: s.selectedKetua != null ? toPanitia(s.selectedKetua!) : null,
+        anggota: s.selectedAnggota.map(toPanitia).toList(),
+      )).toList();
 
-    PanitiaModel toPanitia(MemberModel m) =>
-        PanitiaModel(memberId: m.id, nama: m.nama, nim: m.nim);
+      await context.read<KegiatanRepository>().addKegiatan(KegiatanModel(
+        id: '',
+        judul: _namaCtrl.text.trim(),
+        deskripsi: _deskripsiCtrl.text.trim(),
+        tanggal: _pickedDateRaw ?? DateTime.now(),
+        waktu: _waktuCtrl.text.trim(),
+        lokasi: _lokasiCtrl.text.trim(),
+        status: 'Akan Datang',
+        kuota: int.tryParse(_kuotaCtrl.text.trim()) ?? 0,
+        pesertaTerdaftar: 0,
+        ketuaPelaksana: _selectedKetua != null ? toPanitia(_selectedKetua!) : null,
+        sekretarisPelaksana: _selectedSekretaris != null ? toPanitia(_selectedSekretaris!) : null,
+        bendaharaPelaksana: _selectedBendahara != null ? toPanitia(_selectedBendahara!) : null,
+        sie: sieListMapped,
+        periodeId: aktivePeriode.id,
+      ));
 
-    final sieListMapped = _sieList.map((s) => SieModel(
-      namaSie: s.namaCtrl.text.trim(),
-      ketua: s.selectedKetua != null ? toPanitia(s.selectedKetua!) : null,
-      anggota: s.selectedAnggota.map(toPanitia).toList(),
-    )).toList();
-
-    kegiatanRepo.addKegiatan(KegiatanModel(
-      id: newId,
-      judul: _namaCtrl.text.trim(),
-      deskripsi: _deskripsiCtrl.text.trim(),
-      tanggal: _pickedDateRaw ?? DateTime.now(),
-      waktu: _waktuCtrl.text.trim(),
-      lokasi: _lokasiCtrl.text.trim(),
-      status: 'Akan Datang',
-      kuota: int.tryParse(_kuotaCtrl.text.trim()) ?? 0,
-      pesertaTerdaftar: 0,
-      ketuaPelaksana: _selectedKetua != null ? toPanitia(_selectedKetua!) : null,
-      sekretarisPelaksana: _selectedSekretaris != null ? toPanitia(_selectedSekretaris!) : null,
-      bendaharaPelaksana: _selectedBendahara != null ? toPanitia(_selectedBendahara!) : null,
-      sie: sieListMapped,
-      periodeId: 'p-1',
-    ));
-
-    setState(() => _loading = false);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Kegiatan berhasil dibuat!')),
-    );
-    context.pop();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kegiatan berhasil dibuat!')),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal membuat kegiatan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _pickDate() async {

@@ -4,10 +4,10 @@ import '../dummy/dummy_kegiatan.dart';
 
 abstract class KegiatanRepository extends ChangeNotifier {
   List<KegiatanModel> get kegiatan;
-  void addKegiatan(KegiatanModel item);
-  void updateKegiatan(KegiatanModel item);
+  Future<void> addKegiatan(KegiatanModel item);
+  Future<void> updateKegiatan(KegiatanModel item);
   void registerParticipant(String id);
-  void deleteKegiatan(String id);
+  Future<void> deleteKegiatan(String id);
 }
 
 class DummyKegiatanRepository extends KegiatanRepository {
@@ -17,13 +17,13 @@ class DummyKegiatanRepository extends KegiatanRepository {
   List<KegiatanModel> get kegiatan => List.unmodifiable(_kegiatan);
 
   @override
-  void addKegiatan(KegiatanModel item) {
+  Future<void> addKegiatan(KegiatanModel item) async {
     _kegiatan.insert(0, item);
     notifyListeners();
   }
 
   @override
-  void updateKegiatan(KegiatanModel item) {
+  Future<void> updateKegiatan(KegiatanModel item) async {
     final idx = _kegiatan.indexWhere((k) => k.id == item.id);
     if (idx != -1) {
       _kegiatan[idx] = item;
@@ -45,7 +45,7 @@ class DummyKegiatanRepository extends KegiatanRepository {
   }
 
   @override
-  void deleteKegiatan(String id) {
+  Future<void> deleteKegiatan(String id) async {
     _kegiatan.removeWhere((k) => k.id == id);
     notifyListeners();
   }
@@ -68,14 +68,14 @@ class ApiKegiatanRepository extends KegiatanRepository {
   List<KegiatanModel> get kegiatan => List.unmodifiable(_kegiatan);
 
   @override
-  void addKegiatan(KegiatanModel item) {
+  Future<void> addKegiatan(KegiatanModel item) async {
     // POST /api/kegiatan
     _kegiatan.insert(0, item);
     notifyListeners();
   }
 
   @override
-  void updateKegiatan(KegiatanModel item) {
+  Future<void> updateKegiatan(KegiatanModel item) async {
     // PUT /api/kegiatan/${item.id}
     final idx = _kegiatan.indexWhere((k) => k.id == item.id);
     if (idx != -1) {
@@ -99,7 +99,7 @@ class ApiKegiatanRepository extends KegiatanRepository {
   }
 
   @override
-  void deleteKegiatan(String id) {
+  Future<void> deleteKegiatan(String id) async {
     // DELETE /api/kegiatan/$id
     _kegiatan.removeWhere((k) => k.id == id);
     notifyListeners();

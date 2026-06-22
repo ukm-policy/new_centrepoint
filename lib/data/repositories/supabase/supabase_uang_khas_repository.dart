@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/uang_khas_model.dart';
+import '../../models/rekap_model.dart';
 import '../uang_khas_repository.dart';
 
 class SupabaseUangKhasRepository extends UangKhasRepository {
@@ -102,7 +103,7 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
   List<TransaksiKhasModel> get transaksi => List.unmodifiable(_transaksi);
 
   @override
-  void payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl) async {
+  Future<void> payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl) async {
     try {
       // 1. Insert/Upsert payment entry
       final khasRes = await _db.from('uang_khas_bulan').upsert({
@@ -128,14 +129,14 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
         'keterangan': 'Bukti Pembayaran Ref ID: $kid',
       });
 
-      _loadUangKhas();
+      await _loadUangKhas();
     } catch (e) {
       debugPrint('Error paying uang khas: $e');
     }
   }
 
   @override
-  void addTransaksi(TransaksiKhasModel tx) async {
+  Future<void> addTransaksi(TransaksiKhasModel tx) async {
     try {
       final user = _db.auth.currentUser;
       await _db.from('transaksi_khas').insert({
@@ -147,14 +148,14 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
         'keterangan': tx.keterangan,
         'created_by': user?.id,
       });
-      _loadUangKhas();
+      await _loadUangKhas();
     } catch (e) {
       debugPrint('Error adding transaksi: $e');
     }
   }
 
   @override
-  void verifyPayment(String id, String memberNama) async {
+  Future<void> verifyPayment(String id, String memberNama) async {
     try {
       final user = _db.auth.currentUser;
       // 1. Verify payment entry
@@ -182,14 +183,14 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
         }).eq('id', txId);
       }
 
-      _loadUangKhas();
+      await _loadUangKhas();
     } catch (e) {
       debugPrint('Error verifying payment: $e');
     }
   }
 
   @override
-  void rejectPayment(String id) async {
+  Future<void> rejectPayment(String id) async {
     try {
       // 1. Delete payment entry or set to belumBayar
       final khasData = await _db.from('uang_khas_bulan').update({
@@ -208,9 +209,30 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
           .eq('jumlah', nominal)
           .like('keterangan', '%$id%');
 
-      _loadUangKhas();
+      await _loadUangKhas();
     } catch (e) {
       debugPrint('Error rejecting payment: $e');
+    }
+  }
+
+  @override
+  Future<List<RekapBidangModel>> getRekapKeuangan(int tahun, int semester) async {
+    try {
+      final data = await _db.rpc('get_rekap_keuangan', params: {
+        'p_tahun': tahun,
+        'p_semester': semester,
+      });
+      return (data as List).map<RekapBidangModel>((json) {
+        return RekapBidangModel(
+          bidang: json['bidang'] as String? ?? 'Umum',
+          jumlahAnggota: (json['jumlah_anggota'] as num?)?.toInt() ?? 0,
+          target: (json['target'] as num?)?.toInt() ?? 0,
+          terkumpul: (json['terkumpul'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching rekap keuangan: $e');
+      return [];
     }
   }
 }

@@ -15,15 +15,15 @@
 | 5 | Kelola Kegiatan | `kelola_kegiatan_screen.dart` | ✅ **SELESAI** | KegiatanRepository + panitia/sie |
 | 6 | Uang Kas Admin | `uang_khas_admin_screen.dart` | ✅ **SELESAI** | UangKhasRepository |
 | 7 | Verifikasi Kas | `verifikasi_khas_screen.dart` | ✅ **SELESAI** | Verifikasi bukti bayar |
-| 8 | Buat Pengumuman | `buat_pengumuman_screen.dart` | ⚠️ **PARTIAL** | UI selesai, `_submit()` masih fake delay |
-| 9 | Kelola Poin | `kelola_poin_screen.dart` | ⚠️ **PARTIAL** | Read dari MemberRepo, tulis masih lokal |
-| 10 | QR Generator | `qr_generator_screen.dart` | ⚠️ **PARTIAL** | Read KegiatanRepo, QR & timer UI-only |
-| 11 | Verifikasi Anggota | `verifikasi_anggota_screen.dart` | ❌ **DUMMY** | Data hardcoded, approve/reject lokal |
-| 12 | Kelola Periode | `kelola_periode_screen.dart` | ❌ **DUMMY** | Data lokal, tapi PeriodeRepo sudah ada |
-| 13 | Rekap Keuangan | `rekap_keuangan_screen.dart` | ❌ **DUMMY** | Semua angka hardcoded |
-| 14 | Audit Log | `audit_log_screen.dart` | ❌ **DUMMY** | Log hardcoded, tabel belum ada |
+| 8 | Buat Pengumuman | `buat_pengumuman_screen.dart` | ✅ **SELESAI** | `_submit()` inject InboxRepository → Supabase `pengumuman` |
+| 9 | Kelola Poin | `kelola_poin_screen.dart` | ✅ **SELESAI** | PoinRepository untuk riwayat & mutasi; division filter dinamis |
+| 10 | QR Generator | `qr_generator_screen.dart` | ✅ **SELESAI** | QrSessionRepository → Supabase `qr_session`; QR real via qr_flutter; Timer dari expired_at |
+| 11 | Verifikasi Anggota | `verifikasi_anggota_screen.dart` | ✅ **SELESAI** | ORRepository — reviewApplicant() ke Supabase `or_pelamar` |
+| 12 | Kelola Periode | `kelola_periode_screen.dart` | ✅ **SELESAI** | Consumer<PeriodeRepository> — addPeriode/setActivePeriode realtime |
+| 13 | Rekap Keuangan | `rekap_keuangan_screen.dart` | ✅ **SELESAI** | RPC `get_rekap_keuangan` → agregasi per bidang; export CSV via share_plus |
+| 14 | Audit Log | `audit_log_screen.dart` | ✅ **SELESAI** | Tabel `audit_log` di Supabase; AuditLogRepository; injected di 5 screen admin |
 
-**Summary:** 7 selesai · 3 partial · 4 dummy
+**Summary:** 14 selesai · 0 partial · 0 dummy ✅ **SEMUA SELESAI** *(update: 22 Juni 2026)*
 
 ---
 
@@ -42,17 +42,17 @@ Semua repository sudah menggunakan **ChangeNotifier + Realtime subscription**. P
 ## 3. Roadmap Berdasarkan Prioritas
 
 ### FASE 1 — Quick Win (Repository sudah siap, tinggal wiring)
-> Estimasi: 1–2 hari
+> Estimasi: 1–2 hari ✅ **SELESAI** — Buat Pengumuman & Kelola Periode selesai 22 Juni 2026
 
 ---
 
 ### FASE 2 — Integrasi Data Lokal ke Repository
-> Estimasi: 2–3 hari
+> Estimasi: 2–3 hari ✅ **SELESAI** — Verifikasi Anggota & Kelola Poin selesai 22 Juni 2026
 
 ---
 
 ### FASE 3 — Infrastruktur Baru (butuh tabel/schema baru di Supabase)
-> Estimasi: 3–5 hari
+> Estimasi: 3–5 hari ⏳ **BELUM DIKERJAKAN**
 
 ---
 

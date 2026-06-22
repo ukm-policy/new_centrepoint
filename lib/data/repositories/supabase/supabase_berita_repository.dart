@@ -52,7 +52,7 @@ class SupabaseBeritaRepository extends BeritaRepository {
       _berita.where((b) => !b.isDraft).toList();
 
   @override
-  void addBerita(BeritaModel item) async {
+  Future<void> addBerita(BeritaModel item) async {
     try {
       await _db.from('berita').insert({
         'judul': item.judul,
@@ -64,14 +64,14 @@ class SupabaseBeritaRepository extends BeritaRepository {
         'is_draft': item.isDraft,
         'tanggal_publish': item.tanggalPublish.toIso8601String(),
       });
-      _loadBerita();
+      await _loadBerita();
     } catch (e) {
       debugPrint('Error adding berita: $e');
     }
   }
 
   @override
-  void updateBerita(BeritaModel item) async {
+  Future<void> updateBerita(BeritaModel item) async {
     try {
       await _db.from('berita').update({
         'judul': item.judul,
@@ -81,30 +81,30 @@ class SupabaseBeritaRepository extends BeritaRepository {
         'is_draft': item.isDraft,
         'tanggal_publish': item.tanggalPublish.toIso8601String(),
       }).eq('id', item.id);
-      _loadBerita();
+      await _loadBerita();
     } catch (e) {
       debugPrint('Error updating berita: $e');
     }
   }
 
   @override
-  void deleteBerita(String id) async {
+  Future<void> deleteBerita(String id) async {
     try {
       await _db.from('berita').delete().eq('id', id);
-      _loadBerita();
+      await _loadBerita();
     } catch (e) {
       debugPrint('Error deleting berita: $e');
     }
   }
 
   @override
-  void publishBerita(String id) async {
+  Future<void> publishBerita(String id) async {
     try {
       await _db.from('berita').update({
         'is_draft': false,
         'tanggal_publish': DateTime.now().toIso8601String(),
       }).eq('id', id);
-      _loadBerita();
+      await _loadBerita();
     } catch (e) {
       debugPrint('Error publishing berita: $e');
     }

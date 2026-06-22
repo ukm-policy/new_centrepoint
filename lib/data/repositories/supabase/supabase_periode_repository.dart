@@ -65,7 +65,7 @@ class SupabasePeriodeRepository extends PeriodeRepository {
         );
 
   @override
-  void addPeriode(PeriodeModel item) async {
+  Future<void> addPeriode(PeriodeModel item) async {
     try {
       await _db.from('periode').insert({
         'nama': item.nama,
@@ -73,19 +73,19 @@ class SupabasePeriodeRepository extends PeriodeRepository {
         'tahun_selesai': item.tanggalSelesai.year,
         'is_aktif': item.isActive,
       });
-      _loadPeriodes();
+      await _loadPeriodes();
     } catch (e) {
       debugPrint('Error adding periode: $e');
     }
   }
 
   @override
-  void setActivePeriode(String id) async {
+  Future<void> setActivePeriode(String id) async {
     try {
       // Set all to false, then target to true in a transaction / multiple calls
       await _db.from('periode').update({'is_aktif': false});
       await _db.from('periode').update({'is_aktif': true}).eq('id', id);
-      _loadPeriodes();
+      await _loadPeriodes();
     } catch (e) {
       debugPrint('Error setting active periode: $e');
     }

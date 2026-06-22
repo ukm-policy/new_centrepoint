@@ -8,18 +8,10 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/member_model.dart';
+import '../../../data/models/poin_model.dart';
 import '../../../data/repositories/member_repository.dart';
-
-class _LocalMutation {
-  const _LocalMutation({
-    required this.amount,
-    required this.reason,
-    required this.date,
-  });
-  final int amount;
-  final String reason;
-  final String date;
-}
+import '../../../data/repositories/poin_repository.dart';
+import '../../../data/repositories/audit_log_repository.dart';
 
 class KelolaPoinScreen extends StatefulWidget {
   const KelolaPoinScreen({super.key});
@@ -29,29 +21,8 @@ class KelolaPoinScreen extends StatefulWidget {
 }
 
 class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
-  late Map<String, int> _pointsMap;
-  late Map<String, List<_LocalMutation>> _mutationHistory;
-  bool _initialized = false;
-  
   String _search = '';
   String _filterDiv = 'Semua';
-  final List<String> _divisions = ['Semua', 'Pemrograman', 'Jaringan', 'Multimedia', 'Pengembangan', 'Kaderisasi', 'Humas'];
-
-  void _initMaps(List<MemberModel> members) {
-    if (_initialized) return;
-    _pointsMap = {
-      for (final m in members) m.id: m.totalPoin,
-    };
-    _mutationHistory = {
-      for (final m in members)
-        m.id: [
-          const _LocalMutation(amount: 50, reason: 'Kehadiran Seminar Nasional', date: '18 Juni 2026'),
-          const _LocalMutation(amount: -25, reason: 'Terlambat Rapat Evaluasi', date: '15 Juni 2026'),
-          const _LocalMutation(amount: 100, reason: 'Menjadi Panitia Kegiatan', date: '10 Juni 2026'),
-        ],
-    };
-    _initialized = true;
-  }
 
   List<MemberModel> _getFiltered(List<MemberModel> members) {
     return members.where((m) {
@@ -63,22 +34,31 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
     }).toList();
   }
 
-  void _showAdjustPoinSheet(MemberModel member) {
+  List<String> _buildDivisionFilter(List<MemberModel> members) {
+    final divs = members
+        .map((m) => m.bidang)
+        .where((b) => b != null && b.isNotEmpty)
+        .cast<String>()
+        .toSet()
+        .toList()
+      ..sort();
+    return ['Semua', ...divs];
+  }
+
+  void _showAdjustPoinSheet(BuildContext context, MemberModel member, List<PoinEntryModel> allEntries) {
     final amountCtrl = TextEditingController();
     final reasonCtrl = TextEditingController();
-    bool isAddition = true; // toggle between + and -
+    bool isAddition = true;
     final formKey = GlobalKey<FormState>();
+    final history = allEntries.where((e) => e.memberId == member.id).take(10).toList();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
-            final history = _mutationHistory[member.id] ?? [];
-            final currentPoin = _pointsMap[member.id] ?? 0;
-
+          builder: (sheetContext, setModalState) {
             return Container(
               decoration: const BoxDecoration(
                 color: AppColors.surface,
@@ -92,7 +72,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                   right: BorderSide(color: AppColors.blackCharcoal, width: 2.5),
                 ),
               ),
-              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(sheetContext).viewInsets.bottom),
               child: Form(
                 key: formKey,
                 child: Column(
@@ -111,7 +91,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                                 style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
                               ),
                               Text(
-                                '${member.nama} (Poin saat ini: $currentPoin)',
+                                '${member.nama} (Poin saat ini: ${member.totalPoin})',
                                 style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
                               ),
                             ],
@@ -125,7 +105,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                             border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
                           ),
                           child: Text(
-                            '$currentPoin PTS',
+                            '${member.totalPoin} PTS',
                             style: AppTypography.labelBold.copyWith(color: AppColors.onPrimaryContainer),
                           ),
                         ),
@@ -135,7 +115,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                     const MyDivider(color: AppColors.borderSlate),
                     const SizedBox(height: 16),
 
-                    // Mutasi Segment (Tambah vs Kurang)
                     Text('AKSI MUTASI POIN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                     const SizedBox(height: 8),
                     Row(
@@ -187,7 +166,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                     ),
                     const SizedBox(height: AppSpacing.stackGap),
 
-                    // Jumlah Poin
                     Text('JUMLAH POIN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                     const SizedBox(height: 6),
                     TextFormField(
@@ -207,7 +185,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                     ),
                     const SizedBox(height: AppSpacing.stackGap),
 
-                    // Keterangan / Alasan
                     Text('ALASAN / KETERANGAN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                     const SizedBox(height: 6),
                     TextFormField(
@@ -221,7 +198,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                     ),
                     const SizedBox(height: AppSpacing.stackGap),
 
-                    // Riwayat Mutasi User
                     Text('RIWAYAT MUTASI TERBARU', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                     const SizedBox(height: 8),
                     Container(
@@ -231,41 +207,45 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                         borderRadius: BorderRadius.circular(AppSpacing.radius),
                         border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
                       ),
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: history.length,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        itemBuilder: (context, idx) {
-                          final h = history[idx];
-                          final isAdd = h.amount > 0;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    '${h.reason} (${h.date})',
-                                    style: AppTypography.bodyMd.copyWith(fontSize: 11, color: AppColors.tertiary),
-                                    overflow: TextOverflow.ellipsis,
+                      child: history.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Text('Belum ada riwayat mutasi.', style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary, fontSize: 11)),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: history.length,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              itemBuilder: (context, idx) {
+                                final h = history[idx];
+                                final isAdd = h.poin >= 0;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${h.label} (${h.tanggal.day}/${h.tanggal.month}/${h.tanggal.year})',
+                                          style: AppTypography.bodyMd.copyWith(fontSize: 11, color: AppColors.tertiary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${isAdd ? '+' : ''}${h.poin} PTS',
+                                        style: AppTypography.labelBold.copyWith(
+                                          fontSize: 10,
+                                          color: isAdd ? AppColors.success : AppColors.error,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                Text(
-                                  '${isAdd ? '+' : ''}${h.amount} PTS',
-                                  style: AppTypography.labelBold.copyWith(
-                                    fontSize: 10,
-                                    color: isAdd ? AppColors.success : AppColors.error,
-                                  ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                     const SizedBox(height: 20),
 
-                    // Submit
                     BrutalistButton(
                       label: 'PROSES MUTASI POIN',
                       onPressed: () {
@@ -273,21 +253,27 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                         final inputVal = int.parse(amountCtrl.text);
                         final actualVal = isAddition ? inputVal : -inputVal;
 
+                        context.read<PoinRepository>().addPoinEntry(PoinEntryModel(
+                          id: '',
+                          memberId: member.id,
+                          memberNama: member.nama,
+                          label: reasonCtrl.text.trim(),
+                          tipe: isAddition ? TipePoin.bonus : TipePoin.penalti,
+                          poin: actualVal,
+                          tanggal: DateTime.now(),
+                          kegiatanId: null,
+                        ));
+
                         context.read<MemberRepository>().updatePoin(member.id, actualVal);
 
-                        setState(() {
-                          _pointsMap[member.id] = currentPoin + actualVal;
-                          _mutationHistory[member.id]!.insert(
-                            0,
-                            _LocalMutation(
-                              amount: actualVal,
-                              reason: reasonCtrl.text,
-                              date: 'Hari ini',
-                            ),
-                          );
-                        });
+                        context.read<AuditLogRepository>().logAction(
+                          aksi: '${isAddition ? "Menambahkan +$inputVal" : "Mengurangi -$inputVal"} poin ke ${member.nama}: ${reasonCtrl.text.trim()}',
+                          tipe: 'Poin',
+                          entityId: member.id,
+                          entityType: 'member',
+                        );
 
-                        Navigator.pop(context);
+                        Navigator.pop(sheetContext);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
@@ -314,7 +300,8 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
   @override
   Widget build(BuildContext context) {
     final members = context.watch<MemberRepository>().members;
-    _initMaps(members);
+    final poinEntries = context.watch<PoinRepository>().poinEntries;
+    final divisions = _buildDivisionFilter(members);
     final filteredList = _getFiltered(members);
 
     return Scaffold(
@@ -359,7 +346,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Bar & Division Chips
             Padding(
               padding: const EdgeInsets.all(AppSpacing.marginPage),
               child: Column(
@@ -387,7 +373,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: _divisions.map((d) {
+                      children: divisions.map((d) {
                         final active = _filterDiv == d;
                         return GestureDetector(
                           onTap: () => setState(() => _filterDiv = d),
@@ -411,8 +397,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                 ],
               ),
             ),
-
-            // Members Point List
             Expanded(
               child: filteredList.isEmpty
                   ? Center(
@@ -426,7 +410,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                       itemCount: filteredList.length,
                       itemBuilder: (context, i) {
                         final m = filteredList[i];
-                        final pts = _pointsMap[m.id] ?? 0;
                         final initialName = m.nama.isNotEmpty
                             ? m.nama.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
                             : 'M';
@@ -434,11 +417,10 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
                           child: BrutalistCard(
-                            onTap: () => _showAdjustPoinSheet(m),
+                            onTap: () => _showAdjustPoinSheet(context, m, poinEntries),
                             padding: const EdgeInsets.all(16),
                             child: Row(
                               children: [
-                                // Avatar circle box
                                 Container(
                                   width: 44,
                                   height: 44,
@@ -458,8 +440,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 14),
-
-                                // Text details
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,8 +455,6 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                                     ],
                                   ),
                                 ),
-                                
-                                // Point score badge
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   decoration: BoxDecoration(
@@ -485,7 +463,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                                     border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
                                   ),
                                   child: Text(
-                                    '$pts PTS',
+                                    '${m.totalPoin} PTS',
                                     style: AppTypography.labelBold.copyWith(
                                       color: AppColors.blackCharcoal,
                                       fontSize: 11,

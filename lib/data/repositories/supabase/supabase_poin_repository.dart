@@ -120,7 +120,7 @@ class SupabasePoinRepository extends PoinRepository {
   List<LeaderboardEntryModel> get leaderboard => List.unmodifiable(_leaderboard);
 
   @override
-  void addPoinEntry(PoinEntryModel entry) async {
+  Future<void> addPoinEntry(PoinEntryModel entry) async {
     try {
       final user = _db.auth.currentUser;
       await _db.from('poin_entry').insert({
@@ -133,7 +133,7 @@ class SupabasePoinRepository extends PoinRepository {
         'kegiatan_id': entry.kegiatanId,
         'created_by': user?.id,
       });
-      _loadPoin();
+      await _loadPoin();
     } catch (e) {
       debugPrint('Error adding points: $e');
     }

@@ -181,6 +181,13 @@ final _router = GoRouter(
                   path: ':id',
                   builder: (_, state) =>
                       DetailRapatScreen(id: state.pathParameters['id']!),
+                  routes: [
+                    GoRoute(
+                      path: 'edit',
+                      builder: (_, state) =>
+                          CreateRapatScreen(editId: state.pathParameters['id']!),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -188,6 +195,13 @@ final _router = GoRouter(
               path: ':id',
               builder: (_, state) =>
                   DetailKegiatanScreen(id: state.pathParameters['id']!),
+              routes: [
+                GoRoute(
+                  path: 'edit',
+                  builder: (_, state) =>
+                      CreateKegiatanScreen(editId: state.pathParameters['id']!),
+                ),
+              ],
             ),
           ],
         ),

@@ -15,6 +15,7 @@ import '../../../data/repositories/periode_repository.dart';
 import '../../../shared/utils/initials.dart';
 import '../../../shared/utils/feedback.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
+import '../../../shared/widgets/missing_data_screen.dart';
 
 // ── Sie Form Entry ─────────────────────────────────────────────────────────────
 
@@ -32,7 +33,10 @@ class _SieEntry {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 class CreateKegiatanScreen extends StatefulWidget {
-  const CreateKegiatanScreen({super.key});
+  const CreateKegiatanScreen({super.key, this.editId});
+
+  /// Diisi untuk mode edit: id kegiatan yang diubah.
+  final String? editId;
 
   @override
   State<CreateKegiatanScreen> createState() => _CreateKegiatanScreenState();
@@ -58,6 +62,46 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
   // Sie
   final List<_SieEntry> _sieList = [];
   DateTime? _pickedDateRaw;
+
+  // Mode edit
+  bool get _isEdit => widget.editId != null;
+  KegiatanModel? _editing;
+  bool _prefillScheduled = false;
+
+  static const _namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+  /// Isi form dari kegiatan yang sedang diedit.
+  void _prefill(KegiatanModel k, List<MemberModel> members) {
+    final byId = {for (final m in members) m.id: m};
+    MemberModel? find(PanitiaModel? p) => p == null ? null : byId[p.memberId];
+
+    setState(() {
+      _editing = k;
+      _namaCtrl.text = k.judul;
+      _deskripsiCtrl.text = k.deskripsi;
+      _waktuCtrl.text = k.waktu;
+      _lokasiCtrl.text = k.lokasi;
+      _kuotaCtrl.text = k.kuota > 0 ? '${k.kuota}' : '';
+      _pickedDateRaw = k.tanggal;
+      _tanggalCtrl.text = '${k.tanggal.day} ${_namaBulan[k.tanggal.month - 1]} ${k.tanggal.year}';
+      _selectedKetua = find(k.ketuaPelaksana);
+      _selectedSekretaris = find(k.sekretarisPelaksana);
+      _selectedBendahara = find(k.bendaharaPelaksana);
+      for (final sie in _sieList) {
+        sie.dispose();
+      }
+      _sieList
+        ..clear()
+        ..addAll(k.sie.map((s) {
+          final entry = _SieEntry()
+            ..namaCtrl.text = s.namaSie
+            ..selectedKetua = find(s.ketua);
+          entry.selectedAnggota.addAll(s.anggota.map(find).whereType<MemberModel>());
+          return entry;
+        }));
+    });
+  }
 
   @override
   void dispose() {
@@ -115,7 +159,7 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
     // Ambil periode aktif — wajib ada sebelum bisa buat kegiatan
     final periodeRepo = context.read<PeriodeRepository>();
     final aktivePeriode = periodeRepo.periodes.where((p) => p.isActive).firstOrNull;
-    if (aktivePeriode == null) {
+    if (!_isEdit && aktivePeriode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Tidak ada periode aktif. Aktifkan periode terlebih dahulu.'),
@@ -136,42 +180,51 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
         anggota: s.selectedAnggota.map(toPanitia).toList(),
       )).toList();
 
-      await context.read<KegiatanRepository>().addKegiatan(KegiatanModel(
-        id: '',
+      final editing = _editing;
+      final data = KegiatanModel(
+        id: editing?.id ?? '',
         judul: _namaCtrl.text.trim(),
         deskripsi: _deskripsiCtrl.text.trim(),
         tanggal: _pickedDateRaw ?? DateTime.now(),
         waktu: _waktuCtrl.text.trim(),
         lokasi: _lokasiCtrl.text.trim(),
-        status: 'Akan Datang',
+        status: editing?.status ?? 'Akan Datang',
         kuota: int.tryParse(_kuotaCtrl.text.trim()) ?? 0,
-        pesertaTerdaftar: 0,
+        pesertaTerdaftar: editing?.pesertaTerdaftar ?? 0,
         ketuaPelaksana: _selectedKetua != null ? toPanitia(_selectedKetua!) : null,
         sekretarisPelaksana: _selectedSekretaris != null ? toPanitia(_selectedSekretaris!) : null,
         bendaharaPelaksana: _selectedBendahara != null ? toPanitia(_selectedBendahara!) : null,
         sie: sieListMapped,
-        periodeId: aktivePeriode.id,
-      ));
+        periodeId: editing?.periodeId ?? aktivePeriode!.id,
+      );
+      final repo = context.read<KegiatanRepository>();
+      if (editing != null) {
+        await repo.updateKegiatan(data);
+      } else {
+        await repo.addKegiatan(data);
+      }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kegiatan berhasil dibuat!')),
-      );
+      showSuccessSnack(context, editing != null ? 'Perubahan kegiatan disimpan!' : 'Kegiatan berhasil dibuat!');
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      showErrorSnack(context, e, prefix: 'Gagal membuat kegiatan');
+      showErrorSnack(context, e, prefix: _isEdit ? 'Gagal menyimpan kegiatan' : 'Gagal membuat kegiatan');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final current = _pickedDateRaw;
+    // Mode edit boleh mempertahankan tanggal yang sudah lewat.
+    final first = current != null && current.isBefore(now) ? current : now;
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(days: 7)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: current ?? now.add(const Duration(days: 7)),
+      firstDate: first,
+      lastDate: now.add(const Duration(days: 365)),
     );
     if (picked != null) {
       _pickedDateRaw = picked;
@@ -185,15 +238,37 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allMembers = context.read<MemberRepository>().members;
+    final allMembers = _isEdit
+        ? context.watch<MemberRepository>().members
+        : context.read<MemberRepository>().members;
+
+    if (_isEdit && _editing == null) {
+      final kegiatanRepo = context.watch<KegiatanRepository>();
+      final target = kegiatanRepo.kegiatan.where((k) => k.id == widget.editId).firstOrNull;
+      final needsMembers = target != null &&
+          (target.ketuaPelaksana != null || target.sie.isNotEmpty) &&
+          allMembers.isEmpty;
+      if (target == null || needsMembers) {
+        return MissingDataScreen(
+          title: 'Edit Kegiatan',
+          loading: kegiatanRepo.isLoading || needsMembers,
+        );
+      }
+      if (!_prefillScheduled) {
+        _prefillScheduled = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _prefill(target, allMembers);
+        });
+      }
+    }
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
       body: SafeArea(
         child: Column(
           children: [
-            const FloatingAppBar(
-              title: 'Buat Kegiatan',
+            FloatingAppBar(
+              title: _isEdit ? 'Edit Kegiatan' : 'Buat Kegiatan',
               showBack: true,
               trailing: SizedBox(width: 40),
             ),
@@ -429,7 +504,7 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
                     _loading
                         ? const Center(child: CircularProgressIndicator())
                         : BrutalistButton(
-                            label: 'BUAT KEGIATAN',
+                            label: _isEdit ? 'SIMPAN PERUBAHAN' : 'BUAT KEGIATAN',
                             icon: Icons.check_circle_outline,
                             onPressed: _submit,
                           ),

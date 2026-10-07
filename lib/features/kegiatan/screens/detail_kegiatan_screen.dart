@@ -48,9 +48,7 @@ class DetailKegiatanScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: GestureDetector(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Fitur edit kegiatan segera hadir')),
-                    ),
+                    onTap: () => context.push('/kegiatan/${item.id}/edit'),
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

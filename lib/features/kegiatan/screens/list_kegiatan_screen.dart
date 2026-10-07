@@ -361,7 +361,9 @@ class _RapatTabState extends State<_RapatTab> {
 
   bool _isRapatVisible(RapatModel rapat, List<KegiatanModel> kegiatanList) {
     if (AppSession.kodeRole == 'demisioner') {
-      return rapat.pesertaIds.contains(AppSession.nama);
+      // pesertaIds berisi ID anggota (data lama mungkin masih berisi nama).
+      return rapat.pesertaIds.contains(AppSession.id) ||
+          rapat.pesertaIds.contains(AppSession.nama);
     }
     if (AppSession.isAdmin) return true;
 

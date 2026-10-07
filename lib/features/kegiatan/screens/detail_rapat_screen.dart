@@ -12,6 +12,7 @@ import '../../../data/repositories/kegiatan_repository.dart';
 import '../../../data/repositories/rapat_repository.dart';
 import '../../../shared/widgets/missing_data_screen.dart';
 import '../../../shared/utils/feedback.dart';
+import '../../../data/repositories/member_repository.dart';
 
 class DetailRapatScreen extends StatelessWidget {
   const DetailRapatScreen({super.key, required this.id});
@@ -31,6 +32,9 @@ class DetailRapatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final rapatRepo = context.watch<RapatRepository>();
     final kegiatanRepo = context.watch<KegiatanRepository>();
+    final namaAnggota = {
+      for (final m in context.watch<MemberRepository>().members) m.id: m.nama,
+    };
 
     final rapat = rapatRepo.rapat.where((r) => r.id == id).firstOrNull;
     if (rapat == null) {
@@ -56,9 +60,7 @@ class DetailRapatScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: GestureDetector(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Fitur edit rapat segera hadir')),
-                    ),
+                    onTap: () => context.push('/kegiatan/rapat/${rapat.id}/edit'),
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 10),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -264,7 +266,9 @@ class DetailRapatScreen extends StatelessWidget {
                       const MyDivider(color: AppColors.borderSlate, height: 12),
                       const SizedBox(height: 8),
                       ...rapat.pesertaIds.asMap().entries.map((e) {
-                        final isCurrentUser = e.value == AppSession.nama;
+                        // pesertaIds berisi ID anggota (data lama mungkin berisi nama).
+                        final nama = namaAnggota[e.value] ?? e.value;
+                        final isCurrentUser = e.value == AppSession.id || e.value == AppSession.nama;
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Row(children: [
@@ -287,7 +291,7 @@ class DetailRapatScreen extends StatelessWidget {
                                     : AppColors.tertiary),
                             ),
                             const SizedBox(width: 10),
-                            Expanded(child: Text(e.value, style: AppTypography.bodyMd.copyWith(
+                            Expanded(child: Text(nama, style: AppTypography.bodyMd.copyWith(
                               fontWeight: isCurrentUser ? FontWeight.w700 : FontWeight.w400,
                             ))),
                             if (isCurrentUser)

@@ -48,25 +48,23 @@ class AppSession {
       supabaseUser?.userMetadata?['angkatan'] as String? ??
       '';
 
+  // Nilai otorisasi (level, role, bidang, status, admin) hanya dari profil
+  // database atau JWT claims — userMetadata bisa diubah user sendiri.
   static int get level =>
       (_cachedProfile?['level'] as int?) ??
       (_claims['level'] as int?) ??
-      (supabaseUser?.userMetadata?['level'] as int?) ??
       0;
   static String get kodeRole =>
       (_cachedProfile?['kode_role'] as String?) ??
       (_claims['kode_role'] as String?) ??
-      (supabaseUser?.userMetadata?['kode_role'] as String?) ??
       'user_public';
   static String get bidang =>
       (_cachedProfile?['bidang'] as String?) ??
       (_claims['bidang'] as String?) ??
-      (supabaseUser?.userMetadata?['bidang'] as String?) ??
       '';
   static String get status =>
       (_cachedProfile?['status'] as String?) ??
       (_claims['status'] as String?) ??
-      (supabaseUser?.userMetadata?['status'] as String?) ??
       'pending';
 
   static String get role {
@@ -95,7 +93,6 @@ class AppSession {
   static bool get isAdmin =>
       (_cachedProfile?['is_admin'] as bool?) ??
       (_claims['is_admin'] as bool?) ??
-      (supabaseUser?.userMetadata?['is_admin'] as bool?) ??
       false;
 
   static UserModel get currentUser {

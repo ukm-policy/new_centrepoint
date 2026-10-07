@@ -116,9 +116,7 @@ class SupabaseUserRepository extends UserRepository with RealtimeRepositoryMixin
               'no_hp': user.noHp,
               'prodi': user.prodi,
               'angkatan': user.angkatan,
-              'status': user.isVerified ? 'active' : 'pending',
               'avatar_url': user.avatarUrl,
-              'is_admin': user.isAdmin,
             },
           ),
         );

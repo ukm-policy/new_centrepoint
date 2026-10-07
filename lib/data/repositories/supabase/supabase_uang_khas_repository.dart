@@ -81,6 +81,9 @@ class SupabaseUangKhasRepository extends UangKhasRepository with RealtimeReposit
     }
   }
 
+  /// Penanda transaksi pending milik satu baris uang_khas_bulan.
+  static String _refKeterangan(String khasId) => 'Bukti Pembayaran Ref ID: $khasId';
+
   @override
   List<UangKhasBulanModel> get khasBulan => List.unmodifiable(_khasBulan);
   
@@ -111,7 +114,7 @@ class SupabaseUangKhasRepository extends UangKhasRepository with RealtimeReposit
         'jumlah': nominal,
         'is_pemasukan': true,
         'is_pending': true,
-        'keterangan': 'Bukti Pembayaran Ref ID: $kid',
+        'keterangan': _refKeterangan(kid),
       });
 
       await reload();
@@ -153,15 +156,13 @@ class SupabaseUangKhasRepository extends UangKhasRepository with RealtimeReposit
       }).eq('id', id).select().single();
 
       final bulan = khasData['bulan'] as String? ?? '';
-      final nominal = khasData['nominal'] as int? ?? 10000;
 
       // 2. Update the pending transaction to complete
       final pendingTxs = await _db.from('transaksi_khas')
           .select()
           .eq('is_pending', true)
-          .eq('jumlah', nominal)
-          .like('keterangan', '%$id%');
-      
+          .eq('keterangan', _refKeterangan(id));
+
       if (pendingTxs.isNotEmpty) {
         final txId = pendingTxs.first['id'] as String;
         await _db.from('transaksi_khas').update({
@@ -181,21 +182,18 @@ class SupabaseUangKhasRepository extends UangKhasRepository with RealtimeReposit
   Future<void> rejectPayment(String id) async {
     try {
       // 1. Delete payment entry or set to belumBayar
-      final khasData = await _db.from('uang_khas_bulan').update({
+      await _db.from('uang_khas_bulan').update({
         'status': 'belumBayar',
         'is_verified': false,
         'bukti_url': null,
         'tanggal_bayar': null,
-      }).eq('id', id).select().single();
-
-      final nominal = khasData['nominal'] as int? ?? 10000;
+      }).eq('id', id);
 
       // 2. Remove pending transaction
       await _db.from('transaksi_khas')
           .delete()
           .eq('is_pending', true)
-          .eq('jumlah', nominal)
-          .like('keterangan', '%$id%');
+          .eq('keterangan', _refKeterangan(id));
 
       await reload();
     } catch (e) {

@@ -8,6 +8,7 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../data/models/member_model.dart';
 import '../../../data/repositories/member_repository.dart';
+import '../../../shared/widgets/list_status.dart';
 
 class ListMembersScreen extends StatefulWidget {
   const ListMembersScreen({super.key});
@@ -24,7 +25,8 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allMembers = context.watch<MemberRepository>().members.where((m) => m.isActive).toList();
+    final memberRepo = context.watch<MemberRepository>();
+    final allMembers = memberRepo.members.where((m) => m.isActive).toList();
     final filtered = allMembers.where((m) {
       final matchDiv = _filterDiv == 'Semua' || m.bidang == _filterDiv;
       final matchSearch = _search.isEmpty ||
@@ -107,6 +109,14 @@ class _ListMembersScreenState extends State<ListMembersScreen> {
               const SizedBox(height: 12),
 
               // Grid
+              if (filtered.isEmpty)
+                ListStatus(
+                  loading: memberRepo.isLoading && allMembers.isEmpty,
+                  icon: Icons.group_off_outlined,
+                  message: allMembers.isEmpty
+                      ? 'Belum ada anggota aktif.'
+                      : 'Tidak ada anggota yang cocok dengan pencarian.',
+                ),
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -133,9 +143,9 @@ class _MemberCard extends StatelessWidget {
 
   Color get _tierColor {
     return switch (member.tier) {
-      'Gold' => const Color(0xFFFFF3CD),
+      'Gold' => AppColors.highlightContainer,
       'Silver' => AppColors.surfaceContainerHigh,
-      _ => const Color(0xFFFFE0CC),
+      _ => AppColors.peachContainer,
     };
   }
 

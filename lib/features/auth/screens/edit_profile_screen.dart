@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,7 +10,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../core/session/app_session.dart';
-import '../../../data/repositories/user_repository.dart';
+import '../../../core/session/session_controller.dart';
+import '../../../core/errors/app_exception.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -116,37 +117,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      final userRepo = Provider.of<UserRepository>(context, listen: false);
-      
       String? avatarUrl = _avatarUrl;
       if (_imageFile != null) {
         final bytes = await _imageFile!.readAsBytes();
-        final fileExt = _imageFile!.name.split('.').last;
+        final fileExt = _imageFile!.name.split('.').last.toLowerCase();
         final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
         final filePath = '${AppSession.id}/$fileName';
 
         await Supabase.instance.client.storage.from('avatars').uploadBinary(
           filePath,
           bytes,
-          fileOptions: FileOptions(contentType: 'image/$fileExt', upsert: true),
+          fileOptions: FileOptions(contentType: 'image/${fileExt == 'jpg' ? 'jpeg' : fileExt}', upsert: true),
         );
         avatarUrl = Supabase.instance.client.storage.from('avatars').getPublicUrl(filePath);
       }
 
-      final updatedUser = AppSession.currentUser.copyWith(
-        nama: _namaCtrl.text.trim(),
-        nim: _nimCtrl.text.trim(),
-        noHp: _noHpCtrl.text.trim(),
-        prodi: _selectedProdi,
-        angkatan: _angkatanCtrl.text.trim(),
-        avatarUrl: avatarUrl,
-      );
-      
-      userRepo.updateUser(updatedUser);
-      
-      // Delay slightly for the update to reflect
-      await Future.delayed(const Duration(milliseconds: 500));
-      
+      // Hanya kolom yang boleh diubah sendiri oleh user (bukan status/is_admin).
+      final data = {
+        'nama': _namaCtrl.text.trim(),
+        'nim': _nimCtrl.text.trim(),
+        'no_hp': _noHpCtrl.text.trim(),
+        'prodi': _selectedProdi,
+        'angkatan': _angkatanCtrl.text.trim(),
+        'avatar_url': avatarUrl,
+      };
+      await Supabase.instance.client.from('profiles').update(data).eq('id', AppSession.id);
+      await Supabase.instance.client.auth.updateUser(UserAttributes(data: data));
+      await SessionController.instance.reloadProfile();
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -163,7 +161,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal menyimpan profil: $e',
+          content: Text('Gagal menyimpan profil: ${friendlyError(e)}',
               style: AppTypography.bodyMd.copyWith(color: Colors.white)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
@@ -182,45 +180,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Back Button (left aligned)
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                // Title (right aligned)
-                Text(
-                  'Edit Profil',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Edit Profil'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.marginPage),

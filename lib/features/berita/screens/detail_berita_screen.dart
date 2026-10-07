@@ -6,6 +6,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/berita_model.dart';
 import '../../../data/repositories/berita_repository.dart';
+import '../../../shared/widgets/missing_data_screen.dart';
 
 class DetailBeritaScreen extends StatefulWidget {
   const DetailBeritaScreen({super.key, required this.id});
@@ -55,10 +56,10 @@ class _DetailBeritaScreenState extends State<DetailBeritaScreen> {
   @override
   Widget build(BuildContext context) {
     final beritaRepo = context.watch<BeritaRepository>();
-    final berita = beritaRepo.berita.firstWhere(
-      (b) => b.id == widget.id,
-      orElse: () => beritaRepo.berita.first,
-    );
+    final berita = beritaRepo.berita.where((b) => b.id == widget.id).firstOrNull;
+    if (berita == null) {
+      return MissingDataScreen(title: 'Berita', loading: beritaRepo.isLoading);
+    }
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,

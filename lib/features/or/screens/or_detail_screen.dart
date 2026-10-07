@@ -8,6 +8,8 @@ import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/or_model.dart';
 import '../../../data/repositories/or_repository.dart';
+import '../../../shared/widgets/missing_data_screen.dart';
+import '../../../shared/utils/feedback.dart';
 
 class OrDetailScreen extends StatefulWidget {
   const OrDetailScreen({super.key, required this.id});
@@ -22,17 +24,15 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
   final _catatanCtrl = TextEditingController();
   bool _saving = false;
 
-  ORApplicantModel get _app {
-    final orRepo = context.read<ORRepository>();
-    return orRepo.applicants.firstWhere((a) => a.id == widget.id);
-  }
+  ORApplicantModel? get _app =>
+      context.read<ORRepository>().applicants.where((a) => a.id == widget.id).firstOrNull;
 
   @override
   void initState() {
     super.initState();
-    final app = context.read<ORRepository>().applicants.firstWhere((a) => a.id == widget.id);
-    _status = app.status;
-    _catatanCtrl.text = app.catatan ?? '';
+    final app = _app;
+    _status = app?.status ?? ApplicantStatus.pending;
+    _catatanCtrl.text = app?.catatan ?? '';
   }
 
   @override
@@ -47,15 +47,25 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
       _status = newStatus;
     });
     final orRepo = context.read<ORRepository>();
-    orRepo.reviewApplicant(widget.id, newStatus, catatan: _catatanCtrl.text);
-    await Future.delayed(const Duration(milliseconds: 400));
+    final previousStatus = _app?.status ?? ApplicantStatus.pending;
+    try {
+      await orRepo.reviewApplicant(widget.id, newStatus, catatan: _catatanCtrl.text);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _status = previousStatus;
+      });
+      showErrorSnack(context, e, prefix: 'Gagal menyimpan keputusan');
+      return;
+    }
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(
         newStatus == ApplicantStatus.diterima
-            ? '${_app.nama} berhasil diterima'
-            : '${_app.nama} ditolak',
+            ? '${_app?.nama ?? 'Pelamar'} berhasil diterima'
+            : '${_app?.nama ?? 'Pelamar'} ditolak',
         style: AppTypography.bodyMd.copyWith(color: Colors.white),
       ),
       backgroundColor: newStatus == ApplicantStatus.diterima
@@ -71,7 +81,10 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
   Widget build(BuildContext context) {
     // Watch applicant state
     final orRepo = context.watch<ORRepository>();
-    final app = orRepo.applicants.firstWhere((a) => a.id == widget.id);
+    final app = orRepo.applicants.where((a) => a.id == widget.id).firstOrNull;
+    if (app == null) {
+      return MissingDataScreen(title: 'Detail Pelamar', loading: orRepo.isLoading);
+    }
     final isPending = _status == ApplicantStatus.pending;
 
     return Scaffold(
@@ -173,9 +186,13 @@ class _OrDetailScreenState extends State<OrDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   _ResetButton(
-                    onTap: () {
-                      setState(() => _status = ApplicantStatus.pending);
-                      context.read<ORRepository>().reviewApplicant(widget.id, ApplicantStatus.pending);
+                    onTap: () async {
+                      final ok = await runWithFeedback(
+                        context,
+                        () => context.read<ORRepository>().reviewApplicant(widget.id, ApplicantStatus.pending),
+                        errorPrefix: 'Gagal mereset status',
+                      );
+                      if (ok && mounted) setState(() => _status = ApplicantStatus.pending);
                     },
                   ),
                 ],

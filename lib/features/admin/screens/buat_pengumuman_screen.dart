@@ -10,6 +10,8 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../data/repositories/inbox_repository.dart';
 import '../../../data/repositories/audit_log_repository.dart';
 import '../../../data/models/inbox_model.dart';
+import '../../../core/errors/app_exception.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class BuatPengumumanScreen extends StatefulWidget {
   const BuatPengumumanScreen({super.key});
@@ -53,7 +55,7 @@ class _BuatPengumumanScreenState extends State<BuatPengumumanScreen> {
       final repo = context.read<InboxRepository>();
       final now = DateTime.now();
       final konten = _contentCtrl.text.trim();
-      repo.addPengumuman(PengumumanModel(
+      await repo.addPengumuman(PengumumanModel(
         id: '',
         kategori: _selectedCat,
         judul: _titleCtrl.text.trim(),
@@ -84,7 +86,7 @@ class _BuatPengumumanScreenState extends State<BuatPengumumanScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mengirim pengumuman: $e',
+          content: Text('Gagal mengirim pengumuman: ${friendlyError(e)}',
               style: AppTypography.bodyMd.copyWith(color: Colors.white)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
@@ -100,43 +102,7 @@ class _BuatPengumumanScreenState extends State<BuatPengumumanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Buat Pengumuman',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Buat Pengumuman'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.marginPage),

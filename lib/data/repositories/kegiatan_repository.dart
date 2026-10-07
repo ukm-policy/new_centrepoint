@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
 import '../models/kegiatan_model.dart';
 import '../dummy/dummy_kegiatan.dart';
 
-abstract class KegiatanRepository extends ChangeNotifier {
+abstract class KegiatanRepository extends ChangeNotifier with RepositoryLoadState {
   List<KegiatanModel> get kegiatan;
   Future<void> addKegiatan(KegiatanModel item);
   Future<void> updateKegiatan(KegiatanModel item);
-  void registerParticipant(String id);
+  Future<void> registerParticipant(String id);
   Future<void> deleteKegiatan(String id);
 }
 
@@ -32,7 +33,7 @@ class DummyKegiatanRepository extends KegiatanRepository {
   }
 
   @override
-  void registerParticipant(String id) {
+  Future<void> registerParticipant(String id) async {
     final idx = _kegiatan.indexWhere((k) => k.id == id);
     if (idx != -1) {
       if (_kegiatan[idx].pesertaTerdaftar < _kegiatan[idx].kuota) {
@@ -85,7 +86,7 @@ class ApiKegiatanRepository extends KegiatanRepository {
   }
 
   @override
-  void registerParticipant(String id) {
+  Future<void> registerParticipant(String id) async {
     // POST /api/kegiatan/$id/register
     final idx = _kegiatan.indexWhere((k) => k.id == id);
     if (idx != -1) {

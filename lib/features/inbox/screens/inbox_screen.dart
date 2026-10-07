@@ -7,6 +7,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../data/models/inbox_model.dart';
 import '../../../data/repositories/inbox_repository.dart';
+import '../../../shared/utils/feedback.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -36,11 +37,18 @@ class _InboxScreenState extends State<InboxScreen>
   }
 
   void _markAllRead() {
-    context.read<InboxRepository>().markAllAsRead();
+    runWithFeedback(
+      context,
+      () => context.read<InboxRepository>().markAllAsRead(),
+      errorPrefix: 'Gagal menandai notifikasi',
+    );
   }
 
   void _handleNotifTap(NotifModel item) {
-    context.read<InboxRepository>().markAsRead(item.id);
+    // Tandai dibaca di latar belakang; gagal pun tidak menghalangi navigasi.
+    context.read<InboxRepository>().markAsRead(item.id).catchError((Object e) {
+      debugPrint('Gagal menandai notifikasi dibaca: $e');
+    });
     if (item.route != null) context.push(item.route!);
   }
 
@@ -386,15 +394,15 @@ class _NotifCard extends StatelessWidget {
         TipeNotif.poin => AppColors.onSecondaryContainer,
         TipeNotif.kegiatan => AppColors.primary,
         TipeNotif.absensi => AppColors.secondary,
-        TipeNotif.uangKhas => const Color(0xFFB45309),
+        TipeNotif.uangKhas => AppColors.warning,
         _ => AppColors.tertiary,
       };
 
   Color get _iconBg => switch (item.tipe) {
         TipeNotif.poin => AppColors.secondaryContainer,
         TipeNotif.kegiatan => AppColors.errorContainer,
-        TipeNotif.absensi => const Color(0xFFD1FAE5),
-        TipeNotif.uangKhas => const Color(0xFFFEF3C7),
+        TipeNotif.absensi => AppColors.successContainer,
+        TipeNotif.uangKhas => AppColors.warningContainer,
         _ => AppColors.surfaceContainerHigh,
       };
 
@@ -556,16 +564,16 @@ class _PengumumanCard extends StatelessWidget {
   Color get _catColor => switch (item.kategori) {
         'PENTING' => AppColors.primaryContainer,
         'KEGIATAN' => AppColors.errorContainer,
-        'KEUANGAN' => const Color(0xFFFEF3C7),
-        'REKRUTMEN' => const Color(0xFFD1FAE5),
-        'PRESTASI' => const Color(0xFFFFF3CD),
+        'KEUANGAN' => AppColors.warningContainer,
+        'REKRUTMEN' => AppColors.successContainer,
+        'PRESTASI' => AppColors.highlightContainer,
         _ => AppColors.surfaceContainerHigh,
       };
 
   Color get _catText => switch (item.kategori) {
         'PENTING' => AppColors.onPrimaryContainer,
         'KEGIATAN' => AppColors.primary,
-        'KEUANGAN' => const Color(0xFFB45309),
+        'KEUANGAN' => AppColors.warning,
         'REKRUTMEN' => AppColors.secondary,
         'PRESTASI' => AppColors.onSecondaryContainer,
         _ => AppColors.onSurface,
@@ -614,7 +622,7 @@ class _PengumumanCard extends StatelessWidget {
                     'BARU',
                     style: AppTypography.labelBold.copyWith(
                       color: AppColors.surfaceContainerLowest,
-                      fontSize: 9,
+                      fontSize: 10,
                       letterSpacing: 1,
                     ),
                   ),

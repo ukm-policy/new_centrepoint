@@ -1,26 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/rapat_model.dart';
 import '../rapat_repository.dart';
 
-class SupabaseRapatRepository extends RapatRepository {
+class SupabaseRapatRepository extends RapatRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<RapatModel> _rapat = [];
 
   SupabaseRapatRepository() {
-    _loadRapat();
-    _db
-        .channel('public:rapat')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'rapat',
-          callback: (payload) {
-            _loadRapat();
-          },
-        )
-        .subscribe();
+    reload();
+    listenTable('rapat', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadRapat);
 
   Future<void> _loadRapat() async {
     try {
@@ -93,6 +87,7 @@ class SupabaseRapatRepository extends RapatRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading rapat: $e');
+      rethrow;
     }
   }
 
@@ -100,7 +95,7 @@ class SupabaseRapatRepository extends RapatRepository {
   List<RapatModel> get rapat => List.unmodifiable(_rapat);
 
   @override
-  void addRapat(RapatModel item) async {
+  Future<void> addRapat(RapatModel item) async {
     try {
       final user = _db.auth.currentUser;
       // 1. Insert rapat
@@ -140,14 +135,15 @@ class SupabaseRapatRepository extends RapatRepository {
         });
       }
 
-      _loadRapat();
+      reload();
     } catch (e) {
       debugPrint('Error adding rapat: $e');
+      rethrow;
     }
   }
 
   @override
-  void updateRapat(RapatModel item) async {
+  Future<void> updateRapat(RapatModel item) async {
     try {
       // 1. Update core fields
       await _db.from('rapat').update({
@@ -185,22 +181,24 @@ class SupabaseRapatRepository extends RapatRepository {
         });
       }
 
-      _loadRapat();
+      reload();
     } catch (e) {
       debugPrint('Error updating rapat: $e');
+      rethrow;
     }
   }
 
   @override
-  void updateNotulensi(String id, String notulensi) async {
+  Future<void> updateNotulensi(String id, String notulensi) async {
     try {
       await _db.from('rapat').update({
         'notulensi': notulensi,
         'status': RapatStatus.selesai.toString(),
       }).eq('id', id);
-      _loadRapat();
+      reload();
     } catch (e) {
       debugPrint('Error updating notulensi: $e');
+      rethrow;
     }
   }
 }

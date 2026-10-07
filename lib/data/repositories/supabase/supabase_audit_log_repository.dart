@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/audit_log_model.dart';
 import '../audit_log_repository.dart';
 
-class SupabaseAuditLogRepository extends AuditLogRepository {
+class SupabaseAuditLogRepository extends AuditLogRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<AuditLogModel> _logs = [];
   bool _isLoading = false;
@@ -24,15 +25,7 @@ class SupabaseAuditLogRepository extends AuditLogRepository {
       } catch (_) {}
     }
     await _loadLogs();
-    _db
-        .channel('public:audit_log')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'audit_log',
-          callback: (_) => _loadLogs(),
-        )
-        .subscribe();
+    listenTable('audit_log', _loadLogs, event: PostgresChangeEvent.insert);
   }
 
   Future<void> _loadLogs() async {
@@ -47,6 +40,7 @@ class SupabaseAuditLogRepository extends AuditLogRepository {
       _logs = data.map<AuditLogModel>((json) => AuditLogModel.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error loading audit logs: $e');
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

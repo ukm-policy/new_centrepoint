@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/qr_session_model.dart';
 import '../qr_session_repository.dart';
 
-class SupabaseQrSessionRepository extends QrSessionRepository {
+class SupabaseQrSessionRepository extends QrSessionRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   QrSessionModel? _activeSession;
   List<QrSessionModel> _sessions = [];
@@ -75,7 +76,7 @@ class SupabaseQrSessionRepository extends QrSessionRepository {
       return _activeSession;
     } catch (e) {
       debugPrint('Error creating QR session: $e');
-      return null;
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -109,6 +110,7 @@ class SupabaseQrSessionRepository extends QrSessionRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error deactivating QR session: $e');
+      rethrow;
     }
   }
 }

@@ -105,7 +105,7 @@ const _roles = [
       _MenuItem(icon: Icons.payments_outlined, label: 'Uang Khas Semua Anggota', route: '/admin/uang-khas'),
       _MenuItem(icon: Icons.verified_outlined, label: 'Verifikasi Pembayaran', route: '/admin/uang-khas/verifikasi'),
       _MenuItem(icon: Icons.bar_chart, label: 'Rekap Keuangan', route: '/admin/keuangan'),
-      _MenuItem(icon: Icons.download_outlined, label: 'Export Laporan Keuangan', route: '/admin/keuangan/export', implemented: false),
+      _MenuItem(icon: Icons.download_outlined, label: 'Export Laporan Keuangan', route: '/admin/keuangan'),
     ],
   ),
   _RoleData(

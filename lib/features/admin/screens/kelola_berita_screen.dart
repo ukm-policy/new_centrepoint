@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -10,6 +9,8 @@ import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/berita_model.dart';
 import '../../../data/repositories/berita_repository.dart';
 import '../../../core/session/app_session.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class KelolaBeritaScreen extends StatefulWidget {
   const KelolaBeritaScreen({super.key});
@@ -25,20 +26,21 @@ class _KelolaBeritaScreenState extends State<KelolaBeritaScreen> {
   }
 
   void _handleDelete(BuildContext context, String id) {
-    Provider.of<BeritaRepository>(context, listen: false).deleteBerita(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Berita berhasil dihapus.', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
+    final repo = Provider.of<BeritaRepository>(context, listen: false);
+    runWithFeedback(
+      context,
+      () => repo.deleteBerita(id),
+      success: 'Berita berhasil dihapus.',
+      errorPrefix: 'Gagal menghapus berita',
     );
   }
 
   void _handleToggleStatus(BuildContext context, BeritaModel item) {
-    Provider.of<BeritaRepository>(context, listen: false).updateBerita(
-      item.copyWith(isDraft: !item.isDraft),
+    final repo = Provider.of<BeritaRepository>(context, listen: false);
+    runWithFeedback(
+      context,
+      () => repo.updateBerita(item.copyWith(isDraft: !item.isDraft)),
+      errorPrefix: 'Gagal mengubah status berita',
     );
   }
 
@@ -134,25 +136,27 @@ class _KelolaBeritaScreenState extends State<KelolaBeritaScreen> {
                           tanggalPublish: DateTime.now(),
                           isDraft: false,
                         );
-                        beritaRepo.addBerita(newBerita);
+                        Navigator.pop(modalContext);
+                        runWithFeedback(
+                          context,
+                          () => beritaRepo.addBerita(newBerita),
+                          success: 'Berita berhasil diterbitkan!',
+                          errorPrefix: 'Gagal menerbitkan berita',
+                        );
                       } else {
                         final updated = item.copyWith(
                           judul: titleCtrl.text,
                           kategori: selectedCat,
                           konten: contentCtrl.text,
                         );
-                        beritaRepo.updateBerita(updated);
+                        Navigator.pop(modalContext);
+                        runWithFeedback(
+                          context,
+                          () => beritaRepo.updateBerita(updated),
+                          success: 'Perubahan berita disimpan.',
+                          errorPrefix: 'Gagal menyimpan berita',
+                        );
                       }
-                      Navigator.pop(modalContext);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(item == null ? 'Berita berhasil diterbitkan!' : 'Perubahan berita disimpan.',
-                              style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-                          backgroundColor: AppColors.success,
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(AppSpacing.marginPage),
-                        ),
-                      );
                     },
                   ),
                 ],
@@ -171,43 +175,7 @@ class _KelolaBeritaScreenState extends State<KelolaBeritaScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Kelola Berita',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Kelola Berita'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showFormDialog(context),
         backgroundColor: AppColors.primaryContainer,
@@ -247,7 +215,7 @@ class _KelolaBeritaScreenState extends State<KelolaBeritaScreen> {
                             isTerbit ? 'TERBIT' : 'DRAF',
                             style: AppTypography.labelBold.copyWith(
                               color: isTerbit ? Colors.white : AppColors.tertiary,
-                              fontSize: 9,
+                              fontSize: 10,
                             ),
                           ),
                         ),
@@ -261,7 +229,7 @@ class _KelolaBeritaScreenState extends State<KelolaBeritaScreen> {
                           ),
                           child: Text(
                             news.kategori.toUpperCase(),
-                            style: AppTypography.labelBold.copyWith(fontSize: 9),
+                            style: AppTypography.labelBold.copyWith(fontSize: 10),
                           ),
                         ),
                         const Spacer(),

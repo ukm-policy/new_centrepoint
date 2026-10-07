@@ -11,6 +11,8 @@ import '../../../data/models/kegiatan_model.dart';
 import '../../../data/models/rapat_model.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
 import '../../../data/repositories/rapat_repository.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 // ── Mock Bidang & Sie data ────────────────────────────────────────────────────
 
@@ -191,13 +193,16 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
       denganKetuaBidang: _denganKetuaBidang,
     );
 
-    rapatRepo.addRapat(newRapat);
-
-    setState(() => _loading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Rapat berhasil dibuat!')),
+    final ok = await runWithFeedback(
+      context,
+      () => rapatRepo.addRapat(newRapat),
+      success: 'Rapat berhasil dibuat!',
+      errorPrefix: 'Gagal membuat rapat',
     );
-    context.pop();
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (ok) context.pop();
   }
 
   @override
@@ -208,32 +213,10 @@ class _CreateRapatScreenState extends State<CreateRapatScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Top Bar ──────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.marginPage, 16, AppSpacing.marginPage, 0,
-              ),
-              child: Row(children: [
-                GestureDetector(
-                  onTap: () => context.canPop() ? context.pop() : context.go('/kegiatan'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                const Spacer(),
-                Text('Buat Rapat', style: AppTypography.headlineSm),
-              ]),
+            const FloatingAppBar(
+              title: 'Buat Rapat',
+              showBack: true,
+              trailing: SizedBox(width: 40),
             ),
             const SizedBox(height: 16),
 

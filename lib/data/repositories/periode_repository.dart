@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
 import '../models/periode_model.dart';
 import '../dummy/dummy_periode.dart';
 
-abstract class PeriodeRepository extends ChangeNotifier {
+abstract class PeriodeRepository extends ChangeNotifier with RepositoryLoadState {
   List<PeriodeModel> get periodes;
   PeriodeModel get activePeriode;
   Future<void> addPeriode(PeriodeModel item);

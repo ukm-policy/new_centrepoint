@@ -1,26 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/periode_model.dart';
 import '../periode_repository.dart';
 
-class SupabasePeriodeRepository extends PeriodeRepository {
+class SupabasePeriodeRepository extends PeriodeRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<PeriodeModel> _periodes = [];
 
   SupabasePeriodeRepository() {
-    _loadPeriodes();
-    _db
-        .channel('public:periode')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'periode',
-          callback: (payload) {
-            _loadPeriodes();
-          },
-        )
-        .subscribe();
+    reload();
+    listenTable('periode', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadPeriodes);
 
   Future<void> _loadPeriodes() async {
     try {
@@ -44,6 +38,7 @@ class SupabasePeriodeRepository extends PeriodeRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading periodes: $e');
+      rethrow;
     }
   }
 
@@ -73,9 +68,10 @@ class SupabasePeriodeRepository extends PeriodeRepository {
         'tahun_selesai': item.tanggalSelesai.year,
         'is_aktif': item.isActive,
       });
-      await _loadPeriodes();
+      await reload();
     } catch (e) {
       debugPrint('Error adding periode: $e');
+      rethrow;
     }
   }
 
@@ -85,9 +81,10 @@ class SupabasePeriodeRepository extends PeriodeRepository {
       // Set all to false, then target to true in a transaction / multiple calls
       await _db.from('periode').update({'is_aktif': false});
       await _db.from('periode').update({'is_aktif': true}).eq('id', id);
-      await _loadPeriodes();
+      await reload();
     } catch (e) {
       debugPrint('Error setting active periode: $e');
+      rethrow;
     }
   }
 }

@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../../../core/errors/app_exception.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -37,18 +38,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _loading = true);
     
     try {
-      await Supabase.instance.client.auth.signUp(
+      final res = await Supabase.instance.client.auth.signUp(
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
       );
       if (!mounted) return;
+      if (res.session == null) {
+        // Konfirmasi email aktif: user harus verifikasi email dulu sebelum login.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registrasi sukses. Cek email Anda untuk konfirmasi, lalu masuk.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.go('/login');
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Registrasi sukses. Silakan lengkapi profil.'),
           backgroundColor: AppColors.success,
         ),
       );
-      context.pushReplacement('/lengkapi-profil');
+      context.go('/lengkapi-profil');
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -57,7 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(friendlyError(e)), backgroundColor: AppColors.error),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -219,27 +231,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             onPressed: _submit,
                           ),
                     const SizedBox(height: AppSpacing.stackGap),
-
-                    // ── Divider OR ───────────────────────────────────────────
-                    Row(children: [
-                      const Expanded(child: MyDivider(color: AppColors.borderSlate, height: 1)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('ATAU', style: AppTypography.labelBold.copyWith(
-                          color: AppColors.tertiary,
-                        )),
-                      ),
-                      const Expanded(child: MyDivider(color: AppColors.borderSlate, height: 1)),
-                    ]),
-                    const SizedBox(height: AppSpacing.stackGap),
-
-                    // ── Google Sign Up ───────────────────────────────────────
-                    BrutalistButton(
-                      label: 'Daftar dengan Google',
-                      variant: BrutalistButtonVariant.secondary,
-                      onPressed: () => context.pushReplacement('/setup-password'),
-                    ),
-                    const SizedBox(height: 24),
 
                     // ── Footer ───────────────────────────────────────────────
                     const MyDivider(color: AppColors.borderSlate),

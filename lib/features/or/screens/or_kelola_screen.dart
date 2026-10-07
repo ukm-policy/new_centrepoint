@@ -8,6 +8,7 @@ import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/or_model.dart';
 import '../../../data/repositories/or_repository.dart';
+import '../../../shared/utils/feedback.dart';
 
 class OrKelolaScreen extends StatefulWidget {
   const OrKelolaScreen({super.key});
@@ -74,8 +75,14 @@ class _OrKelolaScreenState extends State<OrKelolaScreen> {
       kuota: _kuota,
       deskripsi: _deskripsi,
     );
-    orRepo.updatePeriode(newPeriode);
-    await Future.delayed(const Duration(milliseconds: 400));
+    try {
+      await orRepo.updatePeriode(newPeriode);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      showErrorSnack(context, e, prefix: 'Gagal memperbarui periode');
+      return;
+    }
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(

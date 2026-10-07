@@ -9,6 +9,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/session/app_session.dart';
 import '../../data/repositories/member_repository.dart';
 import 'my_divider.dart';
+import '../../core/errors/app_exception.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -109,6 +110,17 @@ class AppDrawer extends StatelessWidget {
                       route: '/poin',
                       currentRoute: currentRoute,
                     ),
+                    if (AppSession.isAdmin) ...[
+                      const SizedBox(height: 12),
+                      _DrawerSection(label: 'ADMINISTRATOR'),
+                      _DrawerItem(
+                        icon: Icons.admin_panel_settings_outlined,
+                        activeIcon: Icons.admin_panel_settings,
+                        label: 'Panel Admin',
+                        route: '/admin',
+                        currentRoute: currentRoute,
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     _DrawerSection(label: 'LAINNYA'),
                     _DrawerItem(
@@ -142,13 +154,11 @@ class AppDrawer extends StatelessWidget {
 class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final members = context.watch<MemberRepository>().members;
-    final currentMember = members.isNotEmpty
-        ? members.firstWhere(
-            (m) => m.nama == AppSession.nama,
-            orElse: () => members.first,
-          )
-        : null;
+    final currentMember = context
+        .watch<MemberRepository>()
+        .members
+        .where((m) => m.id == AppSession.id)
+        .firstOrNull;
 
     final tier = currentMember?.tier ?? 'General';
     final poin = currentMember?.totalPoin ?? 0;
@@ -389,7 +399,7 @@ class _DrawerLogout extends StatelessWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Gagal keluar: $e',
+                  content: Text('Gagal keluar: ${friendlyError(e)}',
                       style: AppTypography.bodyMd.copyWith(color: Colors.white)),
                   backgroundColor: AppColors.error,
                   behavior: SnackBarBehavior.floating,

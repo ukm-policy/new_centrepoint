@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -10,6 +9,8 @@ import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/or_repository.dart';
 import '../../../data/repositories/audit_log_repository.dart';
 import '../../../data/models/or_model.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class VerifikasiAnggotaScreen extends StatefulWidget {
   const VerifikasiAnggotaScreen({super.key});
@@ -32,41 +33,27 @@ class _VerifikasiAnggotaScreenState extends State<VerifikasiAnggotaScreen> {
     return _statusLabel(s) == _filter;
   }
 
-  void _handleApprove(String id, String nama) {
-    context.read<ORRepository>().reviewApplicant(id, ApplicantStatus.diterima);
-    context.read<AuditLogRepository>().logAction(
-      aksi: 'Menerima pendaftaran anggota: $nama',
+  Future<void> _review(String id, String nama, ApplicantStatus status) async {
+    final accepted = status == ApplicantStatus.diterima;
+    final auditRepo = context.read<AuditLogRepository>();
+    final ok = await runWithFeedback(
+      context,
+      () => context.read<ORRepository>().reviewApplicant(id, status),
+      success: accepted ? 'Anggota berhasil diterima & diverifikasi!' : 'Pendaftaran anggota ditolak.',
+      errorPrefix: accepted ? 'Gagal menerima anggota' : 'Gagal menolak pendaftaran',
+    );
+    if (!ok) return;
+    auditRepo.logAction(
+      aksi: '${accepted ? 'Menerima' : 'Menolak'} pendaftaran anggota: $nama',
       tipe: 'Verifikasi',
       entityId: id,
       entityType: 'or_pelamar',
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Anggota berhasil diterima & diverifikasi!', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
     );
   }
 
-  void _handleReject(String id, String nama) {
-    context.read<ORRepository>().reviewApplicant(id, ApplicantStatus.ditolak);
-    context.read<AuditLogRepository>().logAction(
-      aksi: 'Menolak pendaftaran anggota: $nama',
-      tipe: 'Verifikasi',
-      entityId: id,
-      entityType: 'or_pelamar',
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Pendaftaran anggota ditolak.', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
-    );
-  }
+  void _handleApprove(String id, String nama) => _review(id, nama, ApplicantStatus.diterima);
+
+  void _handleReject(String id, String nama) => _review(id, nama, ApplicantStatus.ditolak);
 
   void _showDetailDialog(ORApplicantModel applicant) {
     showDialog(
@@ -175,59 +162,7 @@ class _VerifikasiAnggotaScreenState extends State<VerifikasiAnggotaScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.bgGray,
-          appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.marginPage,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(AppSpacing.radius),
-                          border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                          boxShadow: const [AppColors.hardShadowSm],
-                        ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                          const SizedBox(width: 6),
-                          Text('Kembali', style: AppTypography.labelBold),
-                        ]),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Text('Verifikasi', style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
-                        if (pendingCount > 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryContainer,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                              border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
-                            ),
-                            child: Text(
-                              '$pendingCount',
-                              style: AppTypography.labelBold.copyWith(color: AppColors.onPrimaryContainer),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          appBar: PageAppBar(title: 'Verifikasi', badgeCount: pendingCount),
           body: SafeArea(
             child: Column(
               children: [

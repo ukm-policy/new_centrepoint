@@ -280,7 +280,7 @@ class AdminScreen extends StatelessWidget {
                               'ADMIN',
                               style: AppTypography.labelBold.copyWith(
                                 color: Colors.white,
-                                fontSize: 9,
+                                fontSize: 10,
                                 letterSpacing: 1.5,
                               ),
                             ),
@@ -380,7 +380,7 @@ class _StatCard extends StatelessWidget {
             fontWeight: FontWeight.w800, color: fg,
           )),
           Text(label, style: AppTypography.labelBold.copyWith(
-            color: fg.withValues(alpha: 0.7), fontSize: 9,
+            color: fg.withValues(alpha: 0.7), fontSize: 10,
           )),
         ]),
       ),
@@ -540,7 +540,7 @@ class _AdminMenuTileState extends State<_AdminMenuTile> {
                     border: Border.all(color: Colors.white, width: 1),
                   ),
                   child: Text('${menu.badgeCount}', style: AppTypography.labelBold.copyWith(
-                    color: Colors.white, fontSize: 8,
+                    color: Colors.white, fontSize: 10,
                   )),
                 ),
               ),

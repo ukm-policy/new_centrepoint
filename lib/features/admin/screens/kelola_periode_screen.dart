@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -10,28 +9,27 @@ import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/periode_repository.dart';
 import '../../../data/repositories/audit_log_repository.dart';
 import '../../../data/models/periode_model.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class KelolaPeriodeScreen extends StatelessWidget {
   const KelolaPeriodeScreen({super.key});
 
-  void _setActive(BuildContext context, String id, String namaPeriode) {
-    context.read<PeriodeRepository>().setActivePeriode(id);
-    context.read<AuditLogRepository>().logAction(
+  Future<void> _setActive(BuildContext context, String id, String namaPeriode) async {
+    final periodeRepo = context.read<PeriodeRepository>();
+    final auditRepo = context.read<AuditLogRepository>();
+    final ok = await runWithFeedback(
+      context,
+      () => periodeRepo.setActivePeriode(id),
+      success: '$namaPeriode kini diset sebagai Periode Aktif!',
+      errorPrefix: 'Gagal mengaktifkan periode',
+    );
+    if (!ok) return;
+    auditRepo.logAction(
       aksi: 'Mengaktifkan periode: $namaPeriode',
       tipe: 'Sistem',
       entityId: id,
       entityType: 'periode',
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$namaPeriode kini diset sebagai Periode Aktif!',
-          style: AppTypography.bodyMd.copyWith(color: Colors.white),
-        ),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
     );
   }
 
@@ -95,29 +93,30 @@ class KelolaPeriodeScreen extends StatelessWidget {
                 BrutalistButton(
                   label: 'BUAT PERIODE',
                   icon: Icons.check,
-                  onPressed: () {
+                  onPressed: () async {
                     if (!formKey.currentState!.validate()) return;
                     final year = int.parse(yearCtrl.text.trim());
-                    context.read<PeriodeRepository>().addPeriode(PeriodeModel(
-                      id: '',
-                      nama: nameCtrl.text.trim(),
-                      tanggalMulai: DateTime(year, 1, 1),
-                      tanggalSelesai: DateTime(year + 1, 12, 31),
-                      isActive: false,
-                    ));
-                    context.read<AuditLogRepository>().logAction(
-                      aksi: 'Membuat periode baru: ${nameCtrl.text.trim()}',
+                    final nama = nameCtrl.text.trim();
+                    final periodeRepo = context.read<PeriodeRepository>();
+                    final auditRepo = context.read<AuditLogRepository>();
+                    Navigator.pop(dialogContext);
+                    final ok = await runWithFeedback(
+                      context,
+                      () => periodeRepo.addPeriode(PeriodeModel(
+                        id: '',
+                        nama: nama,
+                        tanggalMulai: DateTime(year, 1, 1),
+                        tanggalSelesai: DateTime(year + 1, 12, 31),
+                        isActive: false,
+                      )),
+                      success: 'Periode baru berhasil dibuat!',
+                      errorPrefix: 'Gagal membuat periode',
+                    );
+                    if (!ok) return;
+                    auditRepo.logAction(
+                      aksi: 'Membuat periode baru: $nama',
                       tipe: 'Sistem',
                       entityType: 'periode',
-                    );
-                    Navigator.pop(dialogContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Periode baru berhasil dibuat!', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-                        backgroundColor: AppColors.success,
-                        behavior: SnackBarBehavior.floating,
-                        margin: const EdgeInsets.all(AppSpacing.marginPage),
-                      ),
                     );
                   },
                 ),
@@ -133,43 +132,7 @@ class KelolaPeriodeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Periode Kepengurusan',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Periode Kepengurusan'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateDialog(context),
         backgroundColor: AppColors.primaryContainer,
@@ -229,7 +192,7 @@ class KelolaPeriodeScreen extends StatelessWidget {
                                   p.isActive ? 'AKTIF' : 'TIDAK AKTIF',
                                   style: AppTypography.labelBold.copyWith(
                                     color: p.isActive ? Colors.white : AppColors.tertiary,
-                                    fontSize: 8,
+                                    fontSize: 10,
                                   ),
                                 ),
                               ),

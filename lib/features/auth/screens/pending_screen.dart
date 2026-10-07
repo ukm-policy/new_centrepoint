@@ -8,6 +8,8 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../core/session/app_session.dart';
+import '../../../core/session/session_controller.dart';
+import '../../../core/errors/app_exception.dart';
 
 class PendingScreen extends StatefulWidget {
   const PendingScreen({super.key});
@@ -24,7 +26,10 @@ class _PendingScreenState extends State<PendingScreen> {
     final router = GoRouter.of(context);
     setState(() => _checking = true);
     try {
-      await Supabase.instance.client.auth.refreshSession();
+      try {
+        await Supabase.instance.client.auth.refreshSession();
+      } catch (_) {}
+      await SessionController.instance.reloadProfile();
       if (!mounted) return;
       
       final status = AppSession.status;
@@ -56,7 +61,7 @@ class _PendingScreenState extends State<PendingScreen> {
       if (!mounted) return;
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('Gagal memperbarui status: $e',
+          content: Text('Gagal memperbarui status: ${friendlyError(e)}',
               style: AppTypography.bodyMd.copyWith(color: Colors.white)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
@@ -192,7 +197,7 @@ class _PendingScreenState extends State<PendingScreen> {
                         if (mounted) {
                           scaffoldMessenger.showSnackBar(
                             SnackBar(
-                              content: Text('Gagal keluar: $e',
+                              content: Text('Gagal keluar: ${friendlyError(e)}',
                                   style: AppTypography.bodyMd.copyWith(color: Colors.white)),
                               backgroundColor: AppColors.error,
                               behavior: SnackBarBehavior.floating,

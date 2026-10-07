@@ -8,6 +8,7 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/berita_repository.dart';
+import '../../../shared/widgets/list_status.dart';
 
 class ListBeritaScreen extends StatefulWidget {
   const ListBeritaScreen({super.key});
@@ -27,7 +28,8 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allBerita = context.watch<BeritaRepository>().publishedBerita;
+    final beritaRepo = context.watch<BeritaRepository>();
+    final allBerita = beritaRepo.publishedBerita;
     final filtered = allBerita.where((b) {
       final matchCat = _filter == 'Semua' || b.kategori == _filter;
       final matchSearch = _search.isEmpty ||
@@ -118,6 +120,14 @@ class _ListBeritaScreenState extends State<ListBeritaScreen> {
               const SizedBox(height: AppSpacing.stackGap),
 
               // List
+              if (filtered.isEmpty)
+                ListStatus(
+                  loading: beritaRepo.isLoading && allBerita.isEmpty,
+                  icon: Icons.article_outlined,
+                  message: allBerita.isEmpty
+                      ? 'Belum ada berita yang diterbitkan.'
+                      : 'Tidak ada berita yang cocok dengan pencarian.',
+                ),
               ...filtered.map((b) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
                     child: BrutalistCard(

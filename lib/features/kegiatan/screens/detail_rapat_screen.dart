@@ -10,6 +10,8 @@ import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/rapat_model.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
 import '../../../data/repositories/rapat_repository.dart';
+import '../../../shared/widgets/missing_data_screen.dart';
+import '../../../shared/utils/feedback.dart';
 
 class DetailRapatScreen extends StatelessWidget {
   const DetailRapatScreen({super.key, required this.id});
@@ -30,7 +32,10 @@ class DetailRapatScreen extends StatelessWidget {
     final rapatRepo = context.watch<RapatRepository>();
     final kegiatanRepo = context.watch<KegiatanRepository>();
 
-    final rapat = rapatRepo.rapat.firstWhere((r) => r.id == id, orElse: () => rapatRepo.rapat.first);
+    final rapat = rapatRepo.rapat.where((r) => r.id == id).firstOrNull;
+    if (rapat == null) {
+      return MissingDataScreen(title: 'Rapat', loading: rapatRepo.isLoading);
+    }
     final kegiatan = rapat.kegiatanId == null
         ? null
         : kegiatanRepo.kegiatan.where((k) => k.id == rapat.kegiatanId).firstOrNull;
@@ -296,7 +301,7 @@ class DetailRapatScreen extends StatelessWidget {
                                 ),
                                 child: Text('Anda',
                                   style: AppTypography.labelBold.copyWith(
-                                    color: AppColors.onPrimaryContainer, fontSize: 9)),
+                                    color: AppColors.onPrimaryContainer, fontSize: 10)),
                               ),
                           ]),
                         );
@@ -374,10 +379,16 @@ class DetailRapatScreen extends StatelessWidget {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  if (ctrl.text.trim().isNotEmpty) {
-                                    context.read<RapatRepository>().updateNotulensi(rapat.id, ctrl.text.trim());
-                                  }
+                                  final text = ctrl.text.trim();
+                                  final repo = context.read<RapatRepository>();
                                   Navigator.pop(ctx);
+                                  if (text.isEmpty) return;
+                                  runWithFeedback(
+                                    context,
+                                    () => repo.updateNotulensi(rapat.id, text),
+                                    success: 'Notulensi tersimpan.',
+                                    errorPrefix: 'Gagal menyimpan notulensi',
+                                  );
                                 },
                                 child: const Text('Simpan'),
                               ),

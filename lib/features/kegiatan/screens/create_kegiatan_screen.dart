@@ -12,6 +12,9 @@ import '../../../data/models/member_model.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
 import '../../../data/repositories/member_repository.dart';
 import '../../../data/repositories/periode_repository.dart';
+import '../../../shared/utils/initials.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 // ── Sie Form Entry ─────────────────────────────────────────────────────────────
 
@@ -157,12 +160,7 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal membuat kegiatan: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorSnack(context, e, prefix: 'Gagal membuat kegiatan');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -194,32 +192,10 @@ class _CreateKegiatanScreenState extends State<CreateKegiatanScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Top bar ──────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.marginPage, 16, AppSpacing.marginPage, 0,
-              ),
-              child: Row(children: [
-                GestureDetector(
-                  onTap: () => context.canPop() ? context.pop() : context.go('/kegiatan'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                const Spacer(),
-                Text('Buat Kegiatan', style: AppTypography.headlineSm),
-              ]),
+            const FloatingAppBar(
+              title: 'Buat Kegiatan',
+              showBack: true,
+              trailing: SizedBox(width: 40),
             ),
             const SizedBox(height: 16),
 
@@ -548,7 +524,7 @@ class _MemberPickerField extends StatelessWidget {
                   ),
                   child: Text('wajib',
                     style: AppTypography.labelBold.copyWith(
-                        fontSize: 9, color: AppColors.onErrorContainer)),
+                        fontSize: 10, color: AppColors.onErrorContainer)),
                 ),
               const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
             ],
@@ -721,7 +697,7 @@ class _MemberPickerSheetState extends State<_MemberPickerSheet> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      m.nama.split(' ').map((e) => e[0]).take(2).join().toUpperCase(),
+                                      initialsOf(m.nama),
                                       style: AppTypography.labelBold.copyWith(
                                         fontSize: 12,
                                         color: isSelected
@@ -949,7 +925,7 @@ class _SieFormCardState extends State<_SieFormCard> {
                     ),
                     child: Center(
                       child: Text(
-                        m.nama.split(' ').map((s) => s[0]).take(2).join().toUpperCase(),
+                        initialsOf(m.nama),
                         style: AppTypography.labelBold.copyWith(fontSize: 10),
                       ),
                     ),

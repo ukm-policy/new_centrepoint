@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/or_model.dart';
 import '../or_repository.dart';
 
-class SupabaseORRepository extends ORRepository {
+class SupabaseORRepository extends ORRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   ORPeriodeModel _periode = ORPeriodeModel(
     id: '',
@@ -18,30 +19,13 @@ class SupabaseORRepository extends ORRepository {
   List<ORApplicantModel> _applicants = [];
 
   SupabaseORRepository() {
-    _loadORData();
-    _db
-        .channel('public:or_periode')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'or_periode',
-          callback: (payload) {
-            _loadORData();
-          },
-        )
-        .subscribe();
-    _db
-        .channel('public:or_pelamar')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'or_pelamar',
-          callback: (payload) {
-            _loadORData();
-          },
-        )
-        .subscribe();
+    reload();
+    listenTable('or_periode', reload);
+    listenTable('or_pelamar', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadORData);
 
   Future<void> _loadORData() async {
     try {
@@ -109,6 +93,7 @@ class SupabaseORRepository extends ORRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading OR data: $e');
+      rethrow;
     }
   }
 
@@ -119,7 +104,7 @@ class SupabaseORRepository extends ORRepository {
   List<ORApplicantModel> get applicants => List.unmodifiable(_applicants);
 
   @override
-  void updatePeriode(ORPeriodeModel p) async {
+  Future<void> updatePeriode(ORPeriodeModel p) async {
     try {
       await _db.from('or_periode').upsert({
         'id': p.id.isNotEmpty ? p.id : null,
@@ -131,14 +116,15 @@ class SupabaseORRepository extends ORRepository {
         'bidang_tersedia': p.bidangTersedia,
         'is_manually_open': p.isManuallyOpen,
       });
-      _loadORData();
+      reload();
     } catch (e) {
       debugPrint('Error updating OR period: $e');
+      rethrow;
     }
   }
 
   @override
-  void addApplicant(ORApplicantModel app) async {
+  Future<void> addApplicant(ORApplicantModel app) async {
     try {
       await _db.from('or_pelamar').insert({
         'periode_id': app.periodeId,
@@ -154,22 +140,24 @@ class SupabaseORRepository extends ORRepository {
         'tanggal_daftar': app.tanggalDaftar.toIso8601String(),
         'catatan': app.catatan,
       });
-      _loadORData();
+      reload();
     } catch (e) {
       debugPrint('Error adding applicant: $e');
+      rethrow;
     }
   }
 
   @override
-  void reviewApplicant(String id, ApplicantStatus status, {String? catatan}) async {
+  Future<void> reviewApplicant(String id, ApplicantStatus status, {String? catatan}) async {
     try {
       await _db.from('or_pelamar').update({
         'status': status.toString().split('.').last,
         'catatan': catatan,
       }).eq('id', id);
-      _loadORData();
+      reload();
     } catch (e) {
       debugPrint('Error reviewing applicant: $e');
+      rethrow;
     }
   }
 }

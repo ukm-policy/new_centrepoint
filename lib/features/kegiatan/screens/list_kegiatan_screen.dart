@@ -12,6 +12,7 @@ import '../../../data/models/kegiatan_model.dart';
 import '../../../data/models/rapat_model.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
 import '../../../data/repositories/rapat_repository.dart';
+import '../../../shared/widgets/list_status.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -225,7 +226,8 @@ class _AcaraTabState extends State<_AcaraTab> {
 
   @override
   Widget build(BuildContext context) {
-    final kegiatanList = context.watch<KegiatanRepository>().kegiatan;
+    final kegiatanRepo = context.watch<KegiatanRepository>();
+    final kegiatanList = kegiatanRepo.kegiatan;
     final filtered = kegiatanList.where((k) {
       if (_filter == 'Semua') return true;
       if (_filter == 'Upcoming' || _filter == 'Akan Datang') {
@@ -274,6 +276,15 @@ class _AcaraTabState extends State<_AcaraTab> {
           ),
         ),
         const SizedBox(height: AppSpacing.stackGap),
+
+        if (filtered.isEmpty)
+          ListStatus(
+            loading: kegiatanRepo.isLoading && kegiatanList.isEmpty,
+            icon: Icons.event_busy_outlined,
+            message: kegiatanList.isEmpty
+                ? 'Belum ada kegiatan.'
+                : 'Tidak ada kegiatan dengan status ini.',
+          ),
 
         ...filtered.map((k) => Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),

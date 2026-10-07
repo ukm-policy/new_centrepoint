@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -10,8 +11,10 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../core/session/app_session.dart';
+import '../../../shared/utils/feedback.dart';
 import '../../../data/repositories/absensi_repository.dart';
 import '../../../data/models/absensi_model.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AbsensiScreen extends StatefulWidget {
   const AbsensiScreen({super.key});
@@ -24,9 +27,12 @@ class _AbsensiScreenState extends State<AbsensiScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _scanAnim;
 
-  // Foto bukti sekret (simulasi: null = belum ambil foto)
-  bool _hasFoto = false;
+  // Foto bukti sekret (null = belum ambil foto)
+  final _picker = ImagePicker();
+  Uint8List? _fotoBytes;
+  String _fotoExt = 'jpg';
   bool _sekretSubmitted = false;
+  bool _sekretUploading = false;
 
   bool _isProcessingScan = false;
 
@@ -45,27 +51,41 @@ class _AbsensiScreenState extends State<AbsensiScreen>
     super.dispose();
   }
 
-  void _ambilFoto() {
-    setState(() => _hasFoto = true);
+  Future<void> _ambilFoto() async {
+    try {
+      final file = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+        maxWidth: 1280,
+      );
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      final name = file.name.toLowerCase();
+      if (!mounted) return;
+      setState(() {
+        _fotoBytes = bytes;
+        _fotoExt = name.contains('.') ? name.split('.').last : 'jpg';
+      });
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e, prefix: 'Gagal membuka kamera');
+    }
   }
 
-  void _submitSekret() {
-    if (!_hasFoto) return;
-    setState(() => _sekretSubmitted = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Absen masuk sekret berhasil dicatat!',
-          style: AppTypography.bodyMd.copyWith(color: Colors.white),
-        ),
-        backgroundColor: AppColors.secondary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radius),
-          side: const BorderSide(color: AppColors.blackCharcoal, width: 2),
-        ),
-      ),
+  Future<void> _submitSekret() async {
+    final bytes = _fotoBytes;
+    if (bytes == null || _sekretUploading) return;
+    setState(() => _sekretUploading = true);
+    final ok = await runWithFeedback(
+      context,
+      () => context.read<AbsensiRepository>().absenSekret(bytes, _fotoExt),
+      success: 'Absen masuk sekret berhasil dicatat!',
+      errorPrefix: 'Absen sekret gagal',
     );
+    if (!mounted) return;
+    setState(() {
+      _sekretUploading = false;
+      if (ok) _sekretSubmitted = true;
+    });
   }
 
   void _handleScan(String qrContent) async {
@@ -73,21 +93,13 @@ class _AbsensiScreenState extends State<AbsensiScreen>
     _isProcessingScan = true;
 
     try {
-      final uid = AppSession.currentUser.id;
-      final name = AppSession.nama;
-      
-      context.read<AbsensiRepository>().scanQr(qrContent, uid, name);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Mengirim data absensi...', style: AppTypography.bodyMd),
-          backgroundColor: AppColors.blackCharcoal,
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error scan: $e'), backgroundColor: AppColors.error),
+      await runWithFeedback(
+        context,
+        () => context
+            .read<AbsensiRepository>()
+            .scanQr(qrContent, AppSession.id, AppSession.nama),
+        success: 'Absensi berhasil dicatat. Terima kasih!',
+        errorPrefix: 'Absensi gagal',
       );
     } finally {
       await Future.delayed(const Duration(seconds: 2));
@@ -292,11 +304,12 @@ class _AbsensiScreenState extends State<AbsensiScreen>
                       const SizedBox(height: 12),
 
                       _SekretCard(
-                        hasFoto: _hasFoto,
+                        fotoBytes: _fotoBytes,
                         submitted: _sekretSubmitted,
+                        uploading: _sekretUploading,
                         onAmbilFoto: _ambilFoto,
                         onUlangFoto: () => setState(() {
-                          _hasFoto = false;
+                          _fotoBytes = null;
                           _sekretSubmitted = false;
                         }),
                         onSubmit: _submitSekret,
@@ -321,16 +334,20 @@ class _AbsensiScreenState extends State<AbsensiScreen>
 
 class _SekretCard extends StatelessWidget {
   const _SekretCard({
-    required this.hasFoto,
+    required this.fotoBytes,
     required this.submitted,
+    required this.uploading,
     required this.onAmbilFoto,
     required this.onUlangFoto,
     required this.onSubmit,
     required this.onLihatRiwayat,
   });
 
-  final bool hasFoto, submitted;
+  final Uint8List? fotoBytes;
+  final bool submitted, uploading;
   final VoidCallback onAmbilFoto, onUlangFoto, onSubmit, onLihatRiwayat;
+
+  bool get hasFoto => fotoBytes != null;
 
   @override
   Widget build(BuildContext context) {
@@ -391,7 +408,7 @@ class _SekretCard extends StatelessWidget {
           child: submitted
               ? _FotoSubmitted()
               : hasFoto
-                  ? _FotoPreview(onUlang: onUlangFoto)
+                  ? _FotoPreview(bytes: fotoBytes!, onUlang: uploading ? null : onUlangFoto)
                   : _FotoPlaceholder(onAmbil: onAmbilFoto),
         ),
         const SizedBox(height: 16),
@@ -415,11 +432,13 @@ class _SekretCard extends StatelessWidget {
         if (!submitted)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: BrutalistButton(
-              label: 'ABSEN MASUK SEKRET',
-              icon: Icons.check_circle_outline,
-              onPressed: hasFoto ? onSubmit : null,
-            ),
+            child: uploading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.blackCharcoal))
+                : BrutalistButton(
+                    label: 'ABSEN MASUK SEKRET',
+                    icon: Icons.check_circle_outline,
+                    onPressed: hasFoto ? onSubmit : null,
+                  ),
           ),
 
         if (submitted)
@@ -487,8 +506,9 @@ class _FotoPlaceholder extends StatelessWidget {
 }
 
 class _FotoPreview extends StatelessWidget {
-  const _FotoPreview({required this.onUlang});
-  final VoidCallback onUlang;
+  const _FotoPreview({required this.bytes, required this.onUlang});
+  final Uint8List bytes;
+  final VoidCallback? onUlang;
 
   @override
   Widget build(BuildContext context) {
@@ -506,30 +526,15 @@ class _FotoPreview extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Simulasi foto (gradient sebagai placeholder)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppSpacing.radius - 2),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2D3436), Color(0xFF636E72)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppSpacing.radius - 2),
+                child: Image.memory(
+                  bytes,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
                 ),
               ),
-              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Icon(Icons.home_work, size: 48, color: Colors.white54),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Text('foto_sekret_preview.jpg',
-                    style: AppTypography.labelBold.copyWith(color: Colors.white70)),
-                ),
-              ]),
             ],
           ),
         ),

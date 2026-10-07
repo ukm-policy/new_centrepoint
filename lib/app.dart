@@ -209,6 +209,11 @@ final _router = GoRouter(
           path: '/anggota',
           builder: (_, _) => const ListMembersScreen(),
           routes: [
+            // Harus sebelum ':id' supaya 'bidang' tidak dianggap id anggota.
+            GoRoute(
+              path: 'bidang',
+              builder: (_, _) => const ListMembersScreen(onlyMyBidang: true),
+            ),
             GoRoute(
               path: ':id',
               builder: (_, state) =>

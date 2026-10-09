@@ -126,38 +126,14 @@ class SupabaseAbsensiRepository extends AbsensiRepository with RealtimeRepositor
 
   @override
   Future<void> scanQr(String qrContent, String memberId, String memberNama) async {
+    final sessionId = qrContent.trim();
+    if (!_uuidPattern.hasMatch(sessionId)) {
+      throw const AppException('QR Code tidak dikenali. Pastikan Anda memindai QR absensi resmi.');
+    }
     try {
-      final sessionId = qrContent.trim();
-      if (!_uuidPattern.hasMatch(sessionId)) {
-        throw const AppException('QR Code tidak dikenali. Pastikan Anda memindai QR absensi resmi.');
-      }
-
-      // Find valid active session
-      final sessionData = await _db.from('qr_session').select().eq('id', sessionId).maybeSingle();
-      if (sessionData == null) {
-        throw const AppException('Sesi absensi tidak ditemukan.');
-      }
-
-      final isActive = sessionData['is_active'] as bool? ?? false;
-      final exp = DateTime.tryParse(sessionData['expired_at'] ?? '') ?? DateTime.now();
-      if (!isActive || !exp.isAfter(DateTime.now())) {
-        throw const AppException('QR Code sudah kedaluwarsa atau dinonaktifkan.');
-      }
-
-      final kid = sessionData['kegiatan_id'] as String?;
-      if (kid == null) {
-        throw const AppException('Sesi absensi tidak terhubung ke kegiatan.');
-      }
-      final tipe = sessionData['tipe_kegiatan'] as String? ?? 'kegiatan';
-
-      await _db.from('absensi').upsert({
-        'member_id': memberId,
-        'kegiatan_id': kid,
-        'tipe_kegiatan': tipe,
-        'status': 'hadir',
-        'waktu_scan': DateTime.now().toIso8601String(),
-      }, onConflict: 'member_id, kegiatan_id, tipe_kegiatan');
-
+      // Validasi sesi & pencatatan hadir dilakukan di server (fungsi scan_qr),
+      // jadi anggota tidak bisa menandai dirinya hadir tanpa QR yang sah.
+      await _db.rpc('scan_qr', params: {'p_session': sessionId});
       reload();
     } catch (e) {
       debugPrint('Error scanning QR: $e');

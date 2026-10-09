@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'realtime_repository_mixin.dart';
-import '../../../core/errors/app_exception.dart';
 import '../../models/kegiatan_model.dart';
 import '../kegiatan_repository.dart';
 
@@ -286,39 +285,9 @@ class SupabaseKegiatanRepository extends KegiatanRepository with RealtimeReposit
   @override
   Future<void> registerParticipant(String id) async {
     try {
-      final user = _db.auth.currentUser;
-      if (user == null) {
-        throw const AppException('Sesi berakhir. Silakan login kembali.');
-      }
-
-      final k = _kegiatan.where((item) => item.id == id).firstOrNull;
-      if (k == null) throw const AppException('Kegiatan tidak ditemukan.');
-      if (k.kuota > 0 && k.pesertaTerdaftar >= k.kuota) {
-        throw const AppException('Kuota kegiatan sudah penuh.');
-      }
-
-      final existing = await _db
-          .from('absensi')
-          .select('id')
-          .eq('member_id', user.id)
-          .eq('kegiatan_id', id)
-          .eq('tipe_kegiatan', 'kegiatan')
-          .maybeSingle();
-      if (existing != null) {
-        throw const AppException('Anda sudah terdaftar di kegiatan ini.');
-      }
-
-      // Daftarkan dulu, baru tambah hitungan peserta.
-      await _db.from('absensi').insert({
-        'member_id': user.id,
-        'kegiatan_id': id,
-        'tipe_kegiatan': 'kegiatan',
-        'status': 'belumAbsen',
-      });
-      await _db.from('kegiatan').update({
-        'peserta_terdaftar': k.pesertaTerdaftar + 1,
-      }).eq('id', id);
-
+      // Cek duplikat & kuota serta penambahan hitungan peserta dilakukan
+      // atomik di server (fungsi daftar_kegiatan).
+      await _db.rpc('daftar_kegiatan', params: {'p_kegiatan': id});
       reload();
     } catch (e) {
       debugPrint('Error registering participant: $e');

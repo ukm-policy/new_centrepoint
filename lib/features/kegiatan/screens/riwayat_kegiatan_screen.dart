@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -8,6 +7,7 @@ import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class _LocalRiwayat {
   const _LocalRiwayat({
@@ -92,7 +92,7 @@ class _RiwayatKegiatanScreenState extends State<RiwayatKegiatanScreen> {
 
     final filtered = list.where((item) {
       if (_filter == 'Semua') return true;
-      if (_filter == 'Tahun Ini') return item.year == '2026';
+      if (_filter == 'Tahun Ini') return item.year == '${DateTime.now().year}';
       return item.year == '2023';
     }).toList();
 
@@ -100,43 +100,7 @@ class _RiwayatKegiatanScreenState extends State<RiwayatKegiatanScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Riwayat Kegiatan',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Riwayat Kegiatan'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.marginPage, 8, AppSpacing.marginPage, AppSpacing.stackGap,
@@ -246,7 +210,7 @@ class _RiwayatKegiatanScreenState extends State<RiwayatKegiatanScreen> {
                                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                                       border: Border.all(color: AppColors.borderSlate, width: 1),
                                     ),
-                                    child: Text(item.role.toUpperCase(), style: AppTypography.labelBold.copyWith(fontSize: 8, color: AppColors.tertiary)),
+                                    child: Text(item.role.toUpperCase(), style: AppTypography.labelBold.copyWith(fontSize: 10, color: AppColors.tertiary)),
                                   ),
                                   const Spacer(),
                                   Text(item.date,
@@ -312,7 +276,7 @@ class _AttendanceBadge extends StatelessWidget {
         hadir ? 'Hadir' : 'Tidak Hadir',
         style: AppTypography.labelBold.copyWith(
           color: hadir ? AppColors.onSecondaryContainer : AppColors.onErrorContainer,
-          fontSize: 9,
+          fontSize: 10,
         ),
       ),
     );

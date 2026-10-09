@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
 import '../models/poin_model.dart';
 import '../dummy/dummy_poin.dart';
 
-abstract class PoinRepository extends ChangeNotifier {
+abstract class PoinRepository extends ChangeNotifier with RepositoryLoadState {
   List<PoinEntryModel> get poinEntries;
   List<LeaderboardEntryModel> get leaderboard;
   Future<void> addPoinEntry(PoinEntryModel entry);

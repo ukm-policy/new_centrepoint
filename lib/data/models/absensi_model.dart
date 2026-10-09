@@ -6,10 +6,11 @@ class AbsensiModel {
   final String memberNama;        // denormalized
   final String kegiatanId;        // ref ke KegiatanModel.id atau RapatModel.id
   final String kegiatanJudul;     // denormalized
-  final String tipeKegiatan;      // 'kegiatan' | 'rapat'
+  final String tipeKegiatan;      // 'kegiatan' | 'rapat' | 'sekret'
   final StatusAbsensi status;
   final DateTime? waktuScan;      // null jika belum absen
   final String? keterangan;       // diisi jika izin
+  final String? fotoUrl;          // path foto di bucket absensi_sekret (tipe 'sekret')
 
   const AbsensiModel({
     required this.id,
@@ -21,6 +22,7 @@ class AbsensiModel {
     required this.status,
     this.waktuScan,
     this.keterangan,
+    this.fotoUrl,
   });
 
   AbsensiModel copyWith({
@@ -33,6 +35,7 @@ class AbsensiModel {
     StatusAbsensi? status,
     DateTime? waktuScan,
     String? keterangan,
+    String? fotoUrl,
   }) {
     return AbsensiModel(
       id: id ?? this.id,
@@ -44,6 +47,7 @@ class AbsensiModel {
       status: status ?? this.status,
       waktuScan: waktuScan ?? this.waktuScan,
       keterangan: keterangan ?? this.keterangan,
+      fotoUrl: fotoUrl ?? this.fotoUrl,
     );
   }
 
@@ -58,6 +62,7 @@ class AbsensiModel {
       status: StatusAbsensi.values.firstWhere((e) => e.toString().split('.').last == json['status']),
       waktuScan: json['waktuScan'] != null ? DateTime.parse(json['waktuScan'] as String) : null,
       keterangan: json['keterangan'] as String?,
+      fotoUrl: json['fotoUrl'] as String?,
     );
   }
 
@@ -72,6 +77,7 @@ class AbsensiModel {
       'status': status.toString().split('.').last,
       'waktuScan': waktuScan?.toIso8601String(),
       'keterangan': keterangan,
+      'fotoUrl': fotoUrl,
     };
   }
 }

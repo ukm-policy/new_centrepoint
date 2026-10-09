@@ -1,33 +1,26 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
+import 'kepengurusan_utils.dart';
 import '../../models/user_model.dart';
 import '../user_repository.dart';
 
-class SupabaseUserRepository extends UserRepository {
+class SupabaseUserRepository extends UserRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<UserModel> _users = [];
 
   SupabaseUserRepository() {
-    _loadUsers();
+    reload();
     // Realtime subscription to profiles table
-    _db
-        .channel('public:profiles')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'profiles',
-          callback: (payload) {
-            _loadUsers();
-          },
-        )
-        .subscribe();
+    listenTable('profiles', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadUsers);
 
   Future<void> _loadUsers() async {
     try {
-      final data = await _db.from('profiles').select(
-        '*, kepengurusan(jabatan(nama, level_akses, kode_role, bidang(nama)))'
-      );
+      final data = await selectProfilesWithJabatan(_db);
       
       _users = data.map<UserModel>((json) {
         final id = json['id'] as String;
@@ -48,9 +41,8 @@ class SupabaseUserRepository extends UserRepository {
         String? jabatan;
 
         final kepList = json['kepengurusan'] as List?;
-        if (kepList != null && kepList.isNotEmpty) {
-          final firstKep = kepList.first as Map<String, dynamic>?;
-          final jab = firstKep?['jabatan'] as Map<String, dynamic>?;
+        {
+          final jab = pickJabatan(kepList);
           if (jab != null) {
             jabatan = jab['nama'] as String?;
             final lvl = jab['level_akses'] as int? ?? 1;
@@ -88,6 +80,7 @@ class SupabaseUserRepository extends UserRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading users: $e');
+      rethrow;
     }
   }
 
@@ -95,12 +88,12 @@ class SupabaseUserRepository extends UserRepository {
   List<UserModel> get users => List.unmodifiable(_users);
 
   @override
-  void addUser(UserModel user) {
+  Future<void> addUser(UserModel user) async {
     // Adding user is handled by Supabase Auth sign up.
   }
 
   @override
-  void updateUser(UserModel user) async {
+  Future<void> updateUser(UserModel user) async {
     try {
       await _db.from('profiles').update({
         'nama': user.nama,
@@ -123,29 +116,29 @@ class SupabaseUserRepository extends UserRepository {
               'no_hp': user.noHp,
               'prodi': user.prodi,
               'angkatan': user.angkatan,
-              'status': user.isVerified ? 'active' : 'pending',
               'avatar_url': user.avatarUrl,
-              'is_admin': user.isAdmin,
             },
           ),
         );
       }
 
-      _loadUsers();
+      reload();
     } catch (e) {
       debugPrint('Error updating user: $e');
+      rethrow;
     }
   }
 
   @override
-  void verifyUser(String id) async {
+  Future<void> verifyUser(String id) async {
     try {
       await _db.from('profiles').update({
         'status': 'active',
       }).eq('id', id);
-      _loadUsers();
+      reload();
     } catch (e) {
       debugPrint('Error verifying user: $e');
+      rethrow;
     }
   }
 }

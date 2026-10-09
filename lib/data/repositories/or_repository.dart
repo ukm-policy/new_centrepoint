@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
 import '../models/or_model.dart';
 import '../dummy/dummy_or.dart';
 
-abstract class ORRepository extends ChangeNotifier {
+abstract class ORRepository extends ChangeNotifier with RepositoryLoadState {
   ORPeriodeModel get orPeriode;
   List<ORApplicantModel> get applicants;
-  void updatePeriode(ORPeriodeModel p);
-  void addApplicant(ORApplicantModel app);
-  void reviewApplicant(String id, ApplicantStatus status, {String? catatan});
+  Future<void> updatePeriode(ORPeriodeModel p);
+  Future<void> addApplicant(ORApplicantModel app);
+  Future<void> reviewApplicant(String id, ApplicantStatus status, {String? catatan});
 }
 
 class DummyORRepository extends ORRepository {
@@ -21,19 +22,19 @@ class DummyORRepository extends ORRepository {
   List<ORApplicantModel> get applicants => List.unmodifiable(_applicants);
 
   @override
-  void updatePeriode(ORPeriodeModel p) {
+  Future<void> updatePeriode(ORPeriodeModel p) async {
     _periode = p;
     notifyListeners();
   }
 
   @override
-  void addApplicant(ORApplicantModel app) {
+  Future<void> addApplicant(ORApplicantModel app) async {
     _applicants.add(app);
     notifyListeners();
   }
 
   @override
-  void reviewApplicant(String id, ApplicantStatus status, {String? catatan}) {
+  Future<void> reviewApplicant(String id, ApplicantStatus status, {String? catatan}) async {
     final idx = _applicants.indexWhere((a) => a.id == id);
     if (idx != -1) {
       _applicants[idx] = _applicants[idx].copyWith(
@@ -67,21 +68,21 @@ class ApiORRepository extends ORRepository {
   List<ORApplicantModel> get applicants => List.unmodifiable(_applicants);
 
   @override
-  void updatePeriode(ORPeriodeModel p) {
+  Future<void> updatePeriode(ORPeriodeModel p) async {
     // POST /api/or/periode
     _periode = p;
     notifyListeners();
   }
 
   @override
-  void addApplicant(ORApplicantModel app) {
+  Future<void> addApplicant(ORApplicantModel app) async {
     // POST /api/or/apply
     _applicants.add(app);
     notifyListeners();
   }
 
   @override
-  void reviewApplicant(String id, ApplicantStatus status, {String? catatan}) {
+  Future<void> reviewApplicant(String id, ApplicantStatus status, {String? catatan}) async {
     // POST /api/or/applicants/$id/review
     final idx = _applicants.indexWhere((a) => a.id == id);
     if (idx != -1) {

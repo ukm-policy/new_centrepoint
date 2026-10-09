@@ -9,6 +9,8 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/kegiatan_model.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
+import '../../../shared/widgets/missing_data_screen.dart';
+import '../../../shared/utils/feedback.dart';
 
 class DetailKegiatanScreen extends StatelessWidget {
   const DetailKegiatanScreen({super.key, required this.id});
@@ -27,7 +29,10 @@ class DetailKegiatanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repo = context.watch<KegiatanRepository>();
-    final item = repo.kegiatan.firstWhere((k) => k.id == id, orElse: () => repo.kegiatan.first);
+    final item = repo.kegiatan.where((k) => k.id == id).firstOrNull;
+    if (item == null) {
+      return MissingDataScreen(title: 'Kegiatan', loading: repo.isLoading);
+    }
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
@@ -43,9 +48,7 @@ class DetailKegiatanScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: GestureDetector(
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Fitur edit kegiatan segera hadir')),
-                    ),
+                    onTap: () => context.push('/kegiatan/${item.id}/edit'),
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -246,12 +249,12 @@ class DetailKegiatanScreen extends StatelessWidget {
                     BrutalistButton(
                       label: 'DAFTAR SEKARANG',
                       icon: Icons.how_to_reg,
-                      onPressed: () {
-                        context.read<KegiatanRepository>().registerParticipant(item.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Berhasil mendaftar kegiatan!')),
-                        );
-                      },
+                      onPressed: () => runWithFeedback(
+                        context,
+                        () => context.read<KegiatanRepository>().registerParticipant(item.id),
+                        success: 'Berhasil mendaftar kegiatan!',
+                        errorPrefix: 'Gagal mendaftar',
+                      ),
                     )
                   else if (item.status == 'Berlangsung')
                     BrutalistButton(

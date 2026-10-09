@@ -1,11 +1,18 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../data/models/uang_khas_model.dart';
+import '../../../data/repositories/member_repository.dart';
+import '../../../data/repositories/uang_khas_repository.dart';
+import '../../../shared/utils/feedback.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/brutalist_button.dart';
+import '../../../shared/widgets/list_status.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class VerifikasiKhasScreen extends StatefulWidget {
   const VerifikasiKhasScreen({super.key});
@@ -15,53 +22,65 @@ class VerifikasiKhasScreen extends StatefulWidget {
 }
 
 class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
+  // Catatan: pembayaran yang ditolak dikembalikan ke status "belum bayar"
+  // (bukti dihapus), jadi tidak ada filter "Ditolak".
   String _filter = 'Menunggu';
-  final List<_KhasSubmission> _submissions = [
-    _KhasSubmission(id: '1', name: 'Farhan Maulana', month: 'Juli', nominal: 'Rp 20.000', date: '18 Juni 2026', status: 'Menunggu'),
-    _KhasSubmission(id: '2', name: 'Nabila Syakieb', month: 'Juli', nominal: 'Rp 20.000', date: '19 Juni 2026', status: 'Menunggu'),
-    _KhasSubmission(id: '3', name: 'Raka Saputra', month: 'Juni', nominal: 'Rp 20.000', date: '19 Juni 2026', status: 'Menunggu'),
-    _KhasSubmission(id: '4', name: 'Genta Buana', month: 'Mei', nominal: 'Rp 20.000', date: '15 Juni 2026', status: 'Dikonfirmasi'),
-    _KhasSubmission(id: '5', name: 'Sarah Azhari', month: 'April', nominal: 'Rp 20.000', date: '10 Juni 2026', status: 'Ditolak'),
-  ];
 
-  List<_KhasSubmission> get _filtered => _submissions.where((s) {
-        if (_filter == 'Semua') return true;
-        return s.status == _filter;
-      }).toList();
+  static const _bulanSingkat = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-  int get _pendingCount => _submissions.where((s) => s.status == 'Menunggu').length;
+  static String _fmtDate(DateTime? d) =>
+      d == null ? '-' : '${d.day} ${_bulanSingkat[d.month - 1]} ${d.year}';
 
-  void _handleApprove(String id) {
-    setState(() {
-      final idx = _submissions.indexWhere((s) => s.id == id);
-      if (idx != -1) {
-        _submissions[idx] = _submissions[idx].copyWith(status: 'Dikonfirmasi');
-      }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Pembayaran iuran disetujui & lunas!', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
+  static String _fmtRupiah(int v) => 'Rp ${v.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (m) => '${m[1]}.',
+      )}';
+
+  List<_KhasSubmission> _buildSubmissions(BuildContext context) {
+    final khas = context.watch<UangKhasRepository>().khasBulan;
+    final members = context.watch<MemberRepository>().members;
+    final namaById = {for (final m in members) m.id: m.nama};
+
+    final list = khas
+        .where((k) =>
+            k.status == StatusBayar.pending ||
+            (k.status == StatusBayar.lunas && k.buktiUrl != null))
+        .map((k) => _KhasSubmission(
+              id: k.id,
+              name: namaById[k.memberId] ?? 'Anggota',
+              month: '${k.bulan} ${k.tahun}',
+              nominal: _fmtRupiah(k.nominal),
+              date: _fmtDate(k.tanggalBayar),
+              status: k.status == StatusBayar.pending ? 'Menunggu' : 'Dikonfirmasi',
+              buktiUrl: k.buktiUrl,
+              tanggalBayar: k.tanggalBayar,
+            ))
+        .toList()
+      // Yang menunggu paling atas, lalu terbaru dulu.
+      ..sort((a, b) {
+        if (a.status != b.status) return a.status == 'Menunggu' ? -1 : 1;
+        final ta = a.tanggalBayar ?? DateTime(0);
+        final tb = b.tanggalBayar ?? DateTime(0);
+        return tb.compareTo(ta);
+      });
+    return list;
+  }
+
+  Future<void> _handleApprove(_KhasSubmission sub) async {
+    await runWithFeedback(
+      context,
+      () => context.read<UangKhasRepository>().verifyPayment(sub.id, sub.name),
+      success: 'Pembayaran iuran ${sub.name} disetujui & lunas!',
+      errorPrefix: 'Gagal memverifikasi',
     );
   }
 
-  void _handleReject(String id) {
-    setState(() {
-      final idx = _submissions.indexWhere((s) => s.id == id);
-      if (idx != -1) {
-        _submissions[idx] = _submissions[idx].copyWith(status: 'Ditolak');
-      }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Pembayaran iuran ditolak.', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
+  Future<void> _handleReject(_KhasSubmission sub) async {
+    await runWithFeedback(
+      context,
+      () => context.read<UangKhasRepository>().rejectPayment(sub.id),
+      success: 'Pembayaran iuran ${sub.name} ditolak.',
+      errorPrefix: 'Gagal menolak pembayaran',
     );
   }
 
@@ -97,7 +116,6 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
               _DetailField(label: 'Nominal Transfer', value: submission.nominal),
               const SizedBox(height: 12),
               
-              // Fake Receipt image placeholder
               Text('Foto Bukti Transfer:', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
               const SizedBox(height: 6),
               BrutalistCard(
@@ -105,16 +123,22 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
                 padding: EdgeInsets.zero,
                 backgroundColor: AppColors.surfaceContainerHigh,
                 child: SizedBox(
-                  height: 140,
+                  height: 220,
                   width: double.infinity,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.receipt_long, size: 40, color: AppColors.tertiary),
-                      const SizedBox(height: 6),
-                      Text('bukti_transfer.jpg', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
-                    ],
-                  ),
+                  child: submission.buktiUrl == null
+                      ? const _ReceiptPlaceholder(label: 'Tidak ada bukti')
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(AppSpacing.radius),
+                          child: CachedNetworkImage(
+                            imageUrl: submission.buktiUrl!,
+                            fit: BoxFit.contain,
+                            placeholder: (_, _) => const Center(
+                              child: CircularProgressIndicator(color: AppColors.blackCharcoal),
+                            ),
+                            errorWidget: (_, _, _) =>
+                                const _ReceiptPlaceholder(label: 'Gambar tidak dapat dimuat'),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -124,7 +148,7 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
                   icon: Icons.check,
                   onPressed: () {
                     Navigator.pop(context);
-                    _handleApprove(submission.id);
+                    _handleApprove(submission);
                   },
                 ),
                 const SizedBox(height: 12),
@@ -134,7 +158,7 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
                   icon: Icons.close,
                   onPressed: () {
                     Navigator.pop(context);
-                    _handleReject(submission.id);
+                    _handleReject(submission);
                   },
                 ),
               ],
@@ -148,68 +172,20 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
   Color _statusColor(String status) {
     return switch (status) {
       'Dikonfirmasi' => AppColors.success,
-      'Ditolak' => AppColors.errorContainer,
       _ => AppColors.secondaryContainer,
     };
   }
 
   @override
   Widget build(BuildContext context) {
+    final submissions = _buildSubmissions(context);
+    final filtered = submissions.where((s) => _filter == 'Semua' || s.status == _filter).toList();
+    final pendingCount = submissions.where((s) => s.status == 'Menunggu').length;
+    final loading = context.watch<UangKhasRepository>().isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Text('Verifikasi Kas', style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
-                    if (_pendingCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                          border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
-                        ),
-                        child: Text(
-                          '$_pendingCount',
-                          style: AppTypography.labelBold.copyWith(color: AppColors.onPrimaryContainer),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Verifikasi Kas', badgeCount: pendingCount),
       body: SafeArea(
         child: Column(
           children: [
@@ -219,7 +195,7 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: ['Semua', 'Menunggu', 'Dikonfirmasi', 'Ditolak'].map((f) {
+                  children: ['Semua', 'Menunggu', 'Dikonfirmasi'].map((f) {
                     final active = _filter == f;
                     return GestureDetector(
                       onTap: () => setState(() => _filter = f),
@@ -249,18 +225,17 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
 
             // Submissions List
             Expanded(
-              child: _filtered.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Tidak ada bukti transfer masuk.',
-                        style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
-                      ),
+              child: filtered.isEmpty
+                  ? ListStatus(
+                      loading: loading && submissions.isEmpty,
+                      icon: Icons.receipt_long_outlined,
+                      message: 'Tidak ada bukti transfer masuk.',
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage),
-                      itemCount: _filtered.length,
+                      itemCount: filtered.length,
                       itemBuilder: (context, i) {
-                        final sub = _filtered[i];
+                        final sub = filtered[i];
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: AppSpacing.stackGap),
@@ -290,7 +265,7 @@ class _VerifikasiKhasScreenState extends State<VerifikasiKhasScreen> {
                                         sub.status,
                                         style: AppTypography.labelBold.copyWith(
                                           color: sub.status == 'Dikonfirmasi' ? AppColors.onSuccess : AppColors.onSurface,
-                                          fontSize: 9,
+                                          fontSize: 10,
                                         ),
                                       ),
                                     ),
@@ -348,6 +323,23 @@ class _DetailField extends StatelessWidget {
   }
 }
 
+class _ReceiptPlaceholder extends StatelessWidget {
+  const _ReceiptPlaceholder({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.receipt_long, size: 40, color: AppColors.tertiary),
+        const SizedBox(height: 6),
+        Text(label, style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+      ],
+    );
+  }
+}
+
 class _KhasSubmission {
   const _KhasSubmission({
     required this.id,
@@ -356,18 +348,11 @@ class _KhasSubmission {
     required this.nominal,
     required this.date,
     required this.status,
+    this.buktiUrl,
+    this.tanggalBayar,
   });
 
   final String id, name, month, nominal, date, status;
-
-  _KhasSubmission copyWith({String? status}) {
-    return _KhasSubmission(
-      id: id,
-      name: name,
-      month: month,
-      nominal: nominal,
-      date: date,
-      status: status ?? this.status,
-    );
-  }
+  final String? buktiUrl;
+  final DateTime? tanggalBayar;
 }

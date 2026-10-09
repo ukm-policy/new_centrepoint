@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
 import '../../../data/repositories/inbox_repository.dart';
+import '../../../shared/widgets/missing_data_screen.dart';
 
 class DetailPengumumanScreen extends StatelessWidget {
   const DetailPengumumanScreen({super.key, required this.id});
@@ -14,16 +15,16 @@ class DetailPengumumanScreen extends StatelessWidget {
   Color _getCatColor(String category) => switch (category) {
         'PENTING' => AppColors.primaryContainer,
         'KEGIATAN' => AppColors.errorContainer,
-        'KEUANGAN' => const Color(0xFFFEF3C7),
-        'REKRUTMEN' => const Color(0xFFD1FAE5),
-        'PRESTASI' => const Color(0xFFFFF3CD),
+        'KEUANGAN' => AppColors.warningContainer,
+        'REKRUTMEN' => AppColors.successContainer,
+        'PRESTASI' => AppColors.highlightContainer,
         _ => AppColors.surfaceContainerHigh,
       };
 
   Color _getCatText(String category) => switch (category) {
         'PENTING' => AppColors.onPrimaryContainer,
         'KEGIATAN' => AppColors.primary,
-        'KEUANGAN' => const Color(0xFFB45309),
+        'KEUANGAN' => AppColors.warning,
         'REKRUTMEN' => AppColors.secondary,
         'PRESTASI' => AppColors.onSecondaryContainer,
         _ => AppColors.onSurface,
@@ -46,10 +47,10 @@ class DetailPengumumanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inboxRepo = context.watch<InboxRepository>();
-    final item = inboxRepo.pengumuman.firstWhere(
-      (p) => p.id == id,
-      orElse: () => inboxRepo.pengumuman.first,
-    );
+    final item = inboxRepo.pengumuman.where((p) => p.id == id).firstOrNull;
+    if (item == null) {
+      return MissingDataScreen(title: 'Pengumuman', loading: inboxRepo.isLoading);
+    }
 
     final catColor = _getCatColor(item.kategori);
     final catText = _getCatText(item.kategori);
@@ -214,7 +215,7 @@ class DetailPengumumanScreen extends StatelessWidget {
                                       style:
                                           AppTypography.labelBold.copyWith(
                                         color: AppColors.onSurface,
-                                        fontSize: 9,
+                                        fontSize: 10,
                                         letterSpacing: 1,
                                       ),
                                     ),

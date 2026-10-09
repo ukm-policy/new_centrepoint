@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -13,6 +12,9 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/uang_khas_repository.dart';
 import '../../../data/models/rekap_model.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../core/errors/app_exception.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class RekapKeuanganScreen extends StatefulWidget {
   const RekapKeuanganScreen({super.key});
@@ -54,6 +56,8 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
         _selectedSemester,
       );
       if (mounted) setState(() => _rekapData = data);
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e, prefix: 'Gagal memuat rekap keuangan');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -104,7 +108,7 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal export: $e', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+          content: Text('Gagal export: ${friendlyError(e)}', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(AppSpacing.marginPage),
@@ -119,37 +123,7 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text('Rekap Keuangan', style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Rekap Keuangan'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.marginPage),
@@ -166,7 +140,7 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('TAHUN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 9)),
+                          Text('TAHUN', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 10)),
                           const SizedBox(height: 4),
                           DropdownButtonFormField<int>(
                             initialValue: _selectedYear,
@@ -188,7 +162,7 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('RANGE PERIODE', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 9)),
+                          Text('RANGE PERIODE', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary, fontSize: 10)),
                           const SizedBox(height: 4),
                           DropdownButtonFormField<int>(
                             initialValue: _selectedSemester,
@@ -238,7 +212,7 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('TARGET TOTAL', style: AppTypography.labelBold.copyWith(color: Colors.white54, fontSize: 9)),
+                                Text('TARGET TOTAL', style: AppTypography.labelBold.copyWith(color: Colors.white54, fontSize: 10)),
                                 Text('Rp ${_fmt(_totalTarget)}', style: AppTypography.bodyLg.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
                               ],
                             ),
@@ -247,7 +221,7 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('SISA TARGET', style: AppTypography.labelBold.copyWith(color: Colors.white54, fontSize: 9)),
+                                Text('SISA TARGET', style: AppTypography.labelBold.copyWith(color: Colors.white54, fontSize: 10)),
                                 Text('Rp ${_fmt(_totalSisa)}', style: AppTypography.bodyLg.copyWith(color: AppColors.errorContainer, fontWeight: FontWeight.bold)),
                               ],
                             ),
@@ -361,7 +335,7 @@ class _RekapKeuanganScreenState extends State<RekapKeuanganScreen> {
                                                   ),
                                                 ),
                                                 const SizedBox(width: 6),
-                                                Text('${(r.pct * 100).toInt()}%', style: AppTypography.labelBold.copyWith(fontSize: 8, color: AppColors.tertiary)),
+                                                Text('${(r.pct * 100).toInt()}%', style: AppTypography.labelBold.copyWith(fontSize: 10, color: AppColors.tertiary)),
                                               ],
                                             ),
                                           ],

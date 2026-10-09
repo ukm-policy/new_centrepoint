@@ -14,12 +14,10 @@ class _MenuItem {
     required this.icon,
     required this.label,
     required this.route,
-    this.implemented = true,
   });
   final IconData icon;
   final String label;
   final String route;
-  final bool implemented;
 }
 
 class _RoleData {
@@ -93,7 +91,7 @@ const _roles = [
       _MenuItem(icon: Icons.event_available_outlined, label: 'Kelola Kegiatan Bidang', route: '/admin/kegiatan'),
       _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Kelola Absensi Anggota', route: '/absensi/riwayat-sekret'),
       _MenuItem(icon: Icons.stars_outlined, label: 'Kelola Poin Anggota', route: '/admin/poin'),
-      _MenuItem(icon: Icons.manage_accounts_outlined, label: 'Kelola Data Anggota Bidang', route: '/admin/anggota', implemented: false),
+      _MenuItem(icon: Icons.manage_accounts_outlined, label: 'Anggota Bidang Saya', route: '/anggota/bidang'),
     ],
   ),
   _RoleData(
@@ -105,7 +103,7 @@ const _roles = [
       _MenuItem(icon: Icons.payments_outlined, label: 'Uang Khas Semua Anggota', route: '/admin/uang-khas'),
       _MenuItem(icon: Icons.verified_outlined, label: 'Verifikasi Pembayaran', route: '/admin/uang-khas/verifikasi'),
       _MenuItem(icon: Icons.bar_chart, label: 'Rekap Keuangan', route: '/admin/keuangan'),
-      _MenuItem(icon: Icons.download_outlined, label: 'Export Laporan Keuangan', route: '/admin/keuangan/export', implemented: false),
+      _MenuItem(icon: Icons.download_outlined, label: 'Export Laporan Keuangan', route: '/admin/keuangan'),
     ],
   ),
   _RoleData(
@@ -118,7 +116,7 @@ const _roles = [
       _MenuItem(icon: Icons.article_outlined, label: 'Kelola Berita & Pengumuman', route: '/admin/berita'),
       _MenuItem(icon: Icons.campaign_outlined, label: 'Kirim Pengumuman', route: '/admin/pengumuman/buat'),
       _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Kelola Absensi Semua Anggota', route: '/absensi/riwayat-sekret'),
-      _MenuItem(icon: Icons.manage_accounts_outlined, label: 'Kelola Profil Anggota', route: '/admin/anggota', implemented: false),
+      _MenuItem(icon: Icons.manage_accounts_outlined, label: 'Profil Semua Anggota', route: '/anggota'),
       _MenuItem(icon: Icons.stars_outlined, label: 'Kelola Poin Semua Anggota', route: '/admin/poin'),
       _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Verifikasi Anggota Baru', route: '/admin/verifikasi'),
       _MenuItem(icon: Icons.assignment_ind_outlined, label: 'Dashboard Open Recruitment', route: '/admin/or'),
@@ -350,22 +348,7 @@ class _FeatureButtonState extends State<_FeatureButton> {
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
-        onTap: () {
-          if (item.implemented) {
-            context.push(item.route);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${item.label} — Segera hadir',
-                  style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-                backgroundColor: AppColors.blackCharcoal,
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
-        },
+        onTap: () => context.push(item.route),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 100),
           transform: _pressed
@@ -376,9 +359,7 @@ class _FeatureButtonState extends State<_FeatureButton> {
             vertical: 14,
           ),
           decoration: BoxDecoration(
-            color: item.implemented
-                ? AppColors.surfaceContainerLowest
-                : AppColors.surfaceContainer,
+            color: AppColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(AppSpacing.radius),
             border: Border.all(color: AppColors.blackCharcoal, width: 2),
             boxShadow: [
@@ -394,38 +375,19 @@ class _FeatureButtonState extends State<_FeatureButton> {
               Icon(
                 item.icon,
                 size: 20,
-                color: item.implemented
-                    ? AppColors.onSurface
-                    : AppColors.tertiary,
+                color: AppColors.onSurface,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   item.label,
                   style: AppTypography.bodyLg.copyWith(
-                    color: item.implemented
-                        ? AppColors.onSurface
-                        : AppColors.tertiary,
+                    color: AppColors.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              if (!item.implemented)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    border: Border.all(color: AppColors.borderSlate, width: 1),
-                  ),
-                  child: Text('Soon',
-                    style: AppTypography.labelBold.copyWith(
-                      color: AppColors.tertiary,
-                      fontSize: 10,
-                    )),
-                )
-              else
-                const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
+              const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
             ],
           ),
         ),

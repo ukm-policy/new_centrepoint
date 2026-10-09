@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,6 +19,9 @@ import '../../../data/repositories/audit_log_repository.dart';
 import '../../../data/repositories/absensi_repository.dart';
 import '../../../data/models/qr_session_model.dart';
 import '../../../data/models/absensi_model.dart' hide QrSessionModel;
+import '../../../shared/utils/feedback.dart';
+import '../../../core/errors/app_exception.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class QrGeneratorScreen extends StatefulWidget {
   const QrGeneratorScreen({super.key});
@@ -100,18 +102,35 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
     }
 
     final kegiatanList = context.read<KegiatanRepository>().kegiatan;
-    final kegiatan = kegiatanList.firstWhere(
-      (k) => k.id == _selectedKegiatanId,
-      orElse: () => kegiatanList.first,
-    );
+    final kegiatan = kegiatanList.where((k) => k.id == _selectedKegiatanId).firstOrNull;
+    if (kegiatan == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pilih kegiatan terlebih dahulu.',
+            style: AppTypography.bodyMd.copyWith(color: Colors.white),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(AppSpacing.marginPage),
+        ),
+      );
+      return;
+    }
     final mins = int.tryParse(_durationCtrl.text) ?? 30;
 
     setState(() => _loading = true);
-    final session = await repo.createSession(
-      kegiatanId: kegiatan.id,
-      kegiatanJudul: kegiatan.judul,
-      durationMinutes: mins,
-    );
+    QrSessionModel? session;
+    Object? error;
+    try {
+      session = await repo.createSession(
+        kegiatanId: kegiatan.id,
+        kegiatanJudul: kegiatan.judul,
+        durationMinutes: mins,
+      );
+    } catch (e) {
+      error = e;
+    }
 
     if (!mounted) return;
     if (session != null) {
@@ -129,14 +148,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
       );
     } else {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal membuat QR session.', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(AppSpacing.marginPage),
-        ),
-      );
+      showErrorSnack(context, error ?? 'Tidak ada data sesi.', prefix: 'Gagal membuat QR session');
     }
   }
 
@@ -156,11 +168,17 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
     context.read<QrSessionRepository>().fetchSessions();
   }
 
-  void _deactivate() {
+  Future<void> _deactivate() async {
+    final session = _session;
+    if (session == null) return;
+    final ok = await runWithFeedback(
+      context,
+      () => context.read<QrSessionRepository>().deactivateSession(session.id),
+      success: 'QR absensi dinonaktifkan.',
+      errorPrefix: 'Gagal menonaktifkan QR',
+    );
+    if (!ok || !mounted) return;
     _timer?.cancel();
-    if (_session != null) {
-      context.read<QrSessionRepository>().deactivateSession(_session!.id);
-    }
     setState(() {
       _session = null;
       _remainingSeconds = 0;
@@ -204,7 +222,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal membagikan gambar QR: $e', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
+            content: Text('Gagal membagikan gambar QR: ${friendlyError(e)}', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -416,37 +434,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text('Generator QR', style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Generator QR'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.marginPage),

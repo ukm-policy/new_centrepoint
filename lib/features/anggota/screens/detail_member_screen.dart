@@ -7,6 +7,8 @@ import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/absensi_model.dart';
 import '../../../data/repositories/member_repository.dart';
 import '../../../data/repositories/absensi_repository.dart';
+import '../../../shared/widgets/missing_data_screen.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class DetailMemberScreen extends StatelessWidget {
   const DetailMemberScreen({super.key, required this.id});
@@ -19,10 +21,10 @@ class DetailMemberScreen extends StatelessWidget {
     final memberRepo = context.watch<MemberRepository>();
     final absensiRepo = context.watch<AbsensiRepository>();
 
-    final member = memberRepo.members.firstWhere(
-      (m) => m.id == id,
-      orElse: () => memberRepo.members.first,
-    );
+    final member = memberRepo.members.where((m) => m.id == id).firstOrNull;
+    if (member == null) {
+      return MissingDataScreen(title: 'Anggota', loading: memberRepo.isLoading);
+    }
 
     final memberAbsensi = absensiRepo.absensi.where((a) => a.memberId == id).toList();
     final recentActivities = memberAbsensi.map((a) {
@@ -35,24 +37,7 @@ class DetailMemberScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: AppBar(
-        backgroundColor: AppColors.bgGray,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSpacing.radius),
-              border: Border.all(color: AppColors.blackCharcoal, width: 2),
-              boxShadow: const [AppColors.hardShadowSm],
-            ),
-            child: const Icon(Icons.arrow_back, color: AppColors.onSurface, size: 20),
-          ),
-        ),
-        title: Text('Profil Anggota', style: AppTypography.headlineSm),
-      ),
+      appBar: const PageAppBar(title: 'Profil Anggota'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.marginPage, 8, AppSpacing.marginPage, AppSpacing.stackGap,

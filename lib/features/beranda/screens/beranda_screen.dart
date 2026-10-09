@@ -214,12 +214,14 @@ class _UserCard extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
-    final members = context.watch<MemberRepository>().members;
-    final currentMember = members.firstWhere(
-      (m) => m.nama == AppSession.nama,
-      orElse: () => members.first,
-    );
- 
+    final currentMember = context
+        .watch<MemberRepository>()
+        .members
+        .where((m) => m.id == AppSession.id)
+        .firstOrNull;
+    final tier = currentMember?.tier ?? 'Member';
+    final totalPoin = currentMember?.totalPoin ?? 0;
+
     return BrutalistCard(
       onTap: () => context.push('/poin'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -306,7 +308,7 @@ class _UserCard extends StatelessWidget {
                       const Icon(Icons.star, size: 12, color: AppColors.onSecondaryContainer),
                       const SizedBox(width: 4),
                       Text(
-                        currentMember.tier,
+                        tier,
                         style: AppTypography.labelBold.copyWith(
                           color: AppColors.onSecondaryContainer,
                         ),
@@ -321,7 +323,7 @@ class _UserCard extends StatelessWidget {
                     const Icon(Icons.monetization_on, size: 14, color: AppColors.primary),
                     const SizedBox(width: 4),
                     Text(
-                      '${currentMember.totalPoin} Pts',
+                      '$totalPoin Pts',
                       style: AppTypography.bodyLg.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,

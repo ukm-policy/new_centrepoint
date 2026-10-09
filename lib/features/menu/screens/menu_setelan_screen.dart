@@ -8,6 +8,12 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/session/app_session.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../../../core/errors/app_exception.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import '../../../core/env/env.dart';
+import '../../../data/repositories/inbox_repository.dart';
+import '../../../shared/utils/feedback.dart';
 
 class MenuSetelanScreen extends StatelessWidget {
   const MenuSetelanScreen({super.key});
@@ -97,7 +103,7 @@ class MenuSetelanScreen extends StatelessWidget {
                 _MenuItem(
                   icon: Icons.shield_outlined,
                   label: 'Privasi & Keamanan',
-                  onTap: () {},
+                  onTap: () => _showPrivasiSheet(context),
                 ),
               ]),
               const SizedBox(height: AppSpacing.stackGap),
@@ -107,12 +113,11 @@ class MenuSetelanScreen extends StatelessWidget {
                   icon: Icons.notifications_outlined,
                   label: 'Notifikasi',
                   onTap: () => context.push('/menu/notifikasi'),
-                  trailing: _NotifBadge(count: 3),
+                  trailing: const _NotifBadge(),
                 ),
-                _MenuItem(
+                const _MenuItem(
                   icon: Icons.language,
                   label: 'Bahasa',
-                  onTap: () {},
                   trailingText: 'Indonesia',
                 ),
               ]),
@@ -126,14 +131,9 @@ class MenuSetelanScreen extends StatelessWidget {
                   trailingText: 'v1.0.0',
                 ),
                 _MenuItem(
-                  icon: Icons.help_outline,
-                  label: 'Bantuan & FAQ',
-                  onTap: () {},
-                ),
-                _MenuItem(
-                  icon: Icons.description_outlined,
-                  label: 'Syarat & Ketentuan',
-                  onTap: () {},
+                  icon: Icons.privacy_tip_outlined,
+                  label: 'Kebijakan Privasi',
+                  onTap: () => context.push('/menu/privasi'),
                 ),
               ]),
               const SizedBox(height: AppSpacing.stackGap),
@@ -150,7 +150,7 @@ class MenuSetelanScreen extends StatelessWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Gagal keluar: $e',
+                          content: Text('Gagal keluar: ${friendlyError(e)}',
                               style: AppTypography.bodyMd.copyWith(color: Colors.white)),
                           backgroundColor: AppColors.error,
                           margin: const EdgeInsets.all(AppSpacing.marginPage),
@@ -225,13 +225,15 @@ class _MenuItem extends StatelessWidget {
   const _MenuItem({
     required this.icon,
     required this.label,
-    required this.onTap,
+    this.onTap,
     this.trailing,
     this.trailingText,
   });
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+
+  /// Null = item informasi saja (tanpa panah).
+  final VoidCallback? onTap;
   final Widget? trailing;
   final String? trailingText;
 
@@ -249,8 +251,10 @@ class _MenuItem extends StatelessWidget {
           if (trailingText != null)
             Text(trailingText!,
               style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
+          if (onTap != null) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.tertiary),
+          ],
         ]),
       ),
     );
@@ -258,11 +262,12 @@ class _MenuItem extends StatelessWidget {
 }
 
 class _NotifBadge extends StatelessWidget {
-  const _NotifBadge({required this.count});
-  final int count;
+  const _NotifBadge();
 
   @override
   Widget build(BuildContext context) {
+    final count = context.select<InboxRepository, int>((r) => r.unreadCount);
+    if (count == 0) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -275,3 +280,54 @@ class _NotifBadge extends StatelessWidget {
     );
   }
 }
+
+void _showPrivasiSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) => Container(
+      margin: const EdgeInsets.all(AppSpacing.marginPage),
+      padding: const EdgeInsets.all(AppSpacing.innerPadding + 4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.blackCharcoal, width: 2),
+        boxShadow: const [AppColors.hardShadow],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('Privasi & Keamanan', style: AppTypography.headlineSm),
+          const SizedBox(height: 8),
+          const MyDivider(color: AppColors.borderSlate),
+          _MenuItem(
+            icon: Icons.lock_reset,
+            label: 'Ubah Password',
+            onTap: () {
+              Navigator.pop(sheetContext);
+              final email = AppSession.email;
+              runWithFeedback(
+                context,
+                () => Supabase.instance.client.auth.resetPasswordForEmail(
+                  email,
+                  redirectTo: kIsWeb ? null : Env.authRedirectUrl,
+                ),
+                success: 'Link ubah password telah dikirim ke $email',
+                errorPrefix: 'Gagal mengirim link',
+              );
+            },
+          ),
+          _MenuItem(
+            icon: Icons.privacy_tip_outlined,
+            label: 'Kebijakan Privasi',
+            onTap: () {
+              Navigator.pop(sheetContext);
+              context.push('/menu/privasi');
+            },
+          ),
+        ]),
+      ),
+    ),
+  );
+}
+

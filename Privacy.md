@@ -19,7 +19,7 @@ Dengan menggunakan aplikasi ini, Anda menyetujui ketentuan yang tercantum dalam 
 ### 1.2 Informasi yang Dikumpulkan Secara Otomatis
 - **Data penggunaan aplikasi:** fitur yang diakses, waktu penggunaan, dan pola navigasi dalam aplikasi
 - **Data perangkat:** jenis perangkat, sistem operasi, dan versi aplikasi
-- **Data kamera:** akses kamera digunakan **hanya** saat melakukan scan QR Code untuk absensi dan tidak menyimpan gambar apapun
+- **Data kamera:** akses kamera digunakan saat melakukan scan QR Code untuk absensi (tidak ada gambar yang disimpan) dan saat mengambil **foto absensi sekretariat** — foto ini disimpan sebagai bukti kehadiran dan hanya dapat dilihat oleh anggota yang login
 
 ---
 

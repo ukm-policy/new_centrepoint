@@ -1,34 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
+import 'kepengurusan_utils.dart';
 import '../../models/member_model.dart';
 import '../member_repository.dart';
+import '../../models/jabatan_model.dart';
 
-class SupabaseMemberRepository extends MemberRepository {
+class SupabaseMemberRepository extends MemberRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<MemberModel> _members = [];
 
   SupabaseMemberRepository() {
-    _loadMembers();
+    reload();
     // Realtime subscriptions
-    _db
-        .channel('public:profiles-member')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'profiles',
-          callback: (payload) {
-            _loadMembers();
-          },
-        )
-        .subscribe();
+    listenTable('profiles', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadMembers);
 
   Future<void> _loadMembers() async {
     try {
       // 1. Fetch profiles and kepengurusan
-      final data = await _db.from('profiles').select(
-        '*, kepengurusan(jabatan(nama, level_akses, kode_role, bidang(nama)))'
-      );
+      final data = await selectProfilesWithJabatan(_db);
 
       // 2. Fetch point sums for all users
       final pointsData = await _db.from('poin_entry').select('member_id, poin');
@@ -40,10 +34,12 @@ class SupabaseMemberRepository extends MemberRepository {
       }
 
       // 3. Fetch attendance count for all users
-      final absensiData = await _db.from('absensi').select('member_id, status');
+      final absensiData = await _db.from('absensi').select('member_id, status, tipe_kegiatan');
       final Map<String, int> totalEvents = {};
       final Map<String, int> presentEvents = {};
       for (final a in absensiData) {
+        // Absen sekret bukan kegiatan; tidak dihitung ke tingkat kehadiran.
+        if (a['tipe_kegiatan'] == 'sekret') continue;
         final uid = a['member_id'] as String;
         final status = a['status'] as String? ?? 'belumAbsen';
         totalEvents[uid] = (totalEvents[uid] ?? 0) + 1;
@@ -75,9 +71,8 @@ class SupabaseMemberRepository extends MemberRepository {
         int level = 2;
 
         final kepList = json['kepengurusan'] as List?;
-        if (kepList != null && kepList.isNotEmpty) {
-          final firstKep = kepList.first as Map<String, dynamic>?;
-          final jab = firstKep?['jabatan'] as Map<String, dynamic>?;
+        {
+          final jab = pickJabatan(kepList);
           if (jab != null) {
             jabatan = jab['nama'] as String?;
             final lvl = jab['level_akses'] as int? ?? 1;
@@ -131,6 +126,7 @@ class SupabaseMemberRepository extends MemberRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading members: $e');
+      rethrow;
     }
   }
 
@@ -155,9 +151,10 @@ class SupabaseMemberRepository extends MemberRepository {
         'status': member.status == 'Aktif' ? 'active' : (member.status == 'Suspended' ? 'suspended' : 'pending'),
         'is_admin': member.isAdmin,
       }).eq('id', member.id);
-      await _loadMembers();
+      await reload();
     } catch (e) {
       debugPrint('Error updating member: $e');
+      rethrow;
     }
   }
 
@@ -173,35 +170,10 @@ class SupabaseMemberRepository extends MemberRepository {
         'poin': poinChange,
         'tanggal': DateTime.now().toIso8601String().substring(0, 10),
       });
-      await _loadMembers();
+      await reload();
     } catch (e) {
       debugPrint('Error updating points: $e');
-    }
-  }
-
-  @override
-  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) async {
-    try {
-      // 1. Get jabatan details from DB matching the inputs
-      final jabData = await _db.from('jabatan').select().eq('kode_role', role).maybeSingle();
-      if (jabData == null) return;
-      final jid = jabData['id'] as int;
-
-      // 2. Get active period
-      final periodData = await _db.from('periode').select().eq('is_aktif', true).maybeSingle();
-      if (periodData == null) return;
-      final pid = periodData['id'] as String;
-
-      // 3. Update or Insert kepengurusan mapping
-      await _db.from('kepengurusan').upsert({
-        'user_id': id,
-        'jabatan_id': jid,
-        'periode_id': pid,
-      }, onConflict: 'user_id, jabatan_id, periode_id');
-      
-      await _loadMembers();
-    } catch (e) {
-      debugPrint('Error assigning role: $e');
+      rethrow;
     }
   }
 
@@ -211,9 +183,10 @@ class SupabaseMemberRepository extends MemberRepository {
       await _db.from('profiles').update({
         'status': 'active',
       }).eq('id', id);
-      await _loadMembers();
+      await reload();
     } catch (e) {
       debugPrint('Error verifying member: $e');
+      rethrow;
     }
   }
 
@@ -228,25 +201,56 @@ class SupabaseMemberRepository extends MemberRepository {
         updates['is_admin'] = isAdmin;
       }
       await _db.from('profiles').update(updates).eq('id', id);
-
-      // Find a jabatan matching the level
-      final jabData = await _db.from('jabatan').select().eq('level_akses', level).limit(1).maybeSingle();
-      if (jabData != null) {
-        final jid = jabData['id'] as int;
-        
-        final periodData = await _db.from('periode').select().eq('is_aktif', true).maybeSingle();
-        if (periodData != null) {
-          final pid = periodData['id'] as String;
-          await _db.from('kepengurusan').upsert({
-            'user_id': id,
-            'jabatan_id': jid,
-            'periode_id': pid,
-          }, onConflict: 'user_id, jabatan_id, periode_id');
-        }
-      }
-      await _loadMembers();
+      // Level akses berasal dari jabatan (lihat setJabatan / Assign Jabatan),
+      // jadi [level] tidak diubah di sini.
+      await reload();
     } catch (e) {
       debugPrint('Error updating status and level: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<JabatanModel>> fetchJabatan() async {
+    final data = await _db
+        .from('jabatan')
+        .select('id, nama, level_akses, kode_role, bidang(nama)')
+        .order('level_akses', ascending: false)
+        .order('nama');
+    return data.map<JabatanModel>(JabatanModel.fromJson).toList();
+  }
+
+  @override
+  Future<Map<String, int>> fetchKepengurusan(String periodeId) async {
+    final data = await _db
+        .from('kepengurusan')
+        .select('user_id, jabatan_id')
+        .eq('periode_id', periodeId);
+    return {
+      for (final row in data)
+        row['user_id'] as String: (row['jabatan_id'] as num).toInt(),
+    };
+  }
+
+  @override
+  Future<void> setJabatan(String userId, String periodeId, int? jabatanId) async {
+    try {
+      // Satu anggota = satu jabatan per periode.
+      await _db
+          .from('kepengurusan')
+          .delete()
+          .eq('user_id', userId)
+          .eq('periode_id', periodeId);
+      if (jabatanId != null) {
+        await _db.from('kepengurusan').insert({
+          'user_id': userId,
+          'jabatan_id': jabatanId,
+          'periode_id': periodeId,
+        });
+      }
+    } catch (e) {
+      debugPrint('Error setting jabatan: $e');
+      rethrow;
     }
   }
 }

@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
+import '../../data/repositories/inbox_repository.dart';
+import 'package:provider/provider.dart';
 
 class FloatingAppBar extends StatelessWidget {
   const FloatingAppBar({
@@ -10,13 +13,14 @@ class FloatingAppBar extends StatelessWidget {
     this.title = 'CENTREPOINT',
     this.showBack = false,
     this.trailing,
-    this.inboxCount = 0,
+    this.inboxCount,
   });
 
   final String title;
   final bool showBack;
   final Widget? trailing;
-  final int inboxCount;
+  /// Jumlah badge inbox. Null = ambil otomatis dari [InboxRepository].
+  final int? inboxCount;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +57,8 @@ class FloatingAppBar extends StatelessWidget {
               child: Text(
                 title,
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.bricolageGrotesque(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -62,7 +68,8 @@ class FloatingAppBar extends StatelessWidget {
             ),
             trailing ??
                 _InboxBell(
-                  count: inboxCount,
+                  count: inboxCount ??
+                      context.select<InboxRepository, int>((r) => r.unreadCount),
                   onTap: () => context.push('/inbox'),
                 ),
           ],
@@ -125,7 +132,7 @@ class _InboxBell extends StatelessWidget {
                     count > 9 ? '9+' : '$count',
                     style: const TextStyle(
                       color: AppColors.onPrimaryContainer,
-                      fontSize: 9,
+                      fontSize: 10,
                       fontWeight: FontWeight.w800,
                       height: 1,
                     ),
@@ -135,6 +142,51 @@ class _InboxBell extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Header standar untuk halaman turunan yang memakai [Scaffold] sendiri:
+/// tampilan sama dengan [FloatingAppBar] (tombol kembali + judul), dengan
+/// [badgeCount] opsional di sisi kanan menggantikan ikon inbox.
+class PageAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const PageAppBar({super.key, required this.title, this.badgeCount, this.trailing});
+
+  final String title;
+  final int? badgeCount;
+  final Widget? trailing;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(84);
+
+  @override
+  Widget build(BuildContext context) {
+    Widget? right = trailing;
+    if (right == null && badgeCount != null) {
+      right = Padding(
+        padding: const EdgeInsets.all(8),
+        child: badgeCount! > 0
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.blackCharcoal, width: 1.5),
+                ),
+                child: Text(
+                  '$badgeCount',
+                  style: AppTypography.labelBold.copyWith(color: AppColors.onPrimaryContainer),
+                ),
+              )
+            : const SizedBox(width: 24),
+      );
+    }
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: FloatingAppBar(title: title, showBack: true, trailing: right),
       ),
     );
   }

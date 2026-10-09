@@ -44,6 +44,21 @@ class AppColors {
   static const Color blackCharcoal = Color(0xFF222222);
   static const Color success = Color(0xFF198754);
   static const Color onSuccess = Color(0xFFFFFFFF);
+  static const Color successContainer = Color(0xFFD1FAE5);
+
+  // Peringatan / sorotan (kategori pengumuman, bonus poin, tag).
+  static const Color warning = Color(0xFFB45309);
+  static const Color warningContainer = Color(0xFFFEF3C7);
+  static const Color highlightContainer = Color(0xFFFFF3CD);
+  static const Color onHighlightContainer = Color(0xFF856404);
+  static const Color peachContainer = Color(0xFFFFE0CC);
+
+  // Medali & tier leaderboard.
+  static const Color medalGold = Color(0xFFFFD700);
+  static const Color medalSilver = Color(0xFFC0C0C0);
+  static const Color medalBronze = Color(0xFFCD7F32);
+  static const Color bronzeContainer = Color(0xFFEDD5B3);
+  static const Color onBronzeContainer = Color(0xFF7B4F2E);
 
   static const BoxShadow hardShadow = BoxShadow(
     color: blackCharcoal,

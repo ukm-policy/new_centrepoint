@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/di/repository_providers.dart';
 import 'core/session/app_session.dart';
+import 'core/session/session_controller.dart';
+import 'features/auth/screens/splash_screen.dart';
+import 'features/auth/screens/reset_password_screen.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/complete_profile_screen.dart';
-import 'features/auth/screens/setup_password_screen.dart';
 import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/auth/screens/pending_screen.dart';
 import 'features/auth/screens/edit_profile_screen.dart';
@@ -28,6 +31,7 @@ import 'features/uang_khas/screens/uang_khas_screen.dart';
 import 'features/menu/screens/menu_setelan_screen.dart';
 import 'features/menu/screens/notifikasi_settings_screen.dart';
 import 'features/menu/screens/about_screen.dart';
+import 'features/menu/screens/kebijakan_privasi_screen.dart';
 import 'features/poin/screens/poin_screen.dart';
 import 'features/fitur/screens/fitur_screen.dart';
 import 'features/inbox/screens/inbox_screen.dart';
@@ -55,34 +59,62 @@ import 'features/or/screens/or_kelola_screen.dart';
 import 'features/inbox/screens/detail_pengumuman_screen.dart';
 import 'shared/widgets/bottom_nav_bar.dart';
 import 'shared/widgets/app_drawer.dart';
+import 'shared/widgets/load_error_banner.dart';
+import 'core/theme/app_colors.dart';
+
+const _publicPaths = {'/login', '/register', '/forgot-password'};
+
+String? _redirect(BuildContext context, GoRouterState state) {
+  final user = Supabase.instance.client.auth.currentUser;
+  final path = state.uri.path;
+
+  if (user == null) {
+    return _publicPaths.contains(path) ? null : '/login';
+  }
+
+  // Masuk lewat link reset password: wajib membuat password baru dulu.
+  if (SessionController.instance.passwordRecovery) {
+    return path == '/reset-password' ? null : '/reset-password';
+  }
+
+  // Tunggu profil selesai dimuat sebelum memutuskan status/role.
+  if (!SessionController.instance.profileLoaded) {
+    return path == '/splash' ? null : '/splash';
+  }
+
+  final isPending = AppSession.status == 'pending';
+
+  if (_publicPaths.contains(path) || path == '/splash') {
+    if (!isPending) return '/';
+    return AppSession.nim.isEmpty ? '/lengkapi-profil' : '/pending';
+  }
+
+  if (isPending) {
+    return path == '/pending' || path == '/lengkapi-profil' ? null : '/pending';
+  }
+
+  if (path == '/pending') return '/';
+
+  if (path.startsWith('/admin') && !AppSession.isAdmin && AppSession.level < 3) {
+    return '/';
+  }
+
+  return null;
+}
 
 final _router = GoRouter(
-  initialLocation: '/login',
-  redirect: (context, state) {
-    final user = Supabase.instance.client.auth.currentUser;
-    final path = state.uri.path;
-
-    if (path == '/login' || path == '/register' || path == '/forgot-password') {
-      if (user != null) {
-        if (AppSession.status == 'pending') {
-          return '/pending';
-        }
-        return '/';
-      }
-      return null;
-    }
-
-    if (user == null) {
-      return '/login';
-    }
-
-    if (AppSession.status == 'pending' && path != '/pending' && path != '/lengkapi-profil') {
-      return '/pending';
-    }
-
-    return null;
-  },
+  initialLocation: '/splash',
+  refreshListenable: SessionController.instance,
+  redirect: _redirect,
   routes: [
+    GoRoute(
+      path: '/splash',
+      builder: (_, _) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (_, _) => const ResetPasswordScreen(),
+    ),
     GoRoute(
       path: '/login',
       builder: (_, _) => const LoginScreen(),
@@ -102,10 +134,6 @@ final _router = GoRouter(
     GoRoute(
       path: '/lengkapi-profil',
       builder: (_, _) => const CompleteProfileScreen(),
-    ),
-    GoRoute(
-      path: '/setup-password',
-      builder: (_, _) => const SetupPasswordScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => _AppShell(child: child),
@@ -153,6 +181,13 @@ final _router = GoRouter(
                   path: ':id',
                   builder: (_, state) =>
                       DetailRapatScreen(id: state.pathParameters['id']!),
+                  routes: [
+                    GoRoute(
+                      path: 'edit',
+                      builder: (_, state) =>
+                          CreateRapatScreen(editId: state.pathParameters['id']!),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -160,6 +195,13 @@ final _router = GoRouter(
               path: ':id',
               builder: (_, state) =>
                   DetailKegiatanScreen(id: state.pathParameters['id']!),
+              routes: [
+                GoRoute(
+                  path: 'edit',
+                  builder: (_, state) =>
+                      CreateKegiatanScreen(editId: state.pathParameters['id']!),
+                ),
+              ],
             ),
           ],
         ),
@@ -167,6 +209,11 @@ final _router = GoRouter(
           path: '/anggota',
           builder: (_, _) => const ListMembersScreen(),
           routes: [
+            // Harus sebelum ':id' supaya 'bidang' tidak dianggap id anggota.
+            GoRoute(
+              path: 'bidang',
+              builder: (_, _) => const ListMembersScreen(onlyMyBidang: true),
+            ),
             GoRoute(
               path: ':id',
               builder: (_, state) =>
@@ -213,6 +260,10 @@ final _router = GoRouter(
         GoRoute(
           path: '/menu/tentang',
           builder: (_, _) => const AboutScreen(),
+        ),
+        GoRoute(
+          path: '/menu/privasi',
+          builder: (_, _) => const KebijakanPrivasiScreen(),
         ),
         GoRoute(
           path: '/inbox',
@@ -329,6 +380,13 @@ class App extends StatelessWidget {
       theme: AppTheme.light,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => ListenableBuilder(
+        listenable: SessionController.instance,
+        builder: (context, _) => RepositoryProviders(
+          key: ValueKey(SessionController.instance.userId),
+          child: LoadErrorBanner(child: child!),
+        ),
+      ),
     );
   }
 }
@@ -357,7 +415,7 @@ class _AppShell extends StatelessWidget {
     final navClearance = 96 + MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEFECEC),
+      backgroundColor: AppColors.bgGray,
       drawer: const AppDrawer(),
       body: SafeArea(
         bottom: false,

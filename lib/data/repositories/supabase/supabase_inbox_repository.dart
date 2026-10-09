@@ -1,47 +1,34 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/inbox_model.dart';
 import '../inbox_repository.dart';
 
-class SupabaseInboxRepository extends InboxRepository {
+class SupabaseInboxRepository extends InboxRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<NotifModel> _notifications = [];
   List<PengumumanModel> _pengumuman = [];
 
   SupabaseInboxRepository() {
-    _loadInbox();
+    reload();
     // Subscribe to realtime notifikasi and pengumuman
     final uid = _db.auth.currentUser?.id;
     if (uid != null) {
-      _db
-          .channel('public:notifikasi')
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'notifikasi',
-            filter: PostgresChangeFilter(
-              type: PostgresChangeFilterType.eq,
-              column: 'user_id',
-              value: uid,
-            ),
-            callback: (payload) {
-              _loadInbox();
-            },
-          )
-          .subscribe();
+      listenTable(
+        'notifikasi',
+        reload,
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'user_id',
+          value: uid,
+        ),
+      );
     }
-    _db
-        .channel('public:pengumuman')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'pengumuman',
-          callback: (payload) {
-            _loadInbox();
-          },
-        )
-        .subscribe();
+    listenTable('pengumuman', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadInbox);
 
   Future<void> _loadInbox() async {
     try {
@@ -102,6 +89,7 @@ class SupabaseInboxRepository extends InboxRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading inbox: $e');
+      rethrow;
     }
   }
 
@@ -115,29 +103,31 @@ class SupabaseInboxRepository extends InboxRepository {
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
   @override
-  void markAsRead(String id) async {
+  Future<void> markAsRead(String id) async {
     try {
       await _db.from('notifikasi').update({'is_read': true}).eq('id', id);
-      _loadInbox();
+      reload();
     } catch (e) {
       debugPrint('Error marking notif as read: $e');
+      rethrow;
     }
   }
 
   @override
-  void markAllAsRead() async {
+  Future<void> markAllAsRead() async {
     try {
       final uid = _db.auth.currentUser?.id;
       if (uid == null) return;
       await _db.from('notifikasi').update({'is_read': true}).eq('user_id', uid);
-      _loadInbox();
+      reload();
     } catch (e) {
       debugPrint('Error marking all as read: $e');
+      rethrow;
     }
   }
 
   @override
-  void addPengumuman(PengumumanModel item) async {
+  Future<void> addPengumuman(PengumumanModel item) async {
     try {
       final user = _db.auth.currentUser;
       await _db.from('pengumuman').insert({
@@ -151,14 +141,15 @@ class SupabaseInboxRepository extends InboxRepository {
         'action_route': item.actionRoute,
         'created_by': user?.id,
       });
-      _loadInbox();
+      reload();
     } catch (e) {
       debugPrint('Error adding pengumuman: $e');
+      rethrow;
     }
   }
 
   @override
-  void addNotification(NotifModel item) async {
+  Future<void> addNotification(NotifModel item) async {
     try {
       final uid = _db.auth.currentUser?.id;
       if (uid == null) return;
@@ -171,9 +162,10 @@ class SupabaseInboxRepository extends InboxRepository {
         'is_read': item.isRead,
         'route': item.route,
       });
-      _loadInbox();
+      reload();
     } catch (e) {
       debugPrint('Error adding notification: $e');
+      rethrow;
     }
   }
 }

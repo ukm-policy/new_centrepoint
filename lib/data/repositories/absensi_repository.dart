@@ -1,14 +1,23 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
+import '../../core/errors/app_exception.dart';
 import '../models/absensi_model.dart';
 import '../dummy/dummy_absensi.dart';
 
-abstract class AbsensiRepository extends ChangeNotifier {
+abstract class AbsensiRepository extends ChangeNotifier with RepositoryLoadState {
   List<AbsensiModel> get absensi;
   List<QrSessionModel> get qrSessions;
-  void recordAttendance(AbsensiModel record);
-  void scanQr(String qrContent, String memberId, String memberNama);
-  void createQrSession(QrSessionModel session);
-  void deactivateQrSession(String id);
+  Future<void> recordAttendance(AbsensiModel record);
+  Future<void> scanQr(String qrContent, String memberId, String memberNama);
+  Future<void> createQrSession(QrSessionModel session);
+  Future<void> deactivateQrSession(String id);
+
+  /// Absen masuk sekretariat dengan foto bukti.
+  Future<void> absenSekret(Uint8List fotoBytes, String fileExt) async =>
+      throw const AppException('Absen sekret belum didukung.');
+
+  /// URL sementara untuk menampilkan foto absen sekret (bucket privat).
+  Future<String?> fotoSekretUrl(String path) async => null;
 }
 
 class DummyAbsensiRepository extends AbsensiRepository {
@@ -22,7 +31,7 @@ class DummyAbsensiRepository extends AbsensiRepository {
   List<QrSessionModel> get qrSessions => List.unmodifiable(_qrSessions);
 
   @override
-  void recordAttendance(AbsensiModel record) {
+  Future<void> recordAttendance(AbsensiModel record) async {
     final idx = _absensi.indexWhere(
         (a) => a.memberId == record.memberId && a.kegiatanId == record.kegiatanId);
     if (idx != -1) {
@@ -34,7 +43,7 @@ class DummyAbsensiRepository extends AbsensiRepository {
   }
 
   @override
-  void scanQr(String qrContent, String memberId, String memberNama) {
+  Future<void> scanQr(String qrContent, String memberId, String memberNama) async {
     final sessionIdx = _qrSessions.indexWhere((s) => s.id == qrContent && s.isActive);
     if (sessionIdx != -1) {
       final session = _qrSessions[sessionIdx];
@@ -53,13 +62,13 @@ class DummyAbsensiRepository extends AbsensiRepository {
   }
 
   @override
-  void createQrSession(QrSessionModel session) {
+  Future<void> createQrSession(QrSessionModel session) async {
     _qrSessions.insert(0, session);
     notifyListeners();
   }
 
   @override
-  void deactivateQrSession(String id) {
+  Future<void> deactivateQrSession(String id) async {
     final idx = _qrSessions.indexWhere((s) => s.id == id);
     if (idx != -1) {
       _qrSessions[idx] = _qrSessions[idx].copyWith(isActive: false);
@@ -90,7 +99,7 @@ class ApiAbsensiRepository extends AbsensiRepository {
   List<QrSessionModel> get qrSessions => List.unmodifiable(_qrSessions);
 
   @override
-  void recordAttendance(AbsensiModel record) {
+  Future<void> recordAttendance(AbsensiModel record) async {
     // POST /api/absensi
     final idx = _absensi.indexWhere(
         (a) => a.memberId == record.memberId && a.kegiatanId == record.kegiatanId);
@@ -103,7 +112,7 @@ class ApiAbsensiRepository extends AbsensiRepository {
   }
 
   @override
-  void scanQr(String qrContent, String memberId, String memberNama) {
+  Future<void> scanQr(String qrContent, String memberId, String memberNama) async {
     // POST /api/absensi/scan-qr
     final sessionIdx = _qrSessions.indexWhere((s) => s.id == qrContent && s.isActive);
     if (sessionIdx != -1) {
@@ -123,14 +132,14 @@ class ApiAbsensiRepository extends AbsensiRepository {
   }
 
   @override
-  void createQrSession(QrSessionModel session) {
+  Future<void> createQrSession(QrSessionModel session) async {
     // POST /api/absensi/qr-session
     _qrSessions.insert(0, session);
     notifyListeners();
   }
 
   @override
-  void deactivateQrSession(String id) {
+  Future<void> deactivateQrSession(String id) async {
     // POST /api/absensi/qr-session/$id/deactivate
     final idx = _qrSessions.indexWhere((s) => s.id == id);
     if (idx != -1) {

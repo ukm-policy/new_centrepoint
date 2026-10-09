@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../shared/utils/feedback.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_card.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class NotifikasiSettingsScreen extends StatefulWidget {
   const NotifikasiSettingsScreen({super.key});
@@ -13,55 +15,44 @@ class NotifikasiSettingsScreen extends StatefulWidget {
 }
 
 class _NotifikasiSettingsScreenState extends State<NotifikasiSettingsScreen> {
-  bool _globalNotif = true;
-  bool _notifPoin = true;
-  bool _notifKegiatan = true;
-  bool _notifAbsensi = true;
-  bool _notifUangKhas = false;
-  bool _notifPengumuman = true;
-  bool _notifSistem = false;
+  /// Nilai bawaan tiap kategori notifikasi.
+  static const _defaults = {
+    'global': true,
+    'poin': true,
+    'kegiatan': true,
+    'absensi': true,
+    'uang_khas': false,
+    'pengumuman': true,
+    'sistem': false,
+  };
+
+  late final Map<String, bool> _prefs = {
+    ..._defaults,
+    ...?(Supabase.instance.client.auth.currentUser?.userMetadata?['notif_prefs'] as Map?)
+        ?.map((k, v) => MapEntry('$k', v == true)),
+  };
+
+  bool _get(String key) => _prefs[key] ?? _defaults[key] ?? false;
+
+  /// Simpan preferensi ke metadata akun (ikut ke perangkat lain).
+  Future<void> _set(String key, bool value) async {
+    final previous = _get(key);
+    setState(() => _prefs[key] = value);
+    final ok = await runWithFeedback(
+      context,
+      () => Supabase.instance.client.auth.updateUser(
+        UserAttributes(data: {'notif_prefs': _prefs}),
+      ),
+      errorPrefix: 'Gagal menyimpan pengaturan',
+    );
+    if (!ok && mounted) setState(() => _prefs[key] = previous);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Notifikasi',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Notifikasi'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.marginPage),
@@ -86,13 +77,19 @@ class _NotifikasiSettingsScreenState extends State<NotifikasiSettingsScreen> {
                       ),
                     ),
                     Switch(
-                      value: _globalNotif,
+                      value: _get('global'),
                       activeThumbColor: AppColors.primaryContainer,
                       activeTrackColor: AppColors.primaryContainer.withValues(alpha: 0.4),
-                      onChanged: (v) => setState(() => _globalNotif = v),
+                      onChanged: (v) => _set('global', v),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Pilihan Anda tersimpan di akun. Notifikasi push ke perangkat belum '
+                'tersedia — untuk sementara, pemberitahuan tampil di Inbox.',
+                style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
               ),
               const SizedBox(height: 24),
 
@@ -101,9 +98,9 @@ class _NotifikasiSettingsScreenState extends State<NotifikasiSettingsScreen> {
 
               // Detail List Switch
               Opacity(
-                opacity: _globalNotif ? 1.0 : 0.5,
+                opacity: _get('global') ? 1.0 : 0.5,
                 child: AbsorbPointer(
-                  absorbing: !_globalNotif,
+                  absorbing: !_get('global'),
                   child: BrutalistCard(
                     padding: EdgeInsets.zero,
                     backgroundColor: AppColors.surfaceContainerLowest,
@@ -112,43 +109,43 @@ class _NotifikasiSettingsScreenState extends State<NotifikasiSettingsScreen> {
                         _NotifItem(
                           title: 'Poin Keaktifan',
                           subtitle: 'Notifikasi saat poin bertambah/berkurang',
-                          value: _notifPoin,
-                          onChanged: (v) => setState(() => _notifPoin = v),
+                          value: _get('poin'),
+                          onChanged: (v) => _set('poin', v),
                         ),
                         const Divider(height: 1, color: AppColors.borderSlate),
                         _NotifItem(
                           title: 'Kegiatan Baru',
                           subtitle: 'Notifikasi rapat atau acara bidang baru',
-                          value: _notifKegiatan,
-                          onChanged: (v) => setState(() => _notifKegiatan = v),
+                          value: _get('kegiatan'),
+                          onChanged: (v) => _set('kegiatan', v),
                         ),
                         const Divider(height: 1, color: AppColors.borderSlate),
                         _NotifItem(
                           title: 'Absensi & Kehadiran',
                           subtitle: 'Pengingat absensi atau status verifikasi hadir',
-                          value: _notifAbsensi,
-                          onChanged: (v) => setState(() => _notifAbsensi = v),
+                          value: _get('absensi'),
+                          onChanged: (v) => _set('absensi', v),
                         ),
                         const Divider(height: 1, color: AppColors.borderSlate),
                         _NotifItem(
                           title: 'Uang Khas bulanan',
                           subtitle: 'Tagihan bulanan atau status pembayaran',
-                          value: _notifUangKhas,
-                          onChanged: (v) => setState(() => _notifUangKhas = v),
+                          value: _get('uang_khas'),
+                          onChanged: (v) => _set('uang_khas', v),
                         ),
                         const Divider(height: 1, color: AppColors.borderSlate),
                         _NotifItem(
                           title: 'Pengumuman / Inbox',
                           subtitle: 'Pemberitahuan broadcast penting dari pengurus',
-                          value: _notifPengumuman,
-                          onChanged: (v) => setState(() => _notifPengumuman = v),
+                          value: _get('pengumuman'),
+                          onChanged: (v) => _set('pengumuman', v),
                         ),
                         const Divider(height: 1, color: AppColors.borderSlate),
                         _NotifItem(
                           title: 'Sistem & Keamanan',
                           subtitle: 'Perubahan data profil atau sesi login baru',
-                          value: _notifSistem,
-                          onChanged: (v) => setState(() => _notifSistem = v),
+                          value: _get('sistem'),
+                          onChanged: (v) => _set('sistem', v),
                         ),
                       ],
                     ),

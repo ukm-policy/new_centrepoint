@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -8,6 +7,7 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/audit_log_repository.dart';
 import '../../../data/models/audit_log_model.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class AuditLogScreen extends StatefulWidget {
   const AuditLogScreen({super.key});
@@ -66,37 +66,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.bgGray,
-          appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.marginPage, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(AppSpacing.radius),
-                          border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                          boxShadow: const [AppColors.hardShadowSm],
-                        ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                          const SizedBox(width: 6),
-                          Text('Kembali', style: AppTypography.labelBold),
-                        ]),
-                      ),
-                    ),
-                    Text('Audit Log Sistem', style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800)),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          appBar: PageAppBar(title: 'Audit Log Sistem'),
           body: SafeArea(
             child: Column(
               children: [
@@ -218,7 +188,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
                                                   ),
                                                   child: Text(
                                                     log.tipe.toUpperCase(),
-                                                    style: AppTypography.labelBold.copyWith(fontSize: 8, color: AppColors.tertiary),
+                                                    style: AppTypography.labelBold.copyWith(fontSize: 10, color: AppColors.tertiary),
                                                   ),
                                                 ),
                                               ),

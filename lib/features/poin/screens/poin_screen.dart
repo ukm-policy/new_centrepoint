@@ -1,112 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/session/app_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../data/models/poin_model.dart';
+import '../../../data/repositories/poin_repository.dart';
 import '../../../shared/widgets/floating_app_bar.dart';
+import '../../../shared/widgets/list_status.dart';
 import '../../../shared/widgets/my_divider.dart';
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const _kRiwayat = [
-  _PoinEntry(
-    label: 'Hadir — Seminar Kebijakan Publik',
-    tanggal: '20 Jun 2025',
-    poin: 50,
-    tipe: _EntryTipe.hadir,
-  ),
-  _PoinEntry(
-    label: 'Hadir — Rapat Koordinasi Divisi',
-    tanggal: '19 Jun 2025',
-    poin: 30,
-    tipe: _EntryTipe.hadir,
-  ),
-  _PoinEntry(
-    label: 'Panitia — Workshop Analisis Kebijakan',
-    tanggal: '15 Jun 2025',
-    poin: 100,
-    tipe: _EntryTipe.panitia,
-  ),
-  _PoinEntry(
-    label: 'Tidak Hadir — Diskusi Mingguan',
-    tanggal: '12 Jun 2025',
-    poin: -20,
-    tipe: _EntryTipe.absen,
-  ),
-  _PoinEntry(
-    label: 'Bonus — Kontribusi Materi Pelatihan',
-    tanggal: '10 Jun 2025',
-    poin: 75,
-    tipe: _EntryTipe.bonus,
-  ),
-  _PoinEntry(
-    label: 'Hadir — Rapat Pleno UKM',
-    tanggal: '5 Jun 2025',
-    poin: 40,
-    tipe: _EntryTipe.hadir,
-  ),
-  _PoinEntry(
-    label: 'Hadir — Seminar Nasional Kebijakan',
-    tanggal: '1 Jun 2025',
-    poin: 60,
-    tipe: _EntryTipe.hadir,
-  ),
-  _PoinEntry(
-    label: 'Tidak Hadir — Rapat Bidang Pemrograman',
-    tanggal: '28 Mei 2025',
-    poin: -20,
-    tipe: _EntryTipe.absen,
-  ),
-  _PoinEntry(
-    label: 'Panitia — Pelantikan Anggota Baru',
-    tanggal: '20 Mei 2025',
-    poin: 80,
-    tipe: _EntryTipe.panitia,
-  ),
-  _PoinEntry(
-    label: 'Hadir — Workshop Penulisan Kebijakan',
-    tanggal: '15 Mei 2025',
-    poin: 50,
-    tipe: _EntryTipe.hadir,
-  ),
-];
+const _bulanSingkat = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-const _kLeaderboard = [
-  _LeaderEntry(rank: 1, nama: 'Budi Santoso', divisi: 'Pengembangan', poin: 1580, tier: 'Gold'),
-  _LeaderEntry(rank: 2, nama: 'Rini Wulandari', divisi: 'Kaderisasi', poin: 1420, tier: 'Gold'),
-  _LeaderEntry(rank: 3, nama: 'Ahmad Ridhwan', divisi: 'Pemrograman', poin: 1250, tier: 'Gold'),
-  _LeaderEntry(rank: 4, nama: 'Siti Nurhaliza', divisi: 'Multimedia', poin: 1100, tier: 'Silver'),
-  _LeaderEntry(rank: 5, nama: 'Rizky Pratama', divisi: 'Jaringan', poin: 980, tier: 'Silver'),
-  _LeaderEntry(rank: 6, nama: 'Faisal Hakim', divisi: 'Humas', poin: 870, tier: 'Silver'),
-  _LeaderEntry(rank: 7, nama: 'Hendra Wijaya', divisi: 'Pemrograman', poin: 760, tier: 'Bronze'),
-  _LeaderEntry(rank: 8, nama: 'Maya Putri', divisi: 'Multimedia', poin: 650, tier: 'Bronze'),
-  _LeaderEntry(rank: 9, nama: 'Dewi Purnama', divisi: 'Jaringan', poin: 540, tier: 'Bronze'),
-  _LeaderEntry(rank: 10, nama: 'Indah Permata', divisi: 'Kaderisasi', poin: 420, tier: 'Bronze'),
-];
+String _fmtTanggal(DateTime d) => '${d.day} ${_bulanSingkat[d.month - 1]} ${d.year}';
 
-enum _EntryTipe { hadir, absen, panitia, bonus }
+String _fmtPoin(int v) => v.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
 
-class _PoinEntry {
-  const _PoinEntry({
-    required this.label,
-    required this.tanggal,
-    required this.poin,
-    required this.tipe,
-  });
-  final String label, tanggal;
-  final int poin;
-  final _EntryTipe tipe;
-}
+/// Ambang tier — harus sama dengan perhitungan di repository.
+const _tiers = [('Member', 0), ('Bronze', 400), ('Silver', 800), ('Gold', 1200)];
 
-class _LeaderEntry {
-  const _LeaderEntry({
-    required this.rank,
-    required this.nama,
-    required this.divisi,
-    required this.poin,
-    required this.tier,
-  });
-  final int rank, poin;
-  final String nama, divisi, tier;
+String _tierOf(int poin) => _tiers.lastWhere((t) => poin >= t.$2).$1;
+
+/// Tier berikutnya beserta ambangnya, atau null jika sudah tier tertinggi.
+(String, int)? _nextTier(int poin) {
+  for (final t in _tiers) {
+    if (poin < t.$2) return t;
+  }
+  return null;
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -137,6 +62,12 @@ class _PoinScreenState extends State<PoinScreen>
 
   @override
   Widget build(BuildContext context) {
+    final repo = context.watch<PoinRepository>();
+    final myEntries = repo.poinEntries.where((e) => e.memberId == AppSession.id).toList();
+    final board = repo.leaderboard;
+    final me = board.where((e) => e.memberId == AppSession.id).firstOrNull;
+    final loading = repo.isLoading && repo.poinEntries.isEmpty && board.isEmpty;
+
     return Column(children: [
       FloatingAppBar(title: 'Poin Keaktifan', showBack: true),
       Expanded(
@@ -147,7 +78,7 @@ class _PoinScreenState extends State<PoinScreen>
           ),
           children: [
             // ── Kartu Poin User ──────────────────────────────────────────
-            _UserPoinCard(),
+            _UserPoinCard(entries: myEntries, me: me, totalMembers: board.length),
             const SizedBox(height: AppSpacing.stackGap),
 
             // ── Tab Bar ───────────────────────────────────────────────────
@@ -156,8 +87,8 @@ class _PoinScreenState extends State<PoinScreen>
 
             // ── Tab Content ───────────────────────────────────────────────
             _tab.index == 0
-                ? _RiwayatTab()
-                : _LeaderboardTab(),
+                ? _RiwayatTab(entries: myEntries, loading: loading)
+                : _LeaderboardTab(board: board, me: me, loading: loading),
           ],
         ),
       ),
@@ -168,8 +99,22 @@ class _PoinScreenState extends State<PoinScreen>
 // ── User Poin Card ────────────────────────────────────────────────────────────
 
 class _UserPoinCard extends StatelessWidget {
+  const _UserPoinCard({required this.entries, required this.me, required this.totalMembers});
+  final List<PoinEntryModel> entries;
+  final LeaderboardEntryModel? me;
+  final int totalMembers;
+
   @override
   Widget build(BuildContext context) {
+    final total = me?.totalPoin ?? entries.fold<int>(0, (s, e) => s + e.poin);
+    final tier = _tierOf(total);
+    final now = DateTime.now();
+    final bulanIni = entries
+        .where((e) => e.tanggal.year == now.year && e.tanggal.month == now.month)
+        .fold<int>(0, (s, e) => s + e.poin);
+    final next = _nextTier(total);
+    final progress = next == null ? 1.0 : (total / next.$2).clamp(0.0, 1.0);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -191,9 +136,10 @@ class _UserPoinCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Ahmad Ridhwan',
+            Text(AppSession.nama,
+              maxLines: 1, overflow: TextOverflow.ellipsis,
               style: AppTypography.headlineSm.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
-            Text('Senior Policy Analyst',
+            Text(AppSession.jabatan,
               style: AppTypography.labelBold.copyWith(color: Colors.white54)),
           ])),
           Container(
@@ -206,7 +152,7 @@ class _UserPoinCard extends StatelessWidget {
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               const Icon(Icons.star, size: 12, color: AppColors.onSecondaryContainer),
               const SizedBox(width: 4),
-              Text('Gold', style: AppTypography.labelBold.copyWith(color: AppColors.onSecondaryContainer)),
+              Text(tier, style: AppTypography.labelBold.copyWith(color: AppColors.onSecondaryContainer)),
             ]),
           ),
         ]),
@@ -219,7 +165,7 @@ class _UserPoinCard extends StatelessWidget {
             Text('Total Poin', style: AppTypography.labelBold.copyWith(color: Colors.white54)),
             const SizedBox(height: 4),
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('1.250', style: AppTypography.displayLgMobile.copyWith(color: Colors.white)),
+              Text(_fmtPoin(total), style: AppTypography.displayLgMobile.copyWith(color: Colors.white)),
               const SizedBox(width: 6),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -230,9 +176,13 @@ class _UserPoinCard extends StatelessWidget {
           Container(width: 1, height: 56, color: Colors.white12),
           const SizedBox(width: 20),
           Expanded(child: Column(children: [
-            _StatChip(label: 'Ranking', value: '#3', icon: Icons.emoji_events),
+            _StatChip(label: 'Ranking', value: me == null ? '-' : '#${me!.rank}', icon: Icons.emoji_events),
             const SizedBox(height: 8),
-            _StatChip(label: 'Bulan Ini', value: '+445', icon: Icons.trending_up),
+            _StatChip(
+              label: 'Bulan Ini',
+              value: '${bulanIni > 0 ? '+' : ''}$bulanIni',
+              icon: bulanIni < 0 ? Icons.trending_down : Icons.trending_up,
+            ),
           ])),
         ]),
 
@@ -240,9 +190,11 @@ class _UserPoinCard extends StatelessWidget {
         // Progress bar ke tier berikutnya
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Text('Menuju Platinum', style: AppTypography.labelBold.copyWith(color: Colors.white54)),
+            Text(next == null ? 'Tier tertinggi tercapai' : 'Menuju ${next.$1}',
+              style: AppTypography.labelBold.copyWith(color: Colors.white54)),
             const Spacer(),
-            Text('1250 / 2000 pts', style: AppTypography.labelBold.copyWith(color: Colors.white38)),
+            if (next != null)
+              Text('$total / ${next.$2} pts', style: AppTypography.labelBold.copyWith(color: Colors.white38)),
           ]),
           const SizedBox(height: 8),
           ClipRRect(
@@ -250,7 +202,7 @@ class _UserPoinCard extends StatelessWidget {
             child: Stack(children: [
               Container(height: 8, color: Colors.white12),
               FractionallySizedBox(
-                widthFactor: 1250 / 2000,
+                widthFactor: progress,
                 child: Container(
                   height: 8,
                   decoration: BoxDecoration(
@@ -366,12 +318,16 @@ class _TabPill extends StatelessWidget {
 // ── Tab Riwayat ───────────────────────────────────────────────────────────────
 
 class _RiwayatTab extends StatelessWidget {
+  const _RiwayatTab({required this.entries, required this.loading});
+  final List<PoinEntryModel> entries;
+  final bool loading;
+
   @override
   Widget build(BuildContext context) {
     // Hitung summary
-    final total = _kRiwayat.fold(0, (s, e) => s + e.poin);
-    final masuk = _kRiwayat.where((e) => e.poin > 0).fold(0, (s, e) => s + e.poin);
-    final keluar = _kRiwayat.where((e) => e.poin < 0).fold(0, (s, e) => s + e.poin.abs());
+    final total = entries.fold<int>(0, (s, e) => s + e.poin);
+    final masuk = entries.where((e) => e.poin > 0).fold<int>(0, (s, e) => s + e.poin);
+    final keluar = entries.where((e) => e.poin < 0).fold<int>(0, (s, e) => s + e.poin.abs());
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // Summary row
@@ -382,18 +338,24 @@ class _RiwayatTab extends StatelessWidget {
         _SummaryBox(label: 'Dikurangi', value: '-$keluar', color: AppColors.errorContainer,
           textColor: AppColors.error, icon: Icons.arrow_downward),
         const SizedBox(width: AppSpacing.gutterGrid),
-        _SummaryBox(label: 'Periode Ini', value: '${total > 0 ? "+" : ""}$total',
+        _SummaryBox(label: 'Total', value: '${total > 0 ? "+" : ""}$total',
           color: AppColors.surfaceContainerLowest, textColor: AppColors.onSurface,
           icon: Icons.summarize_outlined),
       ]),
       const SizedBox(height: AppSpacing.stackGap),
 
-      Text('${_kRiwayat.length} aktivitas',
+      Text('${entries.length} aktivitas',
         style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
       const SizedBox(height: 10),
 
       // List
-      ..._kRiwayat.map((e) => Padding(
+      if (entries.isEmpty)
+        ListStatus(
+          loading: loading,
+          icon: Icons.history,
+          message: 'Belum ada riwayat poin. Ikuti kegiatan untuk mengumpulkan poin!',
+        ),
+      ...entries.map((e) => Padding(
         padding: const EdgeInsets.only(bottom: AppSpacing.gutterGrid),
         child: _RiwayatCard(entry: e),
       )),
@@ -434,27 +396,28 @@ class _SummaryBox extends StatelessWidget {
 
 class _RiwayatCard extends StatelessWidget {
   const _RiwayatCard({required this.entry});
-  final _PoinEntry entry;
+  final PoinEntryModel entry;
 
   IconData get _icon => switch (entry.tipe) {
-    _EntryTipe.hadir   => Icons.event_available,
-    _EntryTipe.absen   => Icons.event_busy,
-    _EntryTipe.panitia => Icons.groups,
-    _EntryTipe.bonus   => Icons.card_giftcard,
+    TipePoin.hadir   => Icons.event_available,
+    TipePoin.absen   => Icons.event_busy,
+    TipePoin.panitia => Icons.groups,
+    TipePoin.bonus   => Icons.card_giftcard,
+    TipePoin.penalti => Icons.remove_circle_outline,
   };
 
   Color get _iconBg => switch (entry.tipe) {
-    _EntryTipe.hadir   => AppColors.secondaryContainer,
-    _EntryTipe.absen   => AppColors.errorContainer,
-    _EntryTipe.panitia => AppColors.primaryContainer,
-    _EntryTipe.bonus   => const Color(0xFFFFF3CD),
+    TipePoin.hadir   => AppColors.secondaryContainer,
+    TipePoin.absen || TipePoin.penalti => AppColors.errorContainer,
+    TipePoin.panitia => AppColors.primaryContainer,
+    TipePoin.bonus   => AppColors.highlightContainer,
   };
 
   Color get _iconColor => switch (entry.tipe) {
-    _EntryTipe.hadir   => AppColors.onSecondaryContainer,
-    _EntryTipe.absen   => AppColors.error,
-    _EntryTipe.panitia => AppColors.onPrimaryContainer,
-    _EntryTipe.bonus   => const Color(0xFF856404),
+    TipePoin.hadir   => AppColors.onSecondaryContainer,
+    TipePoin.absen || TipePoin.penalti => AppColors.error,
+    TipePoin.panitia => AppColors.onPrimaryContainer,
+    TipePoin.bonus   => AppColors.onHighlightContainer,
   };
 
   @override
@@ -484,7 +447,7 @@ class _RiwayatCard extends StatelessWidget {
             style: AppTypography.bodyMd.copyWith(fontWeight: FontWeight.w600),
             maxLines: 2, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 2),
-          Text(entry.tanggal,
+          Text(_fmtTanggal(entry.tanggal),
             style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
         ])),
         const SizedBox(width: 8),
@@ -510,25 +473,38 @@ class _RiwayatCard extends StatelessWidget {
 // ── Tab Leaderboard ───────────────────────────────────────────────────────────
 
 class _LeaderboardTab extends StatelessWidget {
+  const _LeaderboardTab({required this.board, required this.me, required this.loading});
+  final List<LeaderboardEntryModel> board;
+  final LeaderboardEntryModel? me;
+  final bool loading;
+
   @override
   Widget build(BuildContext context) {
-    final top3 = _kLeaderboard.take(3).toList();
+    if (board.isEmpty) {
+      return ListStatus(
+        loading: loading,
+        icon: Icons.leaderboard_outlined,
+        message: 'Leaderboard belum tersedia.',
+      );
+    }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // Podium top 3
-      _Podium(top3: top3),
-      const SizedBox(height: AppSpacing.stackGap),
+      if (board.length >= 3) ...[
+        _Podium(top3: board.take(3).toList()),
+        const SizedBox(height: AppSpacing.stackGap),
+      ],
 
       // Posisi user highlight
-      _MyRankBanner(),
+      _MyRankBanner(rank: me?.rank, total: board.length),
       const SizedBox(height: AppSpacing.stackGap),
 
       Text('Semua Peringkat', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
       const SizedBox(height: 10),
 
-      ..._kLeaderboard.map((e) => Padding(
+      ...board.map((e) => Padding(
         padding: const EdgeInsets.only(bottom: AppSpacing.gutterGrid),
-        child: _LeaderCard(entry: e, isMe: e.rank == 3),
+        child: _LeaderCard(entry: e, isMe: e.memberId == AppSession.id),
       )),
     ]);
   }
@@ -536,7 +512,7 @@ class _LeaderboardTab extends StatelessWidget {
 
 class _Podium extends StatelessWidget {
   const _Podium({required this.top3});
-  final List<_LeaderEntry> top3;
+  final List<LeaderboardEntryModel> top3;
 
   @override
   Widget build(BuildContext context) {
@@ -580,15 +556,15 @@ class _PodiumSlot extends StatelessWidget {
     required this.rank,
     required this.isFirst,
   });
-  final _LeaderEntry entry;
+  final LeaderboardEntryModel entry;
   final double height;
   final int rank;
   final bool isFirst;
 
   Color get _podiumColor => switch (rank) {
-    1 => const Color(0xFFFFD700),
-    2 => const Color(0xFFC0C0C0),
-    _ => const Color(0xFFCD7F32),
+    1 => AppColors.medalGold,
+    2 => AppColors.medalSilver,
+    _ => AppColors.medalBronze,
   };
 
   @override
@@ -596,7 +572,7 @@ class _PodiumSlot extends StatelessWidget {
     return Column(children: [
       // Crown for rank 1
       if (isFirst) ...[
-        const Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 28),
+        const Icon(Icons.emoji_events, color: AppColors.medalGold, size: 28),
         const SizedBox(height: 4),
       ],
       // Avatar
@@ -611,14 +587,14 @@ class _PodiumSlot extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       Text(
-        entry.nama.split(' ').first,
+        entry.memberNama.trim().split(RegExp(r'\s+')).first,
         style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 11),
         textAlign: TextAlign.center,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       const SizedBox(height: 2),
-      Text('${entry.poin} pts',
+      Text('${entry.totalPoin} pts',
         style: AppTypography.labelBold.copyWith(color: _podiumColor, fontSize: 10)),
       const SizedBox(height: 8),
       // Podium block
@@ -645,6 +621,10 @@ class _PodiumSlot extends StatelessWidget {
 }
 
 class _MyRankBanner extends StatelessWidget {
+  const _MyRankBanner({required this.rank, required this.total});
+  final int? rank;
+  final int total;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -667,7 +647,7 @@ class _MyRankBanner extends StatelessWidget {
             color: AppColors.onPrimaryContainer,
             borderRadius: BorderRadius.circular(AppSpacing.radiusNav),
           ),
-          child: Text('#3 dari 42',
+          child: Text(rank == null ? 'Belum masuk peringkat' : '#$rank dari $total',
             style: AppTypography.labelBold.copyWith(color: AppColors.primaryContainer)),
         ),
       ]),
@@ -677,19 +657,19 @@ class _MyRankBanner extends StatelessWidget {
 
 class _LeaderCard extends StatelessWidget {
   const _LeaderCard({required this.entry, required this.isMe});
-  final _LeaderEntry entry;
+  final LeaderboardEntryModel entry;
   final bool isMe;
 
   Color get _tierColor => switch (entry.tier) {
     'Gold'   => AppColors.secondaryContainer,
     'Silver' => AppColors.surfaceContainerHigh,
-    _        => const Color(0xFFEDD5B3),
+    _        => AppColors.bronzeContainer,
   };
 
   Color get _tierText => switch (entry.tier) {
     'Gold'   => AppColors.onSecondaryContainer,
     'Silver' => AppColors.onSurfaceVariant,
-    _        => const Color(0xFF7B4F2E),
+    _        => AppColors.onBronzeContainer,
   };
 
   @override
@@ -735,7 +715,7 @@ class _LeaderCard extends StatelessWidget {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Flexible(
-              child: Text(entry.nama,
+              child: Text(entry.memberNama,
                 style: AppTypography.bodyMd.copyWith(
                   fontWeight: FontWeight.w700,
                   color: isMe ? AppColors.onPrimaryContainer : AppColors.onSurface,
@@ -752,11 +732,11 @@ class _LeaderCard extends StatelessWidget {
                 ),
                 child: Text('Kamu',
                   style: AppTypography.labelBold.copyWith(
-                    color: AppColors.primaryContainer, fontSize: 9)),
+                    color: AppColors.primaryContainer, fontSize: 10)),
               ),
             ],
           ]),
-          Text(entry.divisi,
+          Text(entry.divisi ?? 'Umum',
             style: AppTypography.labelBold.copyWith(
               color: isMe ? AppColors.onPrimaryContainer.withValues(alpha: 0.7) : AppColors.tertiary,
               fontSize: 10)),
@@ -775,7 +755,7 @@ class _LeaderCard extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         // Points
-        Text('${entry.poin}',
+        Text('${entry.totalPoin}',
           style: AppTypography.bodyLg.copyWith(
             fontWeight: FontWeight.w800,
             color: isMe ? AppColors.onPrimaryContainer : AppColors.onSurface,

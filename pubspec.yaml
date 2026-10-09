@@ -37,6 +37,7 @@ flutter:
   assets:
     - assets/
     - .env
+    - Privacy.md
 
 flutter_launcher_icons:
   android: "launcher_icon"

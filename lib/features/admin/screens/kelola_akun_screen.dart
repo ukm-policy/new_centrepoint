@@ -9,6 +9,9 @@ import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/member_repository.dart';
 import '../../../data/models/member_model.dart';
+import '../../../shared/utils/initials.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class KelolaAkunScreen extends StatefulWidget {
   const KelolaAkunScreen({super.key});
@@ -27,7 +30,6 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
 
   void _showEditSheet(BuildContext context, MemberModel member) {
     String tempStatus = member.status;
-    int tempLevel = member.level;
     bool tempIsAdmin = member.isAdmin;
 
     showModalBottomSheet(
@@ -86,24 +88,30 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   ),
                   const SizedBox(height: AppSpacing.stackGap),
 
-                  // Level Dropdown
+                  // Level akses mengikuti jabatan
                   Text('LEVEL AKSES', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 6),
-                  DropdownButtonFormField<int>(
-                    initialValue: tempLevel,
-                    onChanged: (v) => setModalState(() => tempLevel = v ?? 2),
-                    style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                  Row(children: [
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(
+                          'Level ${member.level}${member.jabatan != null ? ' · ${member.jabatan}' : ''}',
+                          style: AppTypography.bodyMd.copyWith(color: AppColors.onSurface),
+                        ),
+                        Text(
+                          'Level mengikuti jabatan anggota.',
+                          style: AppTypography.labelBold.copyWith(color: AppColors.tertiary),
+                        ),
+                      ]),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('Level 1 - Anggota Umum')),
-                      DropdownMenuItem(value: 2, child: Text('Level 2 - Anggota Bidang')),
-                      DropdownMenuItem(value: 3, child: Text('Level 3 - Kepala Bidang')),
-                      DropdownMenuItem(value: 4, child: Text('Level 4 - Bendahara / Sekretaris')),
-                      DropdownMenuItem(value: 5, child: Text('Level 5 - BPH / Ketua Umum')),
-                    ],
-                  ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(modalContext);
+                        context.push('/admin/periode/jabatan');
+                      },
+                      child: const Text('Atur Jabatan'),
+                    ),
+                  ]),
                   const SizedBox(height: AppSpacing.stackGap),
 
                   // Admin Switch
@@ -136,23 +144,18 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                   BrutalistButton(
                     label: 'SIMPAN PERUBAHAN',
                     onPressed: () {
-                      Provider.of<MemberRepository>(context, listen: false).updateStatusAndLevel(
-                        member.id,
-                        status: tempStatus,
-                        level: tempLevel,
-                        isAdmin: tempIsAdmin,
-                      );
+                      final repo = Provider.of<MemberRepository>(context, listen: false);
                       Navigator.pop(modalContext);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Akun ${member.nama} berhasil diperbarui.',
-                            style: AppTypography.bodyMd.copyWith(color: Colors.white),
-                          ),
-                          backgroundColor: AppColors.success,
-                          behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(AppSpacing.marginPage),
+                      runWithFeedback(
+                        context,
+                        () => repo.updateStatusAndLevel(
+                          member.id,
+                          status: tempStatus,
+                          level: member.level,
+                          isAdmin: tempIsAdmin,
                         ),
+                        success: 'Akun ${member.nama} berhasil diperbarui.',
+                        errorPrefix: 'Gagal memperbarui akun',
                       );
                     },
                   ),
@@ -191,43 +194,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Kelola Pengguna ($totalUsers)',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Kelola Pengguna ($totalUsers)'),
       body: SafeArea(
         child: Column(
           children: [
@@ -328,7 +295,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                       itemBuilder: (context, i) {
                         final m = filtered[i];
                         final initialName = m.nama.isNotEmpty
-                            ? m.nama.split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+                            ? initialsOf(m.nama)
                             : 'M';
                         
                         return Padding(
@@ -388,7 +355,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                                               m.status.toUpperCase(),
                                               style: AppTypography.labelBold.copyWith(
                                                 color: m.status == 'Aktif' ? Colors.white : AppColors.onSurface,
-                                                fontSize: 8,
+                                                fontSize: 10,
                                               ),
                                             ),
                                           ),
@@ -405,7 +372,7 @@ class _KelolaAkunScreenState extends State<KelolaAkunScreen> {
                                             child: Text(
                                               'LVL ${m.level}',
                                               style: AppTypography.labelBold.copyWith(
-                                                fontSize: 8,
+                                                fontSize: 10,
                                               ),
                                             ),
                                           ),

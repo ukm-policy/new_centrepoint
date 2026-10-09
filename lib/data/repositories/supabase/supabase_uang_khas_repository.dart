@@ -1,39 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/uang_khas_model.dart';
 import '../../models/rekap_model.dart';
 import '../uang_khas_repository.dart';
 
-class SupabaseUangKhasRepository extends UangKhasRepository {
+class SupabaseUangKhasRepository extends UangKhasRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<UangKhasBulanModel> _khasBulan = [];
   List<TransaksiKhasModel> _transaksi = [];
 
   SupabaseUangKhasRepository() {
-    _loadUangKhas();
-    _db
-        .channel('public:uang_khas_bulan')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'uang_khas_bulan',
-          callback: (payload) {
-            _loadUangKhas();
-          },
-        )
-        .subscribe();
-    _db
-        .channel('public:transaksi_khas')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'transaksi_khas',
-          callback: (payload) {
-            _loadUangKhas();
-          },
-        )
-        .subscribe();
+    reload();
+    listenTable('uang_khas_bulan', reload);
+    listenTable('transaksi_khas', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadUangKhas);
 
   Future<void> _loadUangKhas() async {
     try {
@@ -43,7 +27,7 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
         final id = json['id'] as String;
         final memberId = json['member_id'] as String? ?? '';
         final bulan = json['bulan'] as String? ?? '';
-        final tahun = json['tahun'] as int? ?? 2026;
+        final tahun = json['tahun'] as int? ?? DateTime.now().year;
         final nominal = json['nominal'] as int? ?? 10000;
         final statusStr = json['status'] as String? ?? 'belumBayar';
         final tanggalBayar = json['tanggal_bayar'] != null ? DateTime.tryParse(json['tanggal_bayar'] as String) : null;
@@ -93,8 +77,12 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading uang khas: $e');
+      rethrow;
     }
   }
+
+  /// Penanda transaksi pending milik satu baris uang_khas_bulan.
+  static String _refKeterangan(String khasId) => 'Bukti Pembayaran Ref ID: $khasId';
 
   @override
   List<UangKhasBulanModel> get khasBulan => List.unmodifiable(_khasBulan);
@@ -126,12 +114,13 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
         'jumlah': nominal,
         'is_pemasukan': true,
         'is_pending': true,
-        'keterangan': 'Bukti Pembayaran Ref ID: $kid',
+        'keterangan': _refKeterangan(kid),
       });
 
-      await _loadUangKhas();
+      await reload();
     } catch (e) {
       debugPrint('Error paying uang khas: $e');
+      rethrow;
     }
   }
 
@@ -148,9 +137,10 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
         'keterangan': tx.keterangan,
         'created_by': user?.id,
       });
-      await _loadUangKhas();
+      await reload();
     } catch (e) {
       debugPrint('Error adding transaksi: $e');
+      rethrow;
     }
   }
 
@@ -166,15 +156,13 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
       }).eq('id', id).select().single();
 
       final bulan = khasData['bulan'] as String? ?? '';
-      final nominal = khasData['nominal'] as int? ?? 10000;
 
       // 2. Update the pending transaction to complete
       final pendingTxs = await _db.from('transaksi_khas')
           .select()
           .eq('is_pending', true)
-          .eq('jumlah', nominal)
-          .like('keterangan', '%$id%');
-      
+          .eq('keterangan', _refKeterangan(id));
+
       if (pendingTxs.isNotEmpty) {
         final txId = pendingTxs.first['id'] as String;
         await _db.from('transaksi_khas').update({
@@ -183,9 +171,10 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
         }).eq('id', txId);
       }
 
-      await _loadUangKhas();
+      await reload();
     } catch (e) {
       debugPrint('Error verifying payment: $e');
+      rethrow;
     }
   }
 
@@ -193,25 +182,23 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
   Future<void> rejectPayment(String id) async {
     try {
       // 1. Delete payment entry or set to belumBayar
-      final khasData = await _db.from('uang_khas_bulan').update({
+      await _db.from('uang_khas_bulan').update({
         'status': 'belumBayar',
         'is_verified': false,
         'bukti_url': null,
         'tanggal_bayar': null,
-      }).eq('id', id).select().single();
-
-      final nominal = khasData['nominal'] as int? ?? 10000;
+      }).eq('id', id);
 
       // 2. Remove pending transaction
       await _db.from('transaksi_khas')
           .delete()
           .eq('is_pending', true)
-          .eq('jumlah', nominal)
-          .like('keterangan', '%$id%');
+          .eq('keterangan', _refKeterangan(id));
 
-      await _loadUangKhas();
+      await reload();
     } catch (e) {
       debugPrint('Error rejecting payment: $e');
+      rethrow;
     }
   }
 
@@ -232,7 +219,7 @@ class SupabaseUangKhasRepository extends UangKhasRepository {
       }).toList();
     } catch (e) {
       debugPrint('Error fetching rekap keuangan: $e');
-      return [];
+      rethrow;
     }
   }
 }

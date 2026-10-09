@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
 import '../models/berita_model.dart';
 import '../dummy/dummy_berita.dart';
 
-abstract class BeritaRepository extends ChangeNotifier {
+abstract class BeritaRepository extends ChangeNotifier with RepositoryLoadState {
   List<BeritaModel> get berita;
   List<BeritaModel> get publishedBerita;
   Future<void> addBerita(BeritaModel item);

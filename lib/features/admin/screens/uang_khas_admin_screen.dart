@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -11,6 +10,10 @@ import '../../../data/repositories/member_repository.dart';
 import '../../../data/models/uang_khas_model.dart';
 import '../../../data/repositories/uang_khas_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../core/errors/app_exception.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
+import '../../../core/config/kas_config.dart';
 
 class UangKhasAdminScreen extends StatefulWidget {
   const UangKhasAdminScreen({super.key});
@@ -28,16 +31,20 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
   final List<String> _monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
   Future<void> _adminVerify(String id, String memberNama) async {
-    context.read<UangKhasRepository>().verifyPayment(id, memberNama);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Pembayaran $memberNama berhasil diverifikasi!'), backgroundColor: AppColors.success),
+    await runWithFeedback(
+      context,
+      () => context.read<UangKhasRepository>().verifyPayment(id, memberNama),
+      success: 'Pembayaran $memberNama berhasil diverifikasi!',
+      errorPrefix: 'Gagal memverifikasi pembayaran',
     );
   }
 
   Future<void> _adminReject(String id, String memberNama) async {
-    context.read<UangKhasRepository>().rejectPayment(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Pembayaran $memberNama ditolak.'), backgroundColor: AppColors.error),
+    await runWithFeedback(
+      context,
+      () => context.read<UangKhasRepository>().rejectPayment(id),
+      success: 'Pembayaran $memberNama ditolak.',
+      errorPrefix: 'Gagal menolak pembayaran',
     );
   }
 
@@ -47,8 +54,8 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
       await Supabase.instance.client.from('uang_khas_bulan').upsert({
         'member_id': memberId,
         'bulan': bulan,
-        'tahun': 2026,
-        'nominal': 20000,
+        'tahun': KasConfig.tahunBerjalan,
+        'nominal': KasConfig.nominalBulanan,
         'status': 'lunas',
         'is_verified': true,
         'verified_by': adminUid,
@@ -56,7 +63,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengubah status: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text('Gagal mengubah status: ${friendlyError(e)}'), backgroundColor: AppColors.error),
       );
     }
   }
@@ -66,12 +73,12 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
       await Supabase.instance.client.from('uang_khas_bulan').delete().match({
         'member_id': memberId,
         'bulan': bulan,
-        'tahun': 2026,
+        'tahun': KasConfig.tahunBerjalan,
       });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengubah status: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text('Gagal mengubah status: ${friendlyError(e)}'), backgroundColor: AppColors.error),
       );
     }
   }
@@ -87,7 +94,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Member: $memberNama', style: AppTypography.bodyMd),
-              Text('Bulan: ${record.bulan} 2026', style: AppTypography.bodyMd),
+              Text('Bulan: ${record.bulan} ${record.tahun}', style: AppTypography.bodyMd),
               const SizedBox(height: 12),
               if (record.buktiUrl != null) ...[
                 Text('Bukti Transfer:', style: AppTypography.labelBold),
@@ -141,7 +148,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final khasRepo = context.watch<UangKhasRepository>();
-            final currentKhas = khasRepo.khasBulan.where((k) => k.memberId == member.id && k.tahun == 2026).toList();
+            final currentKhas = khasRepo.khasBulan.where((k) => k.memberId == member.id && k.tahun == KasConfig.tahunBerjalan).toList();
 
             return Container(
               decoration: const BoxDecoration(
@@ -166,7 +173,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                   const SizedBox(height: 12),
                   const MyDivider(color: AppColors.borderSlate),
                   const SizedBox(height: 16),
-                  Text('STATUS PEMBAYARAN IURAN 2026', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
+                  Text('STATUS PEMBAYARAN IURAN ${KasConfig.tahunBerjalan}', style: AppTypography.labelBold.copyWith(color: AppColors.tertiary)),
                   const SizedBox(height: 12),
                   GridView.builder(
                     shrinkWrap: true,
@@ -249,54 +256,18 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
     final members = context.watch<MemberRepository>().members.where((m) => m.isActive).toList();
     
     final totalFundsCollected = khasRepo.khasBulan
-        .where((k) => k.status == StatusBayar.lunas && k.tahun == 2026)
+        .where((k) => k.status == StatusBayar.lunas && k.tahun == KasConfig.tahunBerjalan)
         .fold(0, (s, k) => s + k.nominal);
         
     final totalPendingFunds = khasRepo.khasBulan
-        .where((k) => k.status == StatusBayar.pending && k.tahun == 2026)
+        .where((k) => k.status == StatusBayar.pending && k.tahun == KasConfig.tahunBerjalan)
         .fold(0, (s, k) => s + k.nominal);
 
     final filteredList = _getFiltered(members);
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Kas Semua Anggota',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Kas Semua Anggota'),
       body: SafeArea(
         child: Column(
           children: [
@@ -398,7 +369,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                 itemCount: filteredList.length,
                 itemBuilder: (context, i) {
                   final member = filteredList[i];
-                  final currentKhas = khasRepo.khasBulan.where((k) => k.memberId == member.id && k.tahun == 2026).toList();
+                  final currentKhas = khasRepo.khasBulan.where((k) => k.memberId == member.id && k.tahun == KasConfig.tahunBerjalan).toList();
                   final paidCount = currentKhas.where((k) => k.status == StatusBayar.lunas).length;
 
                   return Padding(
@@ -470,7 +441,7 @@ class _UangKhasAdminScreenState extends State<UangKhasAdminScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     _monthsShort[index].substring(0, 1),
-                                    style: AppTypography.labelBold.copyWith(fontSize: 8, color: AppColors.tertiary),
+                                    style: AppTypography.labelBold.copyWith(fontSize: 10, color: AppColors.tertiary),
                                   ),
                                 ],
                               );

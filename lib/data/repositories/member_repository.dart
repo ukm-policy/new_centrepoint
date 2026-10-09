@@ -1,15 +1,27 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
+import '../../core/errors/app_exception.dart';
+import '../models/jabatan_model.dart';
 import '../models/member_model.dart';
 import '../dummy/dummy_members.dart';
 
-abstract class MemberRepository extends ChangeNotifier {
+abstract class MemberRepository extends ChangeNotifier with RepositoryLoadState {
   List<MemberModel> get members;
   Future<void> addMember(MemberModel member);
   Future<void> updateMember(MemberModel member);
   Future<void> updatePoin(String id, int poinChange);
-  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan});
   Future<void> verifyMember(String id);
   Future<void> updateStatusAndLevel(String id, {required String status, required int level, bool? isAdmin});
+
+  /// Semua jabatan yang tersedia (tabel `jabatan`).
+  Future<List<JabatanModel>> fetchJabatan() async => const [];
+
+  /// Jabatan tiap anggota pada [periodeId]: userId → jabatanId.
+  Future<Map<String, int>> fetchKepengurusan(String periodeId) async => const {};
+
+  /// Set jabatan [userId] pada [periodeId]; null = hapus jabatan.
+  Future<void> setJabatan(String userId, String periodeId, int? jabatanId) async =>
+      throw const AppException('Pengaturan jabatan belum didukung.');
 }
 
 class DummyMemberRepository extends MemberRepository {
@@ -49,19 +61,6 @@ class DummyMemberRepository extends MemberRepository {
       _members[idx] = _members[idx].copyWith(
         totalPoin: currentPoin,
         tier: newTier,
-      );
-      notifyListeners();
-    }
-  }
-
-  @override
-  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) async {
-    final idx = _members.indexWhere((m) => m.id == id);
-    if (idx != -1) {
-      _members[idx] = _members[idx].copyWith(
-        role: role,
-        bidang: bidang,
-        jabatan: jabatan,
       );
       notifyListeners();
     }
@@ -130,16 +129,6 @@ class ApiMemberRepository extends MemberRepository {
     if (idx != -1) {
       final currentPoin = _members[idx].totalPoin + poinChange;
       _members[idx] = _members[idx].copyWith(totalPoin: currentPoin);
-      notifyListeners();
-    }
-  }
-
-  @override
-  Future<void> assignRoleAndJabatan(String id, {required String role, String? bidang, String? jabatan}) async {
-    // POST /api/members/$id/role
-    final idx = _members.indexWhere((m) => m.id == id);
-    if (idx != -1) {
-      _members[idx] = _members[idx].copyWith(role: role, bidang: bidang, jabatan: jabatan);
       notifyListeners();
     }
   }

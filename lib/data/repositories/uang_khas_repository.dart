@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'repository_load_state.dart';
 import '../models/uang_khas_model.dart';
 import '../models/rekap_model.dart';
 import '../dummy/dummy_uang_khas.dart';
 
-abstract class UangKhasRepository extends ChangeNotifier {
+abstract class UangKhasRepository extends ChangeNotifier with RepositoryLoadState {
   List<UangKhasBulanModel> get khasBulan;
   List<TransaksiKhasModel> get transaksi;
   Future<void> payUangKhas(String memberId, String bulan, int tahun, int nominal, String buktiUrl);

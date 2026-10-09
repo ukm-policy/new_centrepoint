@@ -13,6 +13,8 @@ import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/repositories/uang_khas_repository.dart';
 import '../../../data/models/uang_khas_model.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../core/config/kas_config.dart';
 
 class UangKhasScreen extends StatefulWidget {
   const UangKhasScreen({super.key});
@@ -48,32 +50,34 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
   Future<void> _submitReceipt(int monthIdx) async {
     if (_receiptImage == null) return;
     setState(() => _isUploading = true);
-    
+
     try {
       final uid = AppSession.currentUser.id;
       if (uid.isEmpty) throw Exception("User not authenticated");
-      
+
       final bytes = await _receiptImage!.readAsBytes();
-      final fileExt = _receiptImage!.name.split('.').last;
-      final filePath = '$uid/${_months[monthIdx]}_2026.$fileExt';
-      
+      final fileExt = _receiptImage!.name.split('.').last.toLowerCase();
+      final tahun = KasConfig.tahunBerjalan;
+      final filePath = '$uid/${_months[monthIdx]}_$tahun.$fileExt';
+
       await Supabase.instance.client.storage.from('bukti-bayar').uploadBinary(
         filePath,
         bytes,
-        fileOptions: FileOptions(contentType: 'image/$fileExt', upsert: true),
+        fileOptions: FileOptions(contentType: 'image/${fileExt == 'jpg' ? 'jpeg' : fileExt}', upsert: true),
       );
-      
+
       final publicUrl = Supabase.instance.client.storage.from('bukti-bayar').getPublicUrl(filePath);
-      
+
       if (!mounted) return;
-      context.read<UangKhasRepository>().payUangKhas(
+      await context.read<UangKhasRepository>().payUangKhas(
         uid,
         _months[monthIdx],
-        2026,
-        20000, // Rp 20.000 nominal
+        tahun,
+        KasConfig.nominalBulanan,
         publicUrl,
       );
-      
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -86,9 +90,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengirim bukti: $e'), backgroundColor: AppColors.error),
-      );
+      showErrorSnack(context, e, prefix: 'Gagal mengirim bukti');
     } finally {
       if (mounted) {
         setState(() {
@@ -132,13 +134,13 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Nominal Iuran: Rp 20.000',
+                    'Nominal Iuran: ${KasConfig.nominalLabel}',
                     style: AppTypography.bodyMd.copyWith(color: AppColors.tertiary),
                   ),
                   const SizedBox(height: 12),
                   const MyDivider(color: AppColors.borderSlate),
                   const SizedBox(height: 16),
-                  
+
                   // Receipt Upload Area
                   GestureDetector(
                     onTap: () => _pickReceipt(setModalState),
@@ -179,7 +181,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Submit Button
                   _isUploading
                       ? const Center(child: CircularProgressIndicator())
@@ -205,7 +207,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
   Widget build(BuildContext context) {
     final repo = context.watch<UangKhasRepository>();
     final uid = AppSession.currentUser.id;
-    final myKhas = repo.khasBulan.where((k) => k.memberId == uid && k.tahun == 2026).toList();
+    final myKhas = repo.khasBulan.where((k) => k.memberId == uid && k.tahun == KasConfig.tahunBerjalan).toList();
     final transactions = repo.transaksi;
 
     final total = transactions.where((t) => !t.isPending).fold<int>(
@@ -216,7 +218,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
       final name = _months[index];
       final record = myKhas.where((k) => k.bulan == name).firstOrNull;
       if (record == null) return 'Belum Bayar';
-      
+
       switch (record.status) {
         case StatusBayar.lunas:
           return 'Lunas';
@@ -315,7 +317,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                 )
               else
                 _SectionCard(
-                  title: 'Status Iuran Saya (2026)',
+                  title: 'Status Iuran Saya (${KasConfig.tahunBerjalan})',
                   child: GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -331,7 +333,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                       final isLunas = status == 'Lunas';
                       final isPending = status == 'Menunggu Verifikasi';
                       final isDitolak = status == 'Ditolak';
-                      
+
                       Color bg = AppColors.surfaceContainerLowest;
                       Color fg = AppColors.onSurface;
                       if (isLunas) {
@@ -381,7 +383,7 @@ class _UangKhasScreenState extends State<UangKhasScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 status == 'Lunas' ? 'LUNAS' : (status == 'Menunggu Verifikasi' ? 'PROSES' : (status == 'Ditolak' ? 'TOLAK' : 'BELUM')),
-                                style: AppTypography.labelBold.copyWith(color: fg.withValues(alpha: 0.8), fontSize: 8),
+                                style: AppTypography.labelBold.copyWith(color: fg.withValues(alpha: 0.8), fontSize: 10),
                               ),
                             ],
                           ),
@@ -525,7 +527,7 @@ class _TransaksiRow extends StatelessWidget {
                 ),
                 child: Text(
                   'PROSES',
-                  style: AppTypography.labelBold.copyWith(fontSize: 8, color: AppColors.onSecondaryContainer),
+                  style: AppTypography.labelBold.copyWith(fontSize: 10, color: AppColors.onSecondaryContainer),
                 ),
               ),
             ],

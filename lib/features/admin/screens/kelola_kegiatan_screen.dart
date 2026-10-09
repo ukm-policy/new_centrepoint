@@ -8,6 +8,8 @@ import '../../../shared/widgets/brutalist_card.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/kegiatan_model.dart';
 import '../../../data/repositories/kegiatan_repository.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class KelolaKegiatanScreen extends StatefulWidget {
   const KelolaKegiatanScreen({super.key});
@@ -20,14 +22,12 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
   String _filterStatus = 'Semua';
 
   void _handleDelete(BuildContext context, String id) {
-    Provider.of<KegiatanRepository>(context, listen: false).deleteKegiatan(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Kegiatan berhasil dihapus.', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
+    final repo = Provider.of<KegiatanRepository>(context, listen: false);
+    runWithFeedback(
+      context,
+      () => repo.deleteKegiatan(id),
+      success: 'Kegiatan berhasil dihapus.',
+      errorPrefix: 'Gagal menghapus kegiatan',
     );
   }
 
@@ -47,9 +47,9 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
             children: [
               const MyDivider(color: AppColors.borderSlate, height: 16),
               _StatusOption(
-                label: 'Upcoming',
+                label: 'Akan Datang',
                 color: AppColors.surfaceContainerHigh,
-                onTap: () => _updateStatus(context, item, 'Upcoming'),
+                onTap: () => _updateStatus(context, item, 'Akan Datang'),
               ),
               const SizedBox(height: 8),
               _StatusOption(
@@ -72,23 +72,19 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
   }
 
   void _updateStatus(BuildContext context, KegiatanModel item, String newStatus) {
-    Provider.of<KegiatanRepository>(context, listen: false).updateKegiatan(
-      item.copyWith(status: newStatus),
-    );
+    final repo = Provider.of<KegiatanRepository>(context, listen: false);
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Status kegiatan berhasil diperbarui!', style: AppTypography.bodyMd.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(AppSpacing.marginPage),
-      ),
+    runWithFeedback(
+      context,
+      () => repo.updateKegiatan(item.copyWith(status: newStatus)),
+      success: 'Status kegiatan berhasil diperbarui!',
+      errorPrefix: 'Gagal memperbarui status',
     );
   }
 
   Color _statusColor(String status) {
     return switch (status) {
-      'Upcoming' => AppColors.surfaceContainerHigh,
+      'Akan Datang' || 'Upcoming' => AppColors.surfaceContainerHigh,
       'Berlangsung' => AppColors.secondaryContainer,
       _ => AppColors.success,
     };
@@ -101,48 +97,14 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
 
     final filtered = kegiatanList.where((k) {
       if (_filterStatus == 'Semua') return true;
-      return k.status == _filterStatus;
+      // 'Upcoming' = nilai lama untuk 'Akan Datang'.
+      final status = k.status == 'Upcoming' ? 'Akan Datang' : k.status;
+      return status == _filterStatus;
     }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Kelola Kegiatan',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Kelola Kegiatan'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/kegiatan/buat'),
         backgroundColor: AppColors.primaryContainer,
@@ -163,7 +125,7 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: ['Semua', 'Upcoming', 'Berlangsung', 'Selesai'].map((f) {
+                  children: ['Semua', 'Akan Datang', 'Berlangsung', 'Selesai'].map((f) {
                     final active = _filterStatus == f;
                     return GestureDetector(
                       onTap: () => setState(() => _filterStatus = f),
@@ -232,10 +194,10 @@ class _KelolaKegiatanScreenState extends State<KelolaKegiatanScreen> {
                                         border: Border.all(color: AppColors.blackCharcoal, width: 1.2),
                                       ),
                                       child: Text(
-                                        k.status,
+                                        k.status == 'Upcoming' ? 'Akan Datang' : k.status,
                                         style: AppTypography.labelBold.copyWith(
                                           color: isSelesai ? Colors.white : AppColors.onSurface,
-                                          fontSize: 9,
+                                          fontSize: 10,
                                         ),
                                       ),
                                     ),

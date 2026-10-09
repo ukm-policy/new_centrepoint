@@ -7,7 +7,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/session/session_controller.dart';
 import '../../../shared/widgets/brutalist_button.dart';
+import '../../../core/errors/app_exception.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -91,14 +93,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       String? avatarUrl;
       if (_imageFile != null) {
         final bytes = await _imageFile!.readAsBytes();
-        final fileExt = _imageFile!.name.split('.').last;
+        final fileExt = _imageFile!.name.split('.').last.toLowerCase();
         final fileName = 'avatar.$fileExt';
         final filePath = '${user.id}/$fileName';
 
         await Supabase.instance.client.storage.from('avatars').uploadBinary(
           filePath,
           bytes,
-          fileOptions: FileOptions(contentType: 'image/$fileExt', upsert: true),
+          fileOptions: FileOptions(contentType: 'image/${fileExt == 'jpg' ? 'jpeg' : fileExt}', upsert: true),
         );
         avatarUrl = Supabase.instance.client.storage.from('avatars').getPublicUrl(filePath);
       }
@@ -127,12 +129,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         ),
       );
 
+      await SessionController.instance.reloadProfile();
       if (!mounted) return;
       context.go('/');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan profil: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text('Gagal menyimpan profil: ${friendlyError(e)}'), backgroundColor: AppColors.error),
       );
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -1,26 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/berita_model.dart';
 import '../berita_repository.dart';
 
-class SupabaseBeritaRepository extends BeritaRepository {
+class SupabaseBeritaRepository extends BeritaRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<BeritaModel> _berita = [];
 
   SupabaseBeritaRepository() {
-    _loadBerita();
-    _db
-        .channel('public:berita')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'berita',
-          callback: (payload) {
-            _loadBerita();
-          },
-        )
-        .subscribe();
+    reload();
+    listenTable('berita', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadBerita);
 
   Future<void> _loadBerita() async {
     try {
@@ -41,6 +35,7 @@ class SupabaseBeritaRepository extends BeritaRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading berita: $e');
+      rethrow;
     }
   }
 
@@ -64,9 +59,10 @@ class SupabaseBeritaRepository extends BeritaRepository {
         'is_draft': item.isDraft,
         'tanggal_publish': item.tanggalPublish.toIso8601String(),
       });
-      await _loadBerita();
+      await reload();
     } catch (e) {
       debugPrint('Error adding berita: $e');
+      rethrow;
     }
   }
 
@@ -81,9 +77,10 @@ class SupabaseBeritaRepository extends BeritaRepository {
         'is_draft': item.isDraft,
         'tanggal_publish': item.tanggalPublish.toIso8601String(),
       }).eq('id', item.id);
-      await _loadBerita();
+      await reload();
     } catch (e) {
       debugPrint('Error updating berita: $e');
+      rethrow;
     }
   }
 
@@ -91,9 +88,10 @@ class SupabaseBeritaRepository extends BeritaRepository {
   Future<void> deleteBerita(String id) async {
     try {
       await _db.from('berita').delete().eq('id', id);
-      await _loadBerita();
+      await reload();
     } catch (e) {
       debugPrint('Error deleting berita: $e');
+      rethrow;
     }
   }
 
@@ -104,9 +102,10 @@ class SupabaseBeritaRepository extends BeritaRepository {
         'is_draft': false,
         'tanggal_publish': DateTime.now().toIso8601String(),
       }).eq('id', id);
-      await _loadBerita();
+      await reload();
     } catch (e) {
       debugPrint('Error publishing berita: $e');
+      rethrow;
     }
   }
 }

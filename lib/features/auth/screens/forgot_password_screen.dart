@@ -1,5 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/env/env.dart';
+import '../../../shared/utils/feedback.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -28,12 +32,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() {
-      _loading = false;
-      _success = true;
-    });
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        _emailCtrl.text.trim(),
+        redirectTo: kIsWeb ? null : Env.authRedirectUrl,
+      );
+      if (!mounted) return;
+      setState(() => _success = true);
+    } catch (e) {
+      if (!mounted) return;
+      showErrorSnack(context, e, prefix: 'Gagal mengirim link reset');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override

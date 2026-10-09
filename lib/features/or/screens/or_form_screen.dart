@@ -8,6 +8,7 @@ import '../../../shared/widgets/floating_app_bar.dart';
 import '../../../shared/widgets/my_divider.dart';
 import '../../../data/models/or_model.dart';
 import '../../../data/repositories/or_repository.dart';
+import '../../../shared/utils/feedback.dart';
 
 class OrFormScreen extends StatefulWidget {
   const OrFormScreen({super.key});
@@ -44,9 +45,6 @@ class _OrFormScreenState extends State<OrFormScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() => _submitting = false);
 
     final orRepo = context.read<ORRepository>();
     // Insert new applicant into repository
@@ -64,9 +62,15 @@ class _OrFormScreenState extends State<OrFormScreen> {
       status: ApplicantStatus.pending,
       tanggalDaftar: DateTime.now(),
     );
-    orRepo.addApplicant(newApp);
-
-    context.pushReplacement('/or/status', extra: _nimCtrl.text);
+    final ok = await runWithFeedback(
+      context,
+      () => orRepo.addApplicant(newApp),
+      success: 'Pendaftaran berhasil dikirim!',
+      errorPrefix: 'Gagal mengirim pendaftaran',
+    );
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    if (ok) context.pushReplacement('/or/status', extra: _nimCtrl.text);
   }
 
   @override

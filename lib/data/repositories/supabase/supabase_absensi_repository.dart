@@ -1,39 +1,29 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
+import '../../../core/errors/app_exception.dart';
 import '../../models/absensi_model.dart';
 import '../absensi_repository.dart';
 
-class SupabaseAbsensiRepository extends AbsensiRepository {
+final _uuidPattern = RegExp(
+  r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+  caseSensitive: false,
+);
+
+class SupabaseAbsensiRepository extends AbsensiRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<AbsensiModel> _absensi = [];
   List<QrSessionModel> _qrSessions = [];
 
   SupabaseAbsensiRepository() {
-    _loadAbsensi();
+    reload();
     // Setup subscription
-    _db
-        .channel('public:absensi')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'absensi',
-          callback: (payload) {
-            _loadAbsensi();
-          },
-        )
-        .subscribe();
-    _db
-        .channel('public:qr_session')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'qr_session',
-          callback: (payload) {
-            _loadAbsensi();
-          },
-        )
-        .subscribe();
+    listenTable('absensi', reload);
+    listenTable('qr_session', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadAbsensi);
 
   Future<void> _loadAbsensi() async {
     try {
@@ -60,6 +50,7 @@ class SupabaseAbsensiRepository extends AbsensiRepository {
         final statusStr = json['status'] as String? ?? 'belumAbsen';
         final waktuScan = json['waktu_scan'] != null ? DateTime.tryParse(json['waktu_scan'] as String) : null;
         final keterangan = json['keterangan'] as String?;
+        final fotoUrl = json['foto_url'] as String?;
 
         final status = StatusAbsensi.values.firstWhere(
           (e) => e.toString().split('.').last == statusStr,
@@ -71,11 +62,14 @@ class SupabaseAbsensiRepository extends AbsensiRepository {
           memberId: memberId,
           memberNama: memberNama,
           kegiatanId: kegiatanId,
-          kegiatanJudul: titles[kegiatanId] ?? 'Kegiatan / Rapat',
+          kegiatanJudul: tipe == 'sekret'
+              ? 'Absen Sekretariat'
+              : titles[kegiatanId] ?? 'Kegiatan / Rapat',
           tipeKegiatan: tipe,
           status: status,
           waktuScan: waktuScan,
           keterangan: keterangan,
+          fotoUrl: fotoUrl,
         );
       }).toList();
 
@@ -102,6 +96,7 @@ class SupabaseAbsensiRepository extends AbsensiRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading absensi: $e');
+      rethrow;
     }
   }
 
@@ -112,7 +107,7 @@ class SupabaseAbsensiRepository extends AbsensiRepository {
   List<QrSessionModel> get qrSessions => List.unmodifiable(_qrSessions);
 
   @override
-  void recordAttendance(AbsensiModel record) async {
+  Future<void> recordAttendance(AbsensiModel record) async {
     try {
       await _db.from('absensi').upsert({
         'member_id': record.memberId,
@@ -122,43 +117,32 @@ class SupabaseAbsensiRepository extends AbsensiRepository {
         'waktu_scan': record.waktuScan?.toIso8601String(),
         'keterangan': record.keterangan,
       }, onConflict: 'member_id, kegiatan_id, tipe_kegiatan');
-      _loadAbsensi();
+      reload();
     } catch (e) {
       debugPrint('Error recording attendance: $e');
+      rethrow;
     }
   }
 
   @override
-  void scanQr(String qrContent, String memberId, String memberNama) async {
+  Future<void> scanQr(String qrContent, String memberId, String memberNama) async {
+    final sessionId = qrContent.trim();
+    if (!_uuidPattern.hasMatch(sessionId)) {
+      throw const AppException('QR Code tidak dikenali. Pastikan Anda memindai QR absensi resmi.');
+    }
     try {
-      // Find valid active session
-      final sessionData = await _db.from('qr_session').select().eq('id', qrContent).maybeSingle();
-      if (sessionData == null) return;
-
-      final isActive = sessionData['is_active'] as bool? ?? false;
-      final exp = DateTime.tryParse(sessionData['expired_at'] ?? '') ?? DateTime.now();
-
-      if (isActive && exp.isAfter(DateTime.now())) {
-        final kid = sessionData['kegiatan_id'] as String;
-        final tipe = sessionData['tipe_kegiatan'] as String? ?? 'kegiatan';
-
-        await _db.from('absensi').upsert({
-          'member_id': memberId,
-          'kegiatan_id': kid,
-          'tipe_kegiatan': tipe,
-          'status': 'hadir',
-          'waktu_scan': DateTime.now().toIso8601String(),
-        }, onConflict: 'member_id, kegiatan_id, tipe_kegiatan');
-
-        _loadAbsensi();
-      }
+      // Validasi sesi & pencatatan hadir dilakukan di server (fungsi scan_qr),
+      // jadi anggota tidak bisa menandai dirinya hadir tanpa QR yang sah.
+      await _db.rpc('scan_qr', params: {'p_session': sessionId});
+      reload();
     } catch (e) {
       debugPrint('Error scanning QR: $e');
+      rethrow;
     }
   }
 
   @override
-  void createQrSession(QrSessionModel session) async {
+  Future<void> createQrSession(QrSessionModel session) async {
     try {
       final user = _db.auth.currentUser;
       await _db.from('qr_session').insert({
@@ -170,21 +154,76 @@ class SupabaseAbsensiRepository extends AbsensiRepository {
         'is_active': session.isActive,
         'created_by': user?.id,
       });
-      _loadAbsensi();
+      reload();
     } catch (e) {
       debugPrint('Error creating QR session: $e');
+      rethrow;
     }
   }
 
   @override
-  void deactivateQrSession(String id) async {
+  Future<void> deactivateQrSession(String id) async {
     try {
       await _db.from('qr_session').update({
         'is_active': false,
       }).eq('id', id);
-      _loadAbsensi();
+      reload();
     } catch (e) {
       debugPrint('Error deactivating QR session: $e');
+      rethrow;
     }
+  }
+
+  static const _sekretBucket = 'absensi_sekret';
+
+  @override
+  Future<void> absenSekret(Uint8List fotoBytes, String fileExt) async {
+    try {
+      final user = _db.auth.currentUser;
+      if (user == null) {
+        throw const AppException('Sesi berakhir. Silakan login kembali.');
+      }
+      final ext = fileExt.toLowerCase();
+      final now = DateTime.now();
+      final path = '${user.id}/${now.millisecondsSinceEpoch}.$ext';
+
+      await _db.storage.from(_sekretBucket).uploadBinary(
+            path,
+            fotoBytes,
+            fileOptions: FileOptions(contentType: 'image/${ext == 'jpg' ? 'jpeg' : ext}'),
+          );
+
+      await _db.from('absensi').insert({
+        'member_id': user.id,
+        'kegiatan_id': null,
+        'tipe_kegiatan': 'sekret',
+        'status': 'hadir',
+        'waktu_scan': now.toIso8601String(),
+        'foto_url': path,
+      });
+      reload();
+    } on StorageException catch (e) {
+      debugPrint('Error absen sekret (storage): $e');
+      if (e.statusCode == '404' || e.message.toLowerCase().contains('bucket not found')) {
+        throw const AppException(
+          'Penyimpanan foto sekret belum disiapkan. Hubungi admin untuk menjalankan migrasi absensi_sekret.',
+        );
+      }
+      rethrow;
+    } on PostgrestException catch (e) {
+      debugPrint('Error absen sekret: $e');
+      if (e.code == '42703' || e.code == 'PGRST204' || e.code == '23502') {
+        throw const AppException(
+          'Database belum mendukung absen sekret. Hubungi admin untuk menjalankan migrasi absensi_sekret.',
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String?> fotoSekretUrl(String path) async {
+    if (path.startsWith('http')) return path;
+    return _db.storage.from(_sekretBucket).createSignedUrl(path, 60 * 60);
   }
 }

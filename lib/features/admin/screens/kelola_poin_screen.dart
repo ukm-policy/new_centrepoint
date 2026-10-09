@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -12,6 +11,9 @@ import '../../../data/models/poin_model.dart';
 import '../../../data/repositories/member_repository.dart';
 import '../../../data/repositories/poin_repository.dart';
 import '../../../data/repositories/audit_log_repository.dart';
+import '../../../shared/utils/initials.dart';
+import '../../../shared/utils/feedback.dart';
+import '../../../shared/widgets/floating_app_bar.dart';
 
 class KelolaPoinScreen extends StatefulWidget {
   const KelolaPoinScreen({super.key});
@@ -248,42 +250,40 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
 
                     BrutalistButton(
                       label: 'PROSES MUTASI POIN',
-                      onPressed: () {
+                      onPressed: () async {
                         if (!formKey.currentState!.validate()) return;
                         final inputVal = int.parse(amountCtrl.text);
                         final actualVal = isAddition ? inputVal : -inputVal;
+                        final reason = reasonCtrl.text.trim();
+                        final poinRepo = context.read<PoinRepository>();
+                        final memberRepo = context.read<MemberRepository>();
+                        final auditRepo = context.read<AuditLogRepository>();
 
-                        context.read<PoinRepository>().addPoinEntry(PoinEntryModel(
-                          id: '',
-                          memberId: member.id,
-                          memberNama: member.nama,
-                          label: reasonCtrl.text.trim(),
-                          tipe: isAddition ? TipePoin.bonus : TipePoin.penalti,
-                          poin: actualVal,
-                          tanggal: DateTime.now(),
-                          kegiatanId: null,
-                        ));
-
-                        context.read<MemberRepository>().updatePoin(member.id, actualVal);
-
-                        context.read<AuditLogRepository>().logAction(
-                          aksi: '${isAddition ? "Menambahkan +$inputVal" : "Mengurangi -$inputVal"} poin ke ${member.nama}: ${reasonCtrl.text.trim()}',
+                        Navigator.pop(sheetContext);
+                        // Cukup satu baris poin_entry; total poin anggota
+                        // dihitung dari jumlah seluruh entry.
+                        final ok = await runWithFeedback(
+                          context,
+                          () => poinRepo.addPoinEntry(PoinEntryModel(
+                            id: '',
+                            memberId: member.id,
+                            memberNama: member.nama,
+                            label: reason,
+                            tipe: isAddition ? TipePoin.bonus : TipePoin.penalti,
+                            poin: actualVal,
+                            tanggal: DateTime.now(),
+                            kegiatanId: null,
+                          )),
+                          success: 'Poin ${member.nama} berhasil diperbarui.',
+                          errorPrefix: 'Gagal memperbarui poin',
+                        );
+                        if (!ok) return;
+                        memberRepo.reload();
+                        auditRepo.logAction(
+                          aksi: '${isAddition ? "Menambahkan +$inputVal" : "Mengurangi -$inputVal"} poin ke ${member.nama}: $reason',
                           tipe: 'Poin',
                           entityId: member.id,
                           entityType: 'member',
-                        );
-
-                        Navigator.pop(sheetContext);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Poin ${member.nama} berhasil diperbarui.',
-                              style: AppTypography.bodyMd.copyWith(color: Colors.white),
-                            ),
-                            backgroundColor: AppColors.success,
-                            behavior: SnackBarBehavior.floating,
-                            margin: const EdgeInsets.all(AppSpacing.marginPage),
-                          ),
                         );
                       },
                     ),
@@ -306,43 +306,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgGray,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.marginPage,
-              vertical: 8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radius),
-                      border: Border.all(color: AppColors.blackCharcoal, width: 2),
-                      boxShadow: const [AppColors.hardShadowSm],
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.arrow_back, size: 16, color: AppColors.onSurface),
-                      const SizedBox(width: 6),
-                      Text('Kembali', style: AppTypography.labelBold),
-                    ]),
-                  ),
-                ),
-                Text(
-                  'Kelola Poin Anggota',
-                  style: AppTypography.headlineSm.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: PageAppBar(title: 'Kelola Poin Anggota'),
       body: SafeArea(
         child: Column(
           children: [
@@ -411,7 +375,7 @@ class _KelolaPoinScreenState extends State<KelolaPoinScreen> {
                       itemBuilder: (context, i) {
                         final m = filteredList[i];
                         final initialName = m.nama.isNotEmpty
-                            ? m.nama.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                            ? initialsOf(m.nama)
                             : 'M';
 
                         return Padding(

@@ -1,27 +1,22 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
+import 'kepengurusan_utils.dart';
 import '../../models/poin_model.dart';
 import '../poin_repository.dart';
 
-class SupabasePoinRepository extends PoinRepository {
+class SupabasePoinRepository extends PoinRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<PoinEntryModel> _poinEntries = [];
   List<LeaderboardEntryModel> _leaderboard = [];
 
   SupabasePoinRepository() {
-    _loadPoin();
-    _db
-        .channel('public:poin_entry')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'poin_entry',
-          callback: (payload) {
-            _loadPoin();
-          },
-        )
-        .subscribe();
+    reload();
+    listenTable('poin_entry', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadPoin);
 
   Future<void> _loadPoin() async {
     try {
@@ -55,9 +50,7 @@ class SupabasePoinRepository extends PoinRepository {
       }).toList();
 
       // 2. Load members, their divisions and calculate leaderboard
-      final membersData = await _db.from('profiles').select(
-        'id, nama, kepengurusan(jabatan(bidang(nama)))'
-      );
+      final membersData = await selectProfilesWithJabatan(_db, columns: 'id, nama');
 
       final Map<String, int> pointsSum = {};
       for (final entry in _poinEntries) {
@@ -72,9 +65,8 @@ class SupabasePoinRepository extends PoinRepository {
 
         String? divisi;
         final kepList = m['kepengurusan'] as List?;
-        if (kepList != null && kepList.isNotEmpty) {
-          final firstKep = kepList.first as Map<String, dynamic>?;
-          final jab = firstKep?['jabatan'] as Map<String, dynamic>?;
+        {
+          final jab = pickJabatan(kepList);
           final bid = jab?['bidang'] as Map<String, dynamic>?;
           if (bid != null) {
             divisi = bid['nama'] as String?;
@@ -110,6 +102,7 @@ class SupabasePoinRepository extends PoinRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading points: $e');
+      rethrow;
     }
   }
 
@@ -133,9 +126,10 @@ class SupabasePoinRepository extends PoinRepository {
         'kegiatan_id': entry.kegiatanId,
         'created_by': user?.id,
       });
-      await _loadPoin();
+      await reload();
     } catch (e) {
       debugPrint('Error adding points: $e');
+      rethrow;
     }
   }
 }

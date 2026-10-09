@@ -1,26 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'realtime_repository_mixin.dart';
 import '../../models/kegiatan_model.dart';
 import '../kegiatan_repository.dart';
 
-class SupabaseKegiatanRepository extends KegiatanRepository {
+class SupabaseKegiatanRepository extends KegiatanRepository with RealtimeRepositoryMixin {
   final _db = Supabase.instance.client;
   List<KegiatanModel> _kegiatan = [];
 
   SupabaseKegiatanRepository() {
-    _loadKegiatan();
-    _db
-        .channel('public:kegiatan')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'kegiatan',
-          callback: (payload) {
-            _loadKegiatan();
-          },
-        )
-        .subscribe();
+    reload();
+    listenTable('kegiatan', reload);
   }
+
+  @override
+  Future<void> reload() => trackLoad(_loadKegiatan);
 
   Future<void> _loadKegiatan() async {
     try {
@@ -116,6 +110,7 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading kegiatan: $e');
+      rethrow;
     }
   }
 
@@ -199,9 +194,10 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
         }
       }
 
-      _loadKegiatan();
+      reload();
     } catch (e) {
       debugPrint('Error adding kegiatan: $e');
+      rethrow;
     }
   }
 
@@ -279,37 +275,23 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
         }
       }
 
-      await _loadKegiatan();
+      await reload();
     } catch (e) {
       debugPrint('Error updating kegiatan: $e');
+      rethrow;
     }
   }
 
   @override
-  void registerParticipant(String id) async {
+  Future<void> registerParticipant(String id) async {
     try {
-      final user = _db.auth.currentUser;
-      if (user == null) return;
-
-      final k = _kegiatan.firstWhere((item) => item.id == id);
-      if (k.pesertaTerdaftar < k.kuota) {
-        // Increment registered participant count
-        await _db.from('kegiatan').update({
-          'peserta_terdaftar': k.pesertaTerdaftar + 1,
-        }).eq('id', id);
-
-        // Insert into absensi record as 'belumAbsen' to register
-        await _db.from('absensi').insert({
-          'member_id': user.id,
-          'kegiatan_id': id,
-          'tipe_kegiatan': 'kegiatan',
-          'status': 'belumAbsen',
-        });
-
-        _loadKegiatan();
-      }
+      // Cek duplikat & kuota serta penambahan hitungan peserta dilakukan
+      // atomik di server (fungsi daftar_kegiatan).
+      await _db.rpc('daftar_kegiatan', params: {'p_kegiatan': id});
+      reload();
     } catch (e) {
       debugPrint('Error registering participant: $e');
+      rethrow;
     }
   }
 
@@ -317,9 +299,10 @@ class SupabaseKegiatanRepository extends KegiatanRepository {
   Future<void> deleteKegiatan(String id) async {
     try {
       await _db.from('kegiatan').delete().eq('id', id);
-      await _loadKegiatan();
+      await reload();
     } catch (e) {
       debugPrint('Error deleting kegiatan: $e');
+      rethrow;
     }
   }
 }

@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/brutalist_button.dart';
 import '../../../shared/widgets/my_divider.dart';
+import '../../../core/errors/app_exception.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -48,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(friendlyError(e)), backgroundColor: AppColors.error),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -170,32 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: _login,
                         ),
                   const SizedBox(height: AppSpacing.stackGap),
-
-                  // Divider OR
-                  Row(
-                    children: [
-                      const Expanded(child: MyDivider(color: AppColors.borderSlate, height: 1)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          'ATAU',
-                          style: AppTypography.labelBold.copyWith(
-                            color: AppColors.tertiary,
-                          ),
-                        ),
-                      ),
-                      const Expanded(child: MyDivider(color: AppColors.borderSlate, height: 1)),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.stackGap),
-
-                  // Google sign in
-                  BrutalistButton(
-                    label: 'Masuk dengan Google',
-                    variant: BrutalistButtonVariant.secondary,
-                    onPressed: () {},
-                  ),
-                  const SizedBox(height: 24),
 
                   // Footer
                   const MyDivider(color: AppColors.borderSlate),
